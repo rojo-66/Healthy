@@ -297,7 +297,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -351,3 +351,76 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - **Correzioni di M2**: `listDietPlans()` ordinava con l'indice `validFrom`, che salta i `null`: ora ordina in memoria (`importedAt`, poi `validFrom`). `activateDietPlan()` ora archivia il piano attivo precedente.
 - **Test**: fixture finte `tests/fixtures/mydiet.json` (stessa struttura del file vero), `diet-extended.json`, `invalid/mydiet-bad.json`. `tests/unit/diet/private-file.test.ts` prova il file vero solo dove esiste `private/` (in CI viene saltato). Playwright `tests/e2e/diet.spec.ts` con l'ora fissata a lunedì 12/10/2026 13:00.
 - Prova fatta con il file vero di ottobre nella build (`npm run preview`): import, Piano, Spesa, ricarica offline. Da verificare su iPhone dopo il deploy: app installata → Dieta → Importa il file MyDiet (da File) → completa almeno un giorno → modalità aereo.
+
+### Note M4 · Allena, editor schede, libreria esercizi
+- **Codice**:
+  - **logica pura** in `src/lib/workouts/`: `calc/` (durata e contatori, regole sui valori, serie piramidali, versioni, settimana e prossimo allenamento, validazione dell'editor, riordino), `draft.ts` (bozza dell'editor), `format.ts`, `library/` (dati, liste chiuse, ricerca, caricamento, esercizi personalizzati);
+  - **supporto all'interfaccia**: `drag-reorder.ts`, `flip.ts`, `keyboard.svelte.ts`, `debounce.ts`;
+  - **schermate**: `src/routes/Train.svelte` (`#/allena`), `WorkoutEditor.svelte` (`#/allena/editor`, `?id=` per modificare, `bozza=1` per riprendere la bozza senza chiedere), `WorkoutView.svelte` (`#/allena/vedi?id=`); componenti in `src/routes/train/` e `src/routes/train/editor/`;
+  - **router**: `parseQuery`/`routeHref` per i parametri; le pagine con parametri si ricreano su `route.nav` (navigazioni vere); `replaceRoute` corregge l'indirizzo senza ricrearle (es. `?id=` dopo il primo salvataggio).
+- **Libreria esercizi**:
+  - **contenuto**: 752 esercizi di forza. 734 vengono da [free-exercise-db](https://github.com/yuhonas/free-exercise-db) (Unlicense, pubblico dominio; commit fissato in `scripts/library/build.mjs`), da cui si prendono solo nome, muscoli e attrezzo, niente istruzioni né immagini. 18 sono macchine aggiunte a mano (`scripts/library/extra.json`). 296 hanno il nome italiano (`scripts/library/names-it.json`), gli altri restano in inglese.
+  - **file generato**: `npm run library` produce `src/lib/workouts/library/data.ts`.
+  - **muscoli** (14, il primo è il principale): Petto, Dorsali, Trapezi, Spalle, Bicipiti, Tricipiti, Avambracci, Addominali, Lombari, Glutei, Quadricipiti, Femorali, Adduttori, Polpacci.
+  - **attrezzi** (12): Bilanciere, Bilanciere EZ, Manubri, Macchina, Multipower, Cavi, Corpo libero, Kettlebell, Elastico, Palla medica, Fitball, Altro.
+- **Aggiornamenti della libreria**:
+  - `syncLibrary()` gira all'avvio e all'apertura di Allena e dell'editor. È idempotente: scrive solo le righe mancanti o cambiate, in una transazione.
+  - Non tocca mai gli esercizi personalizzati e lascia le righe che la libreria non ha più.
+  - Gli id (`fx-…` dalla fonte, `it-…` aggiunti) non cambiano e non spariscono: lo script si ferma se un id pubblicato manca.
+  - La libreria è dell'app, non dei dati dell'utente: non entra nel backup né nei conteggi, e "Svuota tutto" e il ripristino non la toccano (`isBuiltInExercise`).
+- **Ricerca e personalizzati**:
+  - **ricerca**: insensibile a maiuscole e accenti; tutte le parole cercate devono comparire nel nome. Il filtro guarda il muscolo principale. Prima i nomi che iniziano con la ricerca, poi gli esercizi comuni (nome italiano o personalizzati), poi alfabetico. Si mostrano 60 risultati alla volta ("Mostra altri"); ricerca e filtro si azzerano a ogni apertura.
+  - **personalizzati** (crea, modifica, elimina dal foglio Libreria): muscoli e attrezzo dalle liste chiuse. Prima di eliminare compare l'avviso con le schede che lo usano; le schede restano invariate (nome e muscoli copiati, `exerciseId` conservato).
+- **Cambi agli schemi di M2** (solo aggiunte, nessuna nuova versione del database):
+  - `settings` ha due chiavi nuove: `workoutAuthor { name, lastSource }` e `workoutDraft { savedAt, draft }`, con lo schema permissivo della bozza in `schemas/workout-draft.ts`;
+  - `workoutSchema` ed `exerciseSchema` non cambiano;
+  - le regole più severe dell'editor (almeno 1 esercizio, ripetizioni ≥ 1, nome del PT per le schede PT) stanno in `workoutEditorSchema`: le schede importate con 0 ripetizioni restano valide nel database;
+  - link video solo `https://`.
+- **Valori**: serie 1–20, ripetizioni 1–100. I kg vanno a passi di 2,5 **agganciati ai multipli** (22 → 22,5 / 20); i valori importati restano finché non si toccano. Recupero 60/90/120/180 s, più il valore importato se diverso (es. 75 s). Un esercizio aggiunto parte da 3 × 10, 0 kg, 90 s.
+- **Durata** = Σ serie × (recupero + 45 s), in minuti arrotondati, + cardio. Le card dell'elenco mostrano il totale; la card "Prossimo" mostra "~esercizi’ + cardio’ tipo".
+- **Serie diverse tra loro**: con il dettaglio attivo, kg e ripetizioni "uniformi" sono quelli della serie 1. Cambiando il numero di serie si copia l'ultima o si tolgono le ultime. Disattivando tornano uniformi con la serie 1 (conferma solo se erano davvero diverse); riattivando nella stessa bozza si ritrovano i valori, purché quelli uniformi non siano cambiati.
+- **Versioni e origine**:
+  - scheda nuova = v1;
+  - scheda mia (TUA, o PT con autore = il mio nome) = stesso id, v+1;
+  - scheda di un altro PT = mia copia (nuovo id, v1, TUA), con avviso nell'editor; l'originale resta aggiornabile in M8;
+  - "Duplica" = nuovo id, v1, "… (copia)", **senza giorni**, origine come una scheda nuova;
+  - l'origine di una scheda nuova si sceglie nell'editor ("Per me / Come PT" + nome del PT). L'ultima scelta salvata diventa il predefinito (`settings.workoutAuthor`); in M7 si sposta nel Profilo;
+  - "Salva e invia" senza modifiche non crea una nuova versione ("Nessuna modifica: resta alla v3").
+- **Settimana**: 1 = lunedì.
+  - **stati dei giorni**: fatto = sessione conclusa quel giorno per una delle sue schede; prossimo = primo giorno da oggi con una scheda non fatta (a settimana finita: primo giorno con scheda della settimana dopo); non fatto (grigio) = passato senza sessione; riposo (tratteggiato) = nessuna scheda.
+  - **sigla**: prime 3 lettere o cifre del nome, senza accenti. Con più schede nello stesso giorno compare la sigla della prima per nome e il dettaglio le elenca tutte.
+  - **sessioni**: fino a M5 la lista è vuota; si leggono con `recentSessions()`.
+- **Editor**:
+  - **layout**: a schermo intero come il mockup (niente barra di navigazione). Nome nel titolo su una riga (28 → 16 px), badge "v3 → v4" / "NUOVA · v1" / "COPIA · v1", contatori in tempo reale.
+  - **riscaldamento**: in un foglio dal basso (nome, suggerimento, dose, Su/Giù/Elimina).
+  - **cardio**: facoltativo, con tipi rapidi.
+  - **esercizi**: Elimina mostra "Annulla" per 8 s.
+  - **errori**: compaiono dopo il primo tentativo di salvataggio, accanto al campo; la riga con errore si apre e scorre in vista, e sopra il banner c'è il riepilogo "N campi da correggere".
+  - **anteprima**: foglio dal basso con la stessa vista di "Vedi scheda" (sola lettura; link video come testo, `target="_blank" rel="noopener noreferrer"`).
+  - **"Salva e invia"**: salva, poi mostra "Scheda salvata" e spiega che l'invio arriva in M8 (nessun finto invio).
+  - **tastiera iPhone**: campi a 16 px (niente zoom); il campo in focus viene portato in vista; con la tastiera aperta il banner inferiore si nasconde (solo transform/opacity).
+- **Riordino**:
+  - pressione lunga (350 ms) sulla maniglia ⠿ (44 px, `touch-action: none`), poi trascinamento con Pointer Events;
+  - la riga sollevata segue il dito, le altre scivolano (solo `transform`), con scorrimento automatico vicino ai bordi; al rilascio si assesta;
+  - Su/Giù/Duplica/Elimina sono animati con FLIP (`transform`);
+  - con "Riduci movimento" niente transizioni;
+  - annuncio `aria-live` "spostato in posizione N di M".
+- **Bozza**:
+  - salvataggio automatico 400 ms dopo ogni modifica, e subito quando l'app va in background (`visibilitychange`, `pagehide`) o si esce dall'editor;
+  - una sola bozza; alla riapertura dello stesso editor (o di una scheda nuova) chiede "Riprendi / Scarta";
+  - Allena mostra "Bozza non salvata · Riprendi la bozza";
+  - indietro con modifiche: Salva / Esci senza salvare (cancella la bozza) / Continua;
+  - aprire e modificare un'altra scheda sostituisce la bozza precedente.
+- **Funzioni "in arrivo"** (Importa, Condividi, Avvia): sono visibili, ma al tocco un foglio spiega che arrivano in M5/M8. Lo Storico ha già il calendario del mese, con lo stato vuoto "Nessun allenamento ancora".
+- **Scostamenti dal mockup**:
+  - la card "Prossimo" non ha l'orario ("MAR 18:00"): la scheda non ha un campo orario;
+  - il menu della scheda è un foglio dal basso (Vedi, Modifica, Duplica, Elimina);
+  - niente schede solo cardio (serve almeno un esercizio, come il file § 8.1);
+  - i filtri della libreria sono i 14 muscoli, non i gruppi del mockup (Schiena/Gambe/Braccia/Core);
+  - una riga aperta mostra il dettaglio delle serie al posto degli stepper Ripetizioni/Kg quando "Serie diverse" è attivo.
+- **Correzione di M1**: `Stepper` accetta un passo personalizzato (`next`) per i kg. Nuove icone `qr` ed `edit`.
+- **Test**:
+  - **fixture finte**: `tests/fixtures/workouts/` (settimana con schede PT e TUE, piramidali, riscaldamento, cardio, recupero 75 s; esercizio personalizzato);
+  - **Vitest**: `tests/unit/workouts/` (libreria e caricamento, ricerca, calcoli, piramidali, riordino, versioni, bozza, validazione, salvataggio, personalizzati, settimana);
+  - **Playwright**: `tests/e2e/train.spec.ts` (creazione con libreria e personalizzato, stepper, piramidali, Giù e trascinamento, anteprima, salvataggio, ricarica offline, v1 → v2 → v3, duplica ed elimina, errori, bozza, 44 px e nessuno scroll orizzontale, due schede nuove di seguito).
+- **Da verificare su iPhone dopo il deploy**: app installata → Allena → + Nuova scheda → trascinamento con il dito sulla maniglia; tastiera sui campi nota/link (banner nascosto, campo visibile); chiudere l'app dal multitasking durante una modifica e riaprire (bozza); modalità aereo.

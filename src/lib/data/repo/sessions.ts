@@ -22,3 +22,8 @@ export function lastSessionForWorkout(workoutId: string): Promise<Session | unde
 export function sessionsBetween(from: string, to: string): Promise<Session[]> {
   return db.sessions.where('startedAt').between(from, to, true, false).toArray();
 }
+
+/** Sessioni più recenti per prime (settimana, ultima esecuzione delle schede). */
+export function recentSessions(limit = 500): Promise<Session[]> {
+  return db.sessions.orderBy('startedAt').reverse().limit(limit).toArray();
+}

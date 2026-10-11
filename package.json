@@ -10,7 +10,8 @@
     "check": "svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "icons": "pwa-assets-generator"
+    "icons": "pwa-assets-generator",
+    "library": "node scripts/library/build.mjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.64.0",

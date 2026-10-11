@@ -1,6 +1,6 @@
 <script lang="ts">
   import { rise } from '../design/transitions';
-  import { canStep, formatNumber, stepValue } from './stepper';
+  import { canStep, clamp, formatNumber, stepValue } from './stepper';
 
   interface Props {
     label: string;
@@ -13,6 +13,8 @@
     disabled?: boolean;
     decLabel?: string;
     incLabel?: string;
+    /** Passo personalizzato (es. kg agganciati ai multipli di 2,5); il risultato resta tra min e max. */
+    next?: (value: number, dir: 1 | -1) => number;
     onchange?: (value: number) => void;
   }
 
@@ -26,6 +28,7 @@
     disabled = false,
     decLabel,
     incLabel,
+    next,
     onchange,
   }: Props = $props();
 
@@ -33,8 +36,12 @@
   const opts = $derived({ min, max, step });
   const stepText = $derived(formatNumber(step) + (unit ? ` ${unit}` : ''));
 
+  function stepped(dir: 1 | -1): number {
+    return next ? clamp(next(value, dir), min, max) : stepValue(value, dir, opts);
+  }
+
   function change(dir: 1 | -1) {
-    value = stepValue(value, dir, opts);
+    value = stepped(dir);
     onchange?.(value);
   }
 </script>

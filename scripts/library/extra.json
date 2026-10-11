@@ -1,0 +1,20 @@
+[
+  { "slug": "hip-thrust-macchina", "name": "Hip thrust alla macchina", "muscles": ["Glutei", "Femorali"], "equipment": "Macchina" },
+  { "slug": "hip-thrust-multipower", "name": "Hip thrust al multipower", "muscles": ["Glutei", "Femorali"], "equipment": "Multipower" },
+  { "slug": "glute-machine", "name": "Glute machine (slanci dietro)", "muscles": ["Glutei", "Femorali"], "equipment": "Macchina" },
+  { "slug": "abduzioni-cavi", "name": "Abduzioni dell'anca ai cavi", "muscles": ["Glutei"], "equipment": "Cavi" },
+  { "slug": "pressa-orizzontale", "name": "Pressa orizzontale", "muscles": ["Quadricipiti", "Glutei"], "equipment": "Macchina" },
+  { "slug": "pendulum-squat", "name": "Pendulum squat", "muscles": ["Quadricipiti", "Glutei"], "equipment": "Macchina" },
+  { "slug": "belt-squat", "name": "Belt squat", "muscles": ["Quadricipiti", "Glutei"], "equipment": "Macchina" },
+  { "slug": "bulgarian-split-squat-manubri", "name": "Bulgarian split squat con manubri", "muscles": ["Quadricipiti", "Glutei"], "equipment": "Manubri" },
+  { "slug": "stacco-rumeno-manubri", "name": "Stacco rumeno con manubri", "muscles": ["Femorali", "Glutei", "Lombari"], "equipment": "Manubri" },
+  { "slug": "swing-kettlebell", "name": "Swing con kettlebell", "muscles": ["Glutei", "Femorali", "Lombari"], "equipment": "Kettlebell" },
+  { "slug": "rematore-macchina", "name": "Rematore alla macchina (seated row)", "muscles": ["Dorsali", "Bicipiti"], "equipment": "Macchina" },
+  { "slug": "pulldown-macchina", "name": "Pulldown alla macchina", "muscles": ["Dorsali", "Bicipiti"], "equipment": "Macchina" },
+  { "slug": "trazioni-assistite-macchina", "name": "Trazioni alla macchina assistita", "muscles": ["Dorsali", "Bicipiti"], "equipment": "Macchina" },
+  { "slug": "lat-machine-presa-neutra", "name": "Lat machine presa neutra", "muscles": ["Dorsali", "Bicipiti"], "equipment": "Cavi" },
+  { "slug": "pulley-basso-presa-larga", "name": "Pulley basso presa larga", "muscles": ["Dorsali", "Trapezi"], "equipment": "Cavi" },
+  { "slug": "alzate-laterali-macchina", "name": "Alzate laterali alla macchina", "muscles": ["Spalle"], "equipment": "Macchina" },
+  { "slug": "rotary-torso", "name": "Torsioni del busto alla macchina (rotary torso)", "muscles": ["Addominali"], "equipment": "Macchina" },
+  { "slug": "lower-back-machine", "name": "Estensioni lombari alla macchina", "muscles": ["Lombari", "Glutei"], "equipment": "Macchina" }
+]

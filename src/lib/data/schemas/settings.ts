@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateTime } from './common';
+import { savedDraftSchema, workoutAuthorSchema } from './workout-draft';
 
 /** Impostazioni: una riga per chiave, ogni chiave ha il suo tipo di valore. */
 export const settingSchema = z.discriminatedUnion('key', [
@@ -10,6 +11,10 @@ export const settingSchema = z.discriminatedUnion('key', [
     key: z.literal('storagePersist'),
     value: z.object({ granted: z.boolean(), checkedAt: isoDateTime }),
   }),
+  /** Chi crea le schede: nome del PT e origine predefinita (M4; nel Profilo dal M7). */
+  z.object({ key: z.literal('workoutAuthor'), value: workoutAuthorSchema }),
+  /** Bozza dell'editor schede non ancora salvata (una sola). */
+  z.object({ key: z.literal('workoutDraft'), value: savedDraftSchema }),
 ]);
 
 export type Setting = z.infer<typeof settingSchema>;

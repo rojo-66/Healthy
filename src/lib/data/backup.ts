@@ -8,6 +8,7 @@ import { setSetting } from './repo/settings';
 import { TABLE_NAMES, type TableName, type TableRow, type TableRows } from './schemas';
 import { APP_ID } from './schemas/common';
 import { BACKUP_KIND, BACKUP_VERSION, backupSchema, type Backup, type BackupCounts } from './schemas/backup';
+import { isBuiltInExercise } from './schemas/exercises';
 import { isDeviceSetting } from './schemas/settings';
 
 /** Soglia del promemoria di backup (SPEC § 8.5). */
@@ -19,7 +20,7 @@ function rowsOf<T extends TableName>(tables: TableRows, name: T): TableRow<T>[] 
   return tables[name];
 }
 
-/** Tutte le tabelle, lette in un'unica transazione. Le impostazioni del telefono restano fuori. */
+/** Tutte le tabelle, lette in un'unica transazione. Impostazioni del telefono e libreria dell'app restano fuori. */
 async function readAllTables(database: HealthyDb): Promise<TableRows> {
   return database.transaction('r', database.tables, async () => {
     const [profile, measurements, exercises, workouts, sessions, dietPlans, dietLog, shopping, settings] =
@@ -37,7 +38,7 @@ async function readAllTables(database: HealthyDb): Promise<TableRows> {
     return {
       profile,
       measurements,
-      exercises,
+      exercises: exercises.filter((row) => !isBuiltInExercise(row)),
       workouts,
       sessions,
       dietPlans,
@@ -135,13 +136,17 @@ async function replaceTable<T extends TableName>(database: HealthyDb, name: T, r
 /**
  * Sostituisce **tutti** i dati con quelli del backup, in una sola transazione:
  * se una scrittura fallisce, la transazione viene annullata e i dati attuali restano intatti.
- * Le impostazioni del telefono (ultimo backup, persistenza) non vengono toccate.
+ * Le impostazioni del telefono (ultimo backup, persistenza) e la libreria esercizi dell'app non vengono toccate.
  */
 export function restoreBackup(backup: Backup, database: HealthyDb = appDb): Promise<void> {
   const tables: TableRows = backup.tables;
   return database.transaction('rw', database.tables, async () => {
     for (const name of TABLE_NAMES) {
-      if (name === 'settings') {
+      if (name === 'exercises') {
+        // La libreria dell'app resta: si sostituiscono solo gli esercizi dell'utente.
+        await database.exercises.filter((row) => !isBuiltInExercise(row)).delete();
+        await database.exercises.bulkPut(tables.exercises);
+      } else if (name === 'settings') {
         await database.settings.filter((row) => !isDeviceSetting(row.key)).delete();
         await database.settings.bulkAdd(tables.settings.filter((row) => !isDeviceSetting(row.key)));
       } else {

@@ -133,6 +133,12 @@ const FIELD_LABELS: Readonly<Record<string, string>> = {
   equipment: 'attrezzatura',
   custom: 'personalizzato',
   weightKg: 'peso',
+  // Editor schede (M4)
+  lastSource: 'origine predefinita',
+  savedAt: 'salvata il',
+  draft: 'bozza',
+  baseVersion: 'versione di partenza',
+  setsDetailMemory: 'serie diverse (memoria)',
   // File di MyDiet (§ 8.3)
   esportato: 'data di esportazione',
   dieta: 'dieta',

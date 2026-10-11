@@ -8,6 +8,8 @@ import App from './App.svelte';
 // Chiede al browser di non cancellare IndexedDB quando lo spazio scarseggia (SPEC § 2) e salva l'esito.
 // Import dinamico: Dexie e zod non rallentano il primo disegno della pagina.
 void import('./lib/data/storage').then(({ initStorage }) => initStorage()).catch(() => null);
+// Libreria esercizi nel database (idempotente: scrive solo ciò che manca o è cambiato).
+void import('./lib/workouts/library/sync').then(({ syncLibrary }) => syncLibrary()).catch(() => null);
 
 // Safari iOS applica :active (feedback alla pressione) solo se esiste un listener touch.
 document.addEventListener('touchstart', () => {}, { passive: true });
