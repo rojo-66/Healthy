@@ -75,3 +75,8 @@ export async function deliverFile(file: File, env: DeliveryEnv = browserEnv()): 
   download(file, env);
   return 'downloaded';
 }
+
+/** Solo download (alternativa esplicita al foglio di condivisione, es. "Scarica il file"). */
+export function downloadFile(file: File, env: DeliveryEnv = browserEnv()): void {
+  download(file, env);
+}

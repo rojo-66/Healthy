@@ -33,6 +33,20 @@ export const DB_VERSIONS: readonly DbVersion[] = [
       settings: 'key',
     },
   },
+  {
+    // M5: le sessioni hanno la copia della scheda (`snapshot`) e lo stato della sessione in corso (`live`).
+    // Indici invariati; le righe già salvate ricevono i campi nuovi vuoti.
+    version: 2,
+    stores: {},
+    upgrade: (tx) =>
+      tx
+        .table('sessions')
+        .toCollection()
+        .modify((s: Record<string, unknown>) => {
+          if (!('snapshot' in s)) s.snapshot = null;
+          if (!('live' in s)) s.live = null;
+        }),
+  },
 ];
 
 export function applyVersions(db: Dexie, versions: readonly DbVersion[]): void {

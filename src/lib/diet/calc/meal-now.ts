@@ -57,3 +57,22 @@ export function currentMealKey(
   }
   return null;
 }
+
+/**
+ * Prossimo pasto (riepilogo dell'allenamento): quello del momento, altrimenti il primo non vuoto
+ * e non mangiato che inizia dopo `nowMinutes`. `null` se per oggi non ne restano.
+ */
+export function upcomingMealKey(
+  meals: readonly DietMeal[],
+  eaten: Readonly<Record<string, boolean>>,
+  nowMinutes: number,
+): string | null {
+  const current = currentMealKey(meals, eaten, nowMinutes);
+  if (current) return current;
+  const later = meals
+    .filter((meal) => !isEmptyMeal(meal) && !(Object.hasOwn(eaten, meal.key) && eaten[meal.key]))
+    .map((meal) => ({ key: meal.key, start: startOf(meal) }))
+    .filter((m): m is { key: string; start: number } => m.start !== null && m.start > nowMinutes)
+    .sort((a, b) => a.start - b.start);
+  return later[0]?.key ?? null;
+}

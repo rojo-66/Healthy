@@ -15,6 +15,7 @@ import type { BackupMigrations } from '../../../src/lib/data/backup-migrations';
 import { db } from '../../../src/lib/data/db';
 import type { Result } from '../../../src/lib/data/errors';
 import { MAX_BYTES } from '../../../src/lib/data/limits';
+import { latestVersion } from '../../../src/lib/data/versions';
 import { clearAll, countAll } from '../../../src/lib/data/repo/maintenance';
 import { getSetting, setSetting } from '../../../src/lib/data/repo/settings';
 import { primaryKeyOf, TABLE_NAMES, type TableRows } from '../../../src/lib/data/schemas';
@@ -64,7 +65,7 @@ describe('esporta', () => {
       kind: 'backup',
       schemaVersion: 1,
       createdAt: '2026-10-11T09:15:00.000Z',
-      dbVersion: 1,
+      dbVersion: latestVersion(),
       counts: { profile: 1, measurements: 2, exercises: 3, workouts: 2, sessions: 3, dietPlans: 1, dietLog: 2, shopping: 1, settings: 0 },
     });
     expect(Object.keys(backup.tables)).toEqual([...TABLE_NAMES]);

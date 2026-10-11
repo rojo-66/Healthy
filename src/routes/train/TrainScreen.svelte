@@ -8,7 +8,7 @@
   import Tabs from '../../lib/components/Tabs.svelte';
   import { ValidationError } from '../../lib/data/errors';
   import { liveState } from '../../lib/data/live.svelte';
-  import { recentSessions } from '../../lib/data/repo/sessions';
+  import { activeSession, recentSessions } from '../../lib/data/repo/sessions';
   import { getWorkoutDraft } from '../../lib/data/repo/settings';
   import { deleteWorkout, duplicateWorkoutById, listWorkoutsRecent } from '../../lib/data/repo/workouts';
   import type { Session } from '../../lib/data/schemas/sessions';
@@ -17,6 +17,7 @@
   import { weekdayName } from '../../lib/data/schemas/diet-payload';
   import { headerDate, isoWeekday } from '../../lib/diet/calc/calendar';
   import { routeHref } from '../../lib/routes';
+  import { route } from '../../lib/router.svelte';
   import { weekPlan } from '../../lib/workouts/calc/week';
   import { syncLibrary } from '../../lib/workouts/library/sync';
   import Screen from '../Screen.svelte';
@@ -27,6 +28,8 @@
   import NextCard from './NextCard.svelte';
   import WeekStrip from './WeekStrip.svelte';
   import WorkoutRow from './WorkoutRow.svelte';
+  import ResumeCard from '../session/ResumeCard.svelte';
+  import StartGate from '../session/StartGate.svelte';
 
   interface Props {
     now: Date;
@@ -60,7 +63,8 @@
     { id: 'schede', label: 'Schede' },
     { id: 'storico', label: 'Storico' },
   ];
-  let tab = $state<TabId>('schede');
+  // `#/allena?tab=storico` (dal Riepilogo) apre direttamente lo Storico.
+  let tab = $state<TabId>(untrack(() => route.query['tab']) === 'storico' ? 'storico' : 'schede');
 
   // --- Fogli: in arrivo, azioni della scheda, conferma ---
   let info = $state<{ title: string; text: string; soon: string } | null>(null);
@@ -82,12 +86,9 @@
       'Potrai mandare la scheda con un link, un QR o un file.',
       'La condivisione arriva nel prossimo aggiornamento.',
     );
-  const startInfo = () =>
-    showInfo(
-      'Allenamento in arrivo',
-      'Readiness, introduzione del PT, esercizi uno per volta con il recupero e il riepilogo finale.',
-      'Disponibile con la prossima versione dell’app. Intanto puoi aprire la scheda con «Vedi scheda».',
-    );
+  // Avvio: una sola sessione in corso per volta (StartGate chiede Riprendi / Abbandona e inizia).
+  let gate: StartGate;
+  const active = liveState<Session | null>(activeSession, null);
 
   let current = $state<Workout | null>(null);
   let actionsOpen = $state(false);
@@ -166,6 +167,10 @@
       </div>
     </header>
 
+    {#if active.current}
+      <ResumeCard session={active.current} />
+    {/if}
+
     {#if draft.current}
       <NoteBox title="Bozza non salvata" mark="!">
         <p class="note-text">
@@ -206,7 +211,7 @@
               </Card>
             {:else}
               {#if plan.next}
-                <NextCard next={plan.next} onstart={startInfo} />
+                <NextCard next={plan.next} onstart={() => plan.next && void gate.request(plan.next.workout, active.loaded ? active.current : undefined)} />
               {/if}
               <div class="list-head">
                 <h2 class="mono-label">Le tue schede</h2>
@@ -245,6 +250,8 @@
     </div>
   </BottomSheet>
 {/if}
+
+<StartGate bind:this={gate} />
 
 <ConfirmSheet bind:open={confirmOpen} title={confirm.title} text={confirm.text} actions={confirm.actions} />
 

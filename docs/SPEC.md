@@ -297,7 +297,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -424,3 +424,40 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
   - **Vitest**: `tests/unit/workouts/` (libreria e caricamento, ricerca, calcoli, piramidali, riordino, versioni, bozza, validazione, salvataggio, personalizzati, settimana);
   - **Playwright**: `tests/e2e/train.spec.ts` (creazione con libreria e personalizzato, stepper, piramidali, Giù e trascinamento, anteprima, salvataggio, ricarica offline, v1 → v2 → v3, duplica ed elimina, errori, bozza, 44 px e nessuno scroll orizzontale, due schede nuove di seguito).
 - **Da verificare su iPhone dopo il deploy**: app installata → Allena → + Nuova scheda → trascinamento con il dito sulla maniglia; tastiera sui campi nota/link (banner nascosto, campo visibile); chiudere l'app dal multitasking durante una modifica e riaprire (bozza); modalità aereo.
+
+### Note M5 · Flusso sessione e Storico
+- **Codice**:
+  - **logica pura** in `src/lib/sessions/`: `readiness`, `create` (nuova sessione con copia della scheda), `items` e `last-time` (abbinamento esercizi, "ultima volta", precompilazione), `edit` (modifiche immutabili), `stats` (volume, serie, durata, serie migliore, segmenti), `rest-timer`, `input` (kg/rip), `records`, `compare`, `summary`, `calendar`, `format`, `share`, `next-meal`, `writer` (coda delle scritture);
+  - **browser**: `audio.ts` (Web Audio), `wake-lock.ts`, `edge-swipe.ts`, `flow.svelte.ts` (Readiness e riscaldamento in memoria), `nav.ts`;
+  - **schermate** in `src/routes/session/`: `Readiness` (`#/sessione/readiness?scheda=`), `Intro` (`#/sessione/intro?scheda=`), `Live` (`#/sessione/live?id=`), `Summary` (`#/sessione/riepilogo?id=[&da=storico]`); `ResumeCard` e `StartGate` pronti anche per la Home (M6). `#/allena?tab=storico` apre lo Storico.
+- **Schema** (DB v2, indici invariati): `sessions` + `snapshot { items, cardio }` (copia della scheda all'avvio: riepilogo e storico restano corretti se la scheda cambia o sparisce) + `live { itemIndex, rest }` (`null` a sessione conclusa). Entrambi `null` di default: i backup v1 restano validi, formato di backup invariato. L'`upgrade` v2 aggiunge i campi alle righe esistenti (testato). Nuovo file `kind: "session"` (`schemas/session-file.ts`, `schemaVersion 1`): sessione conclusa con la copia della scheda, validata prima della consegna; l'import lato PT arriva con M8 o dopo.
+- **Regole decise**:
+  - **PR** = carico a parità di ripetizioni: una serie fatta con kg > 0 è PR se supera il massimo storico tra le serie fatte con ripetizioni ≥ alle sue, stesso esercizio (id della libreria o nome normalizzato), solo sessioni concluse prima. Senza serie confrontabile niente PR. Un badge per esercizio; "Record" = esercizi con PR. Calcolati, non salvati (eliminare una sessione li ricalcola).
+  - **Corsa**: rimandata. Lo Storico mostra solo palestra (magenta) e riposo (grigio); la voce "corsa" non è in legenda.
+  - **Recupero**: preset e ±15 s valgono per il recupero in corso; "Predefinito del PT: N s" lo fa ripartire con il tempo dell'esercizio. Timer a istanti (`endsAt`), non a contatore: dopo una sospensione di iOS il tempo è giusto.
+  - **Serie fatte/previste**: previste = piano; una serie aggiunta conta se spuntata (può risultare 8/7), se non spuntata non è "saltata" e non compare nel riepilogo. Il segmento non supera il pieno.
+  - **"Ultima volta"** = ultima sessione conclusa della stessa scheda; esercizi abbinati per id (o nome) e occorrenza, quindi regge il riordino. Precompila kg/rip dalla serie fatta, altrimenti dal piano (piramidali comprese).
+  - **Confronto** nel riepilogo: serie mancanti → giallo "−N serie" (ha la precedenza); altrimenti serie migliore (kg più alti, poi ripetizioni) → ciano "+x kg"/"+n rip", grigio "=" o peggio, "prima volta" senza storico.
+- **Persistenza**: la riga nasce su "Inizia allenamento"; prima (Readiness, riscaldamento) tutto resta in memoria. Ogni modifica si salva subito (testo e numeri dopo 300 ms, e subito su `visibilitychange`/`pagehide`/uscita). Una sola sessione in corso: "Avvia" con un'altra in corso chiede Riprendi / Abbandona e inizia. Il flusso naviga con `location.replace`: indietro (o lo swipe di Safari) dal Live non torna mai al Readiness.
+- **iPhone**:
+  - **audio**: sbloccato su "Inizia allenamento" (dopo "Riprendi", al primo tocco nel Live). Web Audio resta nella sessione "ambient": si mescola alla musica ma **il tasto silenzioso lo azzittisce**; scelta voluta (la sessione "playback" fermerebbe la musica). L'impulso del cerchio, "PRONTO" e l'annuncio `aria-live` bastano da soli; il pannello lo dice. Recupero finito con l'app in background: al ritorno niente suono in ritardo.
+  - **Wake Lock**: chiesto su "Inizia"/"Riprendi" e di nuovo a ogni ritorno in primo piano; rilasciato all'uscita dal Live. Senza API non succede nulla.
+  - **tastiera**: campi a 16 px (`inputmode="decimal"`/`numeric`), il campo in focus va al centro, il banner inferiore scivola via (come nell'editor M4).
+  - **swipe indietro** dal bordo sinistro su Readiness, Intro e Riepilogo; mai nel Live (solo freccia con conferma: Esci / Abbandona / Continua).
+- **Invia al PT**: testo leggibile + file `healthy-sessione-<scheda>-AAAA-MM-GG.json` nel foglio di condivisione (Web Share con file, altrimenti solo testo); senza Web Share un pannello con "Copia testo" e "Scarica il file". Testo e file preparati prima del tocco. Mai invio automatico.
+- **Prossimo pasto** nel Riepilogo: solo se la sessione è finita oggi e c'è un piano attivo; pasto del momento, altrimenti il prossimo non mangiato (con lo scambio del giorno). Tocco → Dieta.
+- **Scostamenti dal mockup**:
+  - RPE su 2 righe da 5 (10 in fila sarebbero larghi 32 px, sotto i 44 px);
+  - campi kg/rip veri (`<input>`) invece di pulsanti, a 16 px;
+  - card DURATA con sottotitolo "N esercizi" (i recuperi effettivi non si registrano: niente "recupero medio");
+  - badge parziale del riepilogo con testo chiaro (contrasto);
+  - "Elimina sessione" in fondo al Riepilogo (il mockup non la prevedeva);
+  - l'elenco dello Storico mostra le sessioni del mese scelto nel calendario;
+  - il calendario ha le frecce mese precedente/successivo (la successiva si ferma al mese corrente);
+  - transizioni di schermata con Svelte (`in:` scorrimento + dissolvenza), non View Transitions API.
+- **Correzioni**: `#app` con `overflow-x: clip` (le schermate che entrano di lato allargavano il layout); `deliver-file.ts` esporta anche `downloadFile`.
+- **Test**:
+  - **fixture finte** `tests/fixtures/sessions/` (scheda con piramidale, esercizio senza id e cardio; storico di 5 settimane con sessioni complete, parziali, serie aggiunte e PR noti; sessione in corso);
+  - **Vitest** `tests/unit/sessions/` (readiness, creazione e copia, ultima volta e riordino, precompilazione, modifiche, volume e serie, segmenti, timer con orologio simulato e sospensione, coda delle scritture, ripresa dal database, una sola sessione in corso, PR, confronto, riepilogo, calendario e mese, formati, file e testo per il PT, condivisione, prossimo pasto, swipe, audio e Wake Lock con oggetti finti) + migrazione v1 → v2 in `tests/unit/data/db.test.ts`;
+  - **Playwright** `tests/e2e/session.spec.ts` (390×844, `page.clock`, offline): sessione completa (readiness, intro, spunta, recupero e pannello, doppia spunta, PREC/SUCC, serie aggiunta, nota, ricarica a metà, uscita e "Riprendi", termina con cardio e RPE) → Riepilogo → Invia al PT (foglio simulato) → Fine → Storico dopo ricarica, mesi, swipe indietro, elimina; seconda sessione con "ultima volta", precompilazione, PR e confronto; abbandona e avvio con sessione in corso; 44 px, niente scroll orizzontale, banner fermi.
+- **Da verificare su iPhone dopo il deploy**: app installata → Avvia → schermo che resta acceso; suono a fine recupero con e senza tasto silenzioso (e con musica in riproduzione); tastiera sui kg; chiudere l'app dal multitasking a metà e riaprire → "Riprendi allenamento" con recupero giusto; "Invia al PT" verso Messaggi/WhatsApp (testo + file); swipe dal bordo sul Riepilogo; modalità aereo.

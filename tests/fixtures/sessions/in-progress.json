@@ -1,0 +1,149 @@
+{
+  "id": "9e500099-1111-4111-8111-111111111111",
+  "workoutId": "c5555555-5555-4555-8555-555555555555",
+  "workoutVersion": 2,
+  "workoutName": "Spinta finta",
+  "startedAt": "2026-10-12T16:00:00.000Z",
+  "endedAt": null,
+  "readiness": {
+    "sleep": 4,
+    "mood": 4,
+    "energy": 3,
+    "stress": 4,
+    "soreness": 3
+  },
+  "sets": [
+    {
+      "exerciseId": "fx-barbell-bench-press-medium-grip",
+      "itemIndex": 0,
+      "setIndex": 0,
+      "kg": 57.5,
+      "reps": 10,
+      "done": true
+    },
+    {
+      "exerciseId": "fx-barbell-bench-press-medium-grip",
+      "itemIndex": 0,
+      "setIndex": 1,
+      "kg": 62.5,
+      "reps": 8,
+      "done": true
+    },
+    {
+      "exerciseId": "fx-barbell-bench-press-medium-grip",
+      "itemIndex": 0,
+      "setIndex": 2,
+      "kg": 65,
+      "reps": 6,
+      "done": true
+    },
+    {
+      "exerciseId": "fx-wide-grip-lat-pulldown",
+      "itemIndex": 1,
+      "setIndex": 0,
+      "kg": 52.5,
+      "reps": 10,
+      "done": false
+    },
+    {
+      "exerciseId": "fx-wide-grip-lat-pulldown",
+      "itemIndex": 1,
+      "setIndex": 1,
+      "kg": 52.5,
+      "reps": 10,
+      "done": false
+    },
+    {
+      "exerciseId": null,
+      "itemIndex": 2,
+      "setIndex": 0,
+      "kg": 17.5,
+      "reps": 12,
+      "done": false
+    },
+    {
+      "exerciseId": null,
+      "itemIndex": 2,
+      "setIndex": 1,
+      "kg": 17.5,
+      "reps": 12,
+      "done": false
+    }
+  ],
+  "userNotes": [],
+  "rpe": null,
+  "cardioDone": null,
+  "snapshot": {
+    "items": [
+      {
+        "exerciseId": "fx-barbell-bench-press-medium-grip",
+        "name": "Panca piana con bilanciere",
+        "muscles": [
+          "Petto",
+          "Tricipiti"
+        ],
+        "sets": 3,
+        "reps": 8,
+        "kg": 60,
+        "restSec": 120,
+        "note": "Scapole addotte.",
+        "videoUrl": "https://example.com/video/panca",
+        "setsDetail": [
+          {
+            "reps": 10,
+            "kg": 55
+          },
+          {
+            "reps": 8,
+            "kg": 60
+          },
+          {
+            "reps": 6,
+            "kg": 65
+          }
+        ]
+      },
+      {
+        "exerciseId": "fx-wide-grip-lat-pulldown",
+        "name": "Lat machine presa larga",
+        "muscles": [
+          "Dorsali",
+          "Bicipiti"
+        ],
+        "sets": 2,
+        "reps": 10,
+        "kg": 50,
+        "restSec": 90,
+        "note": "",
+        "videoUrl": null,
+        "setsDetail": null
+      },
+      {
+        "exerciseId": null,
+        "name": "Croci ai cavi",
+        "muscles": [
+          "Petto"
+        ],
+        "sets": 2,
+        "reps": 12,
+        "kg": 15,
+        "restSec": 60,
+        "note": "Gomiti morbidi.",
+        "videoUrl": null,
+        "setsDetail": null
+      }
+    ],
+    "cardio": {
+      "type": "tapis roulant",
+      "minutes": 12
+    }
+  },
+  "live": {
+    "itemIndex": 1,
+    "rest": {
+      "totalSec": 90,
+      "endsAt": "2026-10-12T16:20:00.000Z",
+      "pausedRemainingMs": null
+    }
+  }
+}

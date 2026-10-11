@@ -4,7 +4,10 @@ import { DB_NAME, db, HealthyDb } from '../../../src/lib/data/db';
 import { TABLE_NAMES } from '../../../src/lib/data/schemas';
 import type { Measurement } from '../../../src/lib/data/schemas/measurements';
 import { DB_VERSIONS, latestVersion, type DbVersion } from '../../../src/lib/data/versions';
+import { validate } from '../../../src/lib/data/errors';
+import { sessionSchema } from '../../../src/lib/data/schemas/sessions';
 import measurementsFixture from '../../fixtures/measurements.json';
+import sessionFixture from '../../fixtures/session.json';
 
 const opened: HealthyDb[] = [];
 
@@ -83,6 +86,19 @@ describe('migrazioni', () => {
     expect(rows[0]).toEqual(measurementsFixture[0]);
     expect(rows[1]!.notes).toBe('(migrata)');
     expect((await next.measurements.where('weightKg').above(80).toArray()).map((m) => m.date)).toEqual(['2026-08-14']);
+  });
+
+  it('v2 vera (M5): le sessioni già salvate ricevono snapshot e live vuoti, valide per lo schema', async () => {
+    const old = open('migration-sessions', [v1]);
+    await old.table('sessions').add(structuredClone(sessionFixture));
+    old.close();
+
+    const next = open('migration-sessions', DB_VERSIONS);
+    await next.open();
+    expect(next.verno).toBe(2);
+    const [row] = await next.sessions.toArray();
+    expect(row).toEqual({ ...sessionFixture, snapshot: null, live: null });
+    expect(validate(sessionSchema, row).ok).toBe(true);
   });
 
   it('se la migrazione fallisce il database resta alla versione precedente, dati intatti', async () => {

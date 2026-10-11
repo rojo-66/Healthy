@@ -11,6 +11,10 @@
   const loadTrain = () => import('./routes/Train.svelte');
   const loadEditor = () => import('./routes/WorkoutEditor.svelte');
   const loadView = () => import('./routes/WorkoutView.svelte');
+  const loadReadiness = () => import('./routes/session/Readiness.svelte');
+  const loadIntro = () => import('./routes/session/Intro.svelte');
+  const loadLive = () => import('./routes/session/Live.svelte');
+  const loadSummary = () => import('./routes/session/Summary.svelte');
 </script>
 
 {#if route.path === '/showcase'}
@@ -44,6 +48,30 @@
   {#await loadView() then { default: WorkoutView }}
     {#key route.nav}
       <WorkoutView id={route.query['id'] ?? ''} />
+    {/key}
+  {/await}
+{:else if route.path === '/sessione/readiness'}
+  {#await loadReadiness() then { default: Readiness }}
+    {#key route.nav}
+      <Readiness workoutId={route.query['scheda'] ?? ''} />
+    {/key}
+  {/await}
+{:else if route.path === '/sessione/intro'}
+  {#await loadIntro() then { default: Intro }}
+    {#key route.nav}
+      <Intro workoutId={route.query['scheda'] ?? ''} />
+    {/key}
+  {/await}
+{:else if route.path === '/sessione/live'}
+  {#await loadLive() then { default: Live }}
+    {#key route.nav}
+      <Live id={route.query['id'] ?? ''} />
+    {/key}
+  {/await}
+{:else if route.path === '/sessione/riepilogo'}
+  {#await loadSummary() then { default: Summary }}
+    {#key route.nav}
+      <Summary id={route.query['id'] ?? ''} fromHistory={route.query['da'] === 'storico'} />
     {/key}
   {/await}
 {:else}

@@ -10,7 +10,11 @@ export type RoutePath =
   | '/dieta/completa'
   | '/allena'
   | '/allena/editor'
-  | '/allena/vedi';
+  | '/allena/vedi'
+  | '/sessione/readiness'
+  | '/sessione/intro'
+  | '/sessione/live'
+  | '/sessione/riepilogo';
 
 const KNOWN: readonly string[] = [
   '/',
@@ -21,6 +25,10 @@ const KNOWN: readonly string[] = [
   '/allena',
   '/allena/editor',
   '/allena/vedi',
+  '/sessione/readiness',
+  '/sessione/intro',
+  '/sessione/live',
+  '/sessione/riepilogo',
 ];
 
 /** Rotta corrispondente a un hash; `null` se l'hash non è una rotta (es. `#import=…`). Sconosciuta → Home. */

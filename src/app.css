@@ -19,6 +19,11 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Le schermate entrano scorrendo di lato (e lo swipe indietro le sposta): mai scroll orizzontale. */
+#app {
+  overflow-x: clip;
+}
+
 button,
 input,
 textarea,

@@ -90,3 +90,21 @@ export function pop(_node: Element, { duration: ms = 350 } = {}): TransitionConf
     css: (t) => `opacity: ${Math.min(1, t * 1.5)}; transform: scale(${0.6 + 0.4 * t})`,
   };
 }
+
+/** Ingresso orizzontale (cambio esercizio nella sessione): `dir` 1 = da destra (SUCC), -1 = da sinistra (PREC). */
+export function slideX(_node: Element, { duration: ms = 300, dir = 1, x = 24 } = {}): TransitionConfig {
+  return {
+    duration: duration(ms),
+    easing: easeOut,
+    css: (t) => `opacity: ${t}; transform: translateX(${(1 - t) * x * dir}px)`,
+  };
+}
+
+/** Impulso che si allarga e svanisce (fine del recupero). */
+export function burst(_node: Element, { duration: ms = 900 } = {}): TransitionConfig {
+  return {
+    duration: duration(ms),
+    easing: easeOut,
+    css: (t) => `opacity: ${Math.min(1, (1 - t) * 1.6)}; transform: scale(${1 + 0.45 * t})`,
+  };
+}

@@ -7,8 +7,8 @@
   import type { Workout } from '../lib/data/schemas/workouts';
   import { routeHref } from '../lib/routes';
   import ActionBar from './train/ActionBar.svelte';
-  import InfoSheet from './train/InfoSheet.svelte';
   import WorkoutPreview from './train/WorkoutPreview.svelte';
+  import StartGate from './session/StartGate.svelte';
 
   // "Vedi scheda": la scheda come la vede chi si allena, in sola lettura.
   interface Props {
@@ -18,7 +18,7 @@
   let { id }: Props = $props();
 
   const workout = liveState<Workout | undefined>(() => (id ? workoutsRepo.get(id) : undefined), undefined);
-  let startOpen = $state(false);
+  let gate: StartGate;
 </script>
 
 <div class="screen tone-training">
@@ -38,17 +38,12 @@
   {#if workout.current}
     <ActionBar>
       <Button variant="secondary" tone="neutral" href={routeHref('/allena/editor', { id: workout.current.id })}>Modifica</Button>
-      <Button tone="training" size="lg" onclick={() => (startOpen = true)}>Avvia</Button>
+      <Button tone="training" size="lg" onclick={() => workout.current && void gate.request(workout.current)}>Avvia</Button>
     </ActionBar>
   {/if}
 </div>
 
-<InfoSheet
-  bind:open={startOpen}
-  title="Allenamento in arrivo"
-  text="Readiness, introduzione del PT, esercizi uno per volta con il recupero e il riepilogo finale."
-  soon="Disponibile con la prossima versione dell’app."
-/>
+<StartGate bind:this={gate} />
 
 <style>
   .screen {

@@ -18,6 +18,8 @@
     profile: 'M4 21c1-4 4-6 8-6s7 2 8 6M12 4a4 4 0 1 1 0 8 4 4 0 0 1 0-8z',
     qr: 'M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2',
     edit: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
+    // Doppia spunta (segna/togli tutte le serie).
+    doubleCheck: 'M1.5 13l4 4.5L14.5 6M10.5 16l1.8 1.8L22.5 6',
   } as const;
 
   export type IconName = keyof typeof PATHS;
