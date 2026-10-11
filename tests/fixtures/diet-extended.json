@@ -1,0 +1,1194 @@
+{
+  "app": "healthy-app",
+  "kind": "diet",
+  "schemaVersion": 2,
+  "id": "e2e11111-1111-4111-8111-111111111111",
+  "version": 2,
+  "title": "Piano di esempio",
+  "author": "Nutrizionista di esempio",
+  "validFrom": "2026-10-01",
+  "dayTypes": {
+    "gym": {
+      "label": "Palestra",
+      "targets": {
+        "kcal": 1800,
+        "protein": 140,
+        "carbs": 200,
+        "fat": 50,
+        "fiber": 25
+      }
+    },
+    "run": {
+      "label": "Corsa",
+      "targets": {
+        "kcal": 1900,
+        "protein": 120,
+        "carbs": 230,
+        "fat": 60,
+        "fiber": 25
+      }
+    },
+    "rest": {
+      "label": "Riposo",
+      "targets": {
+        "kcal": 1550,
+        "protein": 130,
+        "carbs": 150,
+        "fat": 50,
+        "fiber": 25
+      }
+    }
+  },
+  "categories": [
+    "Carne e pesce",
+    "Scatolame",
+    "Latticini e uova",
+    "Frutta e verdura",
+    "Pane, pasta e cereali",
+    "Dispensa"
+  ],
+  "products": {
+    "pollo": {
+      "name": "Petto di pollo",
+      "cat": "Carne e pesce",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 110,
+        "protein": 23,
+        "carbs": 0,
+        "fat": 1.5,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "tonno": {
+      "name": "Tonno al naturale",
+      "cat": "Scatolame",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 103,
+        "protein": 23,
+        "carbs": 0,
+        "fat": 1,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "zucchine": {
+      "name": "Zucchine",
+      "cat": "Frutta e verdura",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 17,
+        "protein": 1.2,
+        "carbs": 3,
+        "fat": 0.3,
+        "fiber": 1.1
+      },
+      "pieceGrams": null
+    },
+    "banana": {
+      "name": "Banana",
+      "cat": "Frutta e verdura",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 89,
+        "protein": 1.1,
+        "carbs": 23,
+        "fat": 0.3,
+        "fiber": 2.6
+      },
+      "pieceGrams": null
+    },
+    "yogurt": {
+      "name": "Yogurt greco 0%",
+      "cat": "Latticini e uova",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 57,
+        "protein": 10,
+        "carbs": 4,
+        "fat": 0.2,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "uova": {
+      "name": "Uova",
+      "cat": "Latticini e uova",
+      "unit": "pz",
+      "shop": true,
+      "per100": {
+        "kcal": 143,
+        "protein": 12.6,
+        "carbs": 0.7,
+        "fat": 9.5,
+        "fiber": 0
+      },
+      "pieceGrams": 55
+    },
+    "avena": {
+      "name": "Fiocchi d'avena",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 370,
+        "protein": 13,
+        "carbs": 60,
+        "fat": 7,
+        "fiber": 10
+      },
+      "pieceGrams": null
+    },
+    "riso": {
+      "name": "Riso",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 350,
+        "protein": 7,
+        "carbs": 78,
+        "fat": 0.6,
+        "fiber": 1.4
+      },
+      "pieceGrams": null
+    },
+    "pasta": {
+      "name": "Pasta integrale",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 340,
+        "protein": 13,
+        "carbs": 64,
+        "fat": 2.5,
+        "fiber": 7
+      },
+      "pieceGrams": null
+    },
+    "pane": {
+      "name": "Pane integrale",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 245,
+        "protein": 9,
+        "carbs": 41,
+        "fat": 3.5,
+        "fiber": 7
+      },
+      "pieceGrams": null
+    },
+    "latte": {
+      "name": "Latte parzialmente scremato",
+      "cat": "Latticini e uova",
+      "unit": "ml",
+      "shop": true,
+      "per100": {
+        "kcal": 46,
+        "protein": 3.3,
+        "carbs": 5,
+        "fat": 1.6,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "olio": {
+      "name": "Olio EVO",
+      "cat": "Dispensa",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 884,
+        "protein": 0,
+        "carbs": 0,
+        "fat": 100,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "whey": {
+      "name": "Proteine whey",
+      "cat": "Integratori",
+      "unit": "g",
+      "shop": false,
+      "per100": {
+        "kcal": 380,
+        "protein": 78,
+        "carbs": 6,
+        "fat": 5,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "pizza": {
+      "name": "Pizza margherita",
+      "cat": "Pasto libero",
+      "unit": "pz",
+      "shop": false,
+      "per100": {
+        "kcal": 250,
+        "protein": 10,
+        "carbs": 33,
+        "fat": 8,
+        "fiber": 2
+      },
+      "pieceGrams": 320
+    }
+  },
+  "days": [
+    {
+      "weekday": 1,
+      "type": "gym",
+      "note": "Cuoci 160 g di riso: metà oggi, metà per domani.",
+      "supplements": [
+        {
+          "name": "Proteine whey",
+          "when": "dopo palestra",
+          "dose": "30 g",
+          "skip": false
+        },
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": true
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": [
+            "07:00",
+            "09:00"
+          ],
+          "name": "Yogurt, avena e banana",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "yogurt",
+              "q": 200
+            },
+            {
+              "p": "avena",
+              "q": 40
+            },
+            {
+              "p": "banana",
+              "q": 100
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino",
+          "time": "10:30",
+          "window": [
+            "10:00",
+            "11:00"
+          ],
+          "name": "Banana",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana",
+              "q": 120
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:00",
+            "13:30"
+          ],
+          "name": "Pollo, riso e zucchine",
+          "recipe": 2,
+          "items": [
+            {
+              "p": "pollo",
+              "q": 150
+            },
+            {
+              "p": "riso",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 10
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Post-workout",
+          "time": "18:00",
+          "window": [
+            "17:30",
+            "19:00"
+          ],
+          "name": "Whey in acqua",
+          "recipe": null,
+          "items": [
+            {
+              "p": "whey",
+              "q": 30
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "21:30"
+          ],
+          "name": "Pasta al tonno",
+          "recipe": 3,
+          "items": [
+            {
+              "p": "pasta",
+              "q": 80
+            },
+            {
+              "p": "tonno",
+              "q": 120
+            },
+            {
+              "p": "zucchine",
+              "q": 150
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 2,
+      "type": "gym",
+      "note": "Porta il pranzo in un contenitore.",
+      "supplements": [
+        {
+          "name": "Proteine whey",
+          "when": "dopo palestra",
+          "dose": "30 g",
+          "skip": false
+        },
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": true
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": [
+            "07:00",
+            "09:00"
+          ],
+          "name": "Yogurt, avena e banana",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "yogurt",
+              "q": 200
+            },
+            {
+              "p": "avena",
+              "q": 40
+            },
+            {
+              "p": "banana",
+              "q": 100
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino",
+          "time": "10:30",
+          "window": [
+            "10:00",
+            "11:00"
+          ],
+          "name": "Banana",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana",
+              "q": 120
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:00",
+            "13:30"
+          ],
+          "name": "Pollo, riso e zucchine",
+          "recipe": 2,
+          "items": [
+            {
+              "p": "pollo",
+              "q": 150
+            },
+            {
+              "p": "riso",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 10
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Post-workout",
+          "time": "18:00",
+          "window": [
+            "17:30",
+            "19:00"
+          ],
+          "name": "Whey in acqua",
+          "recipe": null,
+          "items": [
+            {
+              "p": "whey",
+              "q": 30
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "21:30"
+          ],
+          "name": "Frittata con pane",
+          "recipe": 4,
+          "items": [
+            {
+              "p": "uova",
+              "q": 3
+            },
+            {
+              "p": "pane",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 3,
+      "type": "rest",
+      "note": "Riposo: niente whey.",
+      "supplements": [
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "08:00",
+          "window": [
+            "07:30",
+            "09:00"
+          ],
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte",
+              "q": 250
+            },
+            {
+              "p": "avena",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino",
+          "time": "10:30",
+          "window": [
+            "10:00",
+            "11:00"
+          ],
+          "name": "Banana",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana",
+              "q": 120
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:00",
+            "13:30"
+          ],
+          "name": "Pasta al tonno",
+          "recipe": 3,
+          "items": [
+            {
+              "p": "pasta",
+              "q": 70
+            },
+            {
+              "p": "tonno",
+              "q": 120
+            },
+            {
+              "p": "zucchine",
+              "q": 150
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino",
+          "time": null,
+          "window": null,
+          "name": "",
+          "recipe": null,
+          "items": []
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "21:30"
+          ],
+          "name": "Frittata con pane",
+          "recipe": 4,
+          "items": [
+            {
+              "p": "uova",
+              "q": 3
+            },
+            {
+              "p": "pane",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 4,
+      "type": "gym",
+      "note": "",
+      "supplements": [
+        {
+          "name": "Proteine whey",
+          "when": "dopo palestra",
+          "dose": "30 g",
+          "skip": false
+        },
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": true
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": [
+            "07:00",
+            "09:00"
+          ],
+          "name": "Yogurt, avena e banana",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "yogurt",
+              "q": 200
+            },
+            {
+              "p": "avena",
+              "q": 40
+            },
+            {
+              "p": "banana",
+              "q": 100
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino",
+          "time": "10:30",
+          "window": [
+            "10:00",
+            "11:00"
+          ],
+          "name": "Banana",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana",
+              "q": 120
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:00",
+            "13:30"
+          ],
+          "name": "Pollo, riso e zucchine",
+          "recipe": 2,
+          "items": [
+            {
+              "p": "pollo",
+              "q": 150
+            },
+            {
+              "p": "riso",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 10
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Post-workout",
+          "time": "18:00",
+          "window": [
+            "17:30",
+            "19:00"
+          ],
+          "name": "Whey in acqua",
+          "recipe": null,
+          "items": [
+            {
+              "p": "whey",
+              "q": 30
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "21:30"
+          ],
+          "name": "Pasta al tonno",
+          "recipe": 3,
+          "items": [
+            {
+              "p": "pasta",
+              "q": 80
+            },
+            {
+              "p": "tonno",
+              "q": 120
+            },
+            {
+              "p": "zucchine",
+              "q": 150
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 5,
+      "type": "gym",
+      "note": "Porzione singola: sabato si cucina fresco.",
+      "supplements": [
+        {
+          "name": "Proteine whey",
+          "when": "dopo palestra",
+          "dose": "30 g",
+          "skip": false
+        },
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": true
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": [
+            "07:00",
+            "09:00"
+          ],
+          "name": "Yogurt, avena e banana",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "yogurt",
+              "q": 200
+            },
+            {
+              "p": "avena",
+              "q": 40
+            },
+            {
+              "p": "banana",
+              "q": 100
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino",
+          "time": "10:30",
+          "window": [
+            "10:00",
+            "11:00"
+          ],
+          "name": "Banana",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana",
+              "q": 120
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:00",
+            "13:30"
+          ],
+          "name": "Pollo, riso e zucchine",
+          "recipe": 2,
+          "items": [
+            {
+              "p": "pollo",
+              "q": 150
+            },
+            {
+              "p": "riso",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 10
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Post-workout",
+          "time": "18:00",
+          "window": [
+            "17:30",
+            "19:00"
+          ],
+          "name": "Whey in acqua",
+          "recipe": null,
+          "items": [
+            {
+              "p": "whey",
+              "q": 30
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "21:30"
+          ],
+          "name": "Frittata con pane",
+          "recipe": 4,
+          "items": [
+            {
+              "p": "uova",
+              "q": 3
+            },
+            {
+              "p": "pane",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 6,
+      "type": "run",
+      "note": "Corsa 6 km dopo colazione.",
+      "supplements": [
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": [
+            "07:00",
+            "09:00"
+          ],
+          "name": "Yogurt, avena e banana",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "yogurt",
+              "q": 200
+            },
+            {
+              "p": "avena",
+              "q": 40
+            },
+            {
+              "p": "banana",
+              "q": 100
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e pane",
+          "recipe": null,
+          "items": [
+            {
+              "p": "pollo",
+              "q": 150
+            },
+            {
+              "p": "pane",
+              "q": 80
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 10
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "22:00"
+          ],
+          "name": "Pasto libero",
+          "recipe": null,
+          "items": [
+            {
+              "p": "pizza",
+              "q": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 7,
+      "type": "rest",
+      "note": "",
+      "supplements": [
+        {
+          "name": "Vitamina D3",
+          "when": "cena",
+          "dose": "2.000 UI",
+          "skip": false
+        },
+        {
+          "name": "Omega-3",
+          "when": "cena",
+          "dose": "1 capsula",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "08:30",
+          "window": [
+            "08:00",
+            "10:00"
+          ],
+          "name": "Uova e pane tostato",
+          "recipe": null,
+          "items": [
+            {
+              "p": "uova",
+              "q": 2
+            },
+            {
+              "p": "pane",
+              "q": 60
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo, riso e zucchine",
+          "recipe": 2,
+          "items": [
+            {
+              "p": "pollo",
+              "q": 150
+            },
+            {
+              "p": "riso",
+              "q": 70
+            },
+            {
+              "p": "zucchine",
+              "q": 200
+            },
+            {
+              "p": "olio",
+              "q": 10
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:30",
+          "window": [
+            "20:00",
+            "21:30"
+          ],
+          "name": "Pasta al tonno",
+          "recipe": 3,
+          "items": [
+            {
+              "p": "pasta",
+              "q": 80
+            },
+            {
+              "p": "tonno",
+              "q": 120
+            },
+            {
+              "p": "zucchine",
+              "q": 150
+            },
+            {
+              "p": "olio",
+              "q": 5
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "n": 1,
+      "name": "Bowl di yogurt, avena e banana",
+      "meta": "3 min · zero cottura",
+      "dose": "",
+      "steps": [
+        "Versa lo yogurt in una ciotola e aggiungi l'avena.",
+        "Lascia riposare due minuti.",
+        "Aggiungi la banana a rondelle."
+      ],
+      "tip": "Prepara l'avena la sera prima se vai di fretta."
+    },
+    {
+      "n": 2,
+      "name": "Pollo, riso e zucchine",
+      "meta": "25 min · pentola e padella",
+      "dose": "Totale: 150 g di pollo, 80 g di riso, 200 g di zucchine, 10 g di olio",
+      "steps": [
+        "Bolli il riso 12-15 minuti.",
+        "Pollo a straccetti in padella con metà dell'olio.",
+        "Zucchine a rondelle con il resto dell'olio."
+      ],
+      "tip": ""
+    },
+    {
+      "n": 3,
+      "name": "Pasta al tonno",
+      "meta": "15 min · pentola e padella",
+      "dose": "Totale: 80 g di pasta, 120 g di tonno, 150 g di zucchine, 5 g di olio",
+      "steps": [
+        "Metti l'acqua sul fuoco.",
+        "In padella zucchine e tonno per 5 minuti.",
+        "Scola la pasta e condisci."
+      ],
+      "tip": "Il tonno al naturale ha meno grassi di quello sott'olio."
+    },
+    {
+      "n": 4,
+      "name": "Frittata con pane",
+      "meta": "15 min · padella",
+      "dose": "3 uova, 200 g di zucchine, 80 g di pane, 5 g di olio",
+      "steps": [
+        "Salta le zucchine 5 minuti.",
+        "Sbatti le uova e uniscile alle zucchine.",
+        "Cuoci a fuoco basso con il coperchio."
+      ],
+      "tip": ""
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "app": "dieta-e-spesa",
+  "schemaVersion": 1,
+  "esportato": "2026-10-08T09:30:00",
+  "dieta": {
+    "categorie": ["Carne e pesce"],
+    "prodotti": {
+      "pollo": { "nome": "Petto di pollo", "cat": "Carne e pesce", "unita": "kg", "spesa": true }
+    },
+    "giorni": [
+      {
+        "nota": "",
+        "pasti": {
+          "pranzo": { "nome": "Pollo", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }], "abilita": "12:00", "fine": "13:30" }
+        }
+      }
+    ]
+  }
+}

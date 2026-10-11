@@ -5,6 +5,7 @@
     forward: 'M9 4l8 8-8 8',
     chevronDown: 'M6 9l6 6 6-6',
     close: 'M6 6l12 12M18 6L6 18',
+    file: 'M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9zM14 3v6h6',
     check: 'M4 12l5 5L20 6',
     plus: 'M12 5v14M5 12h14',
     minus: 'M5 12h14',

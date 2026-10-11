@@ -18,6 +18,11 @@ describe('parseHash', () => {
     expect(parseHash('#/dev-data')).toBe('/dev-data');
   });
 
+  it('dieta e completamento guidato', () => {
+    expect(parseHash('#/dieta')).toBe('/dieta');
+    expect(parseHash('#/dieta/completa')).toBe('/dieta/completa');
+  });
+
   it('rotta sconosciuta → Home', () => {
     expect(parseHash('#/nonesiste')).toBe('/');
   });

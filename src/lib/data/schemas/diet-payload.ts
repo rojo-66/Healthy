@@ -41,9 +41,14 @@ export const targetsSchema = z.object({
   fiber: num(0, 500).nullable().default(null),
 });
 
+/** Da dove vengono i target: dal file del piano (nutrizionista), inseriti a mano o stima accettata (§ 6.1). */
+export const targetsSourceSchema = z.enum(['plan', 'manual', 'estimated']);
+
 export const dayTypeSchema = z.object({
   label: requiredText(MAX_TEXT.short),
   targets: targetsSchema.nullable().default(null),
+  /** Aggiunto in M3: i piani salvati prima valgono come "dal piano". */
+  targetsSource: targetsSourceSchema.default('plan'),
 });
 
 export const productSchema = z.object({
@@ -163,3 +168,8 @@ export type DietDay = z.infer<typeof daySchema>;
 export type DietMeal = z.infer<typeof mealSchema>;
 export type DietProduct = z.infer<typeof productSchema>;
 export type DietRecipe = z.infer<typeof recipeSchema>;
+export type DietDayType = z.infer<typeof dayTypeSchema>;
+export type DietTargets = z.infer<typeof targetsSchema>;
+export type DietNutrients = z.infer<typeof nutrientsSchema>;
+export type DietSupplement = z.infer<typeof supplementSchema>;
+export type TargetsSource = z.infer<typeof targetsSourceSchema>;

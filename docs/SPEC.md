@@ -206,7 +206,7 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 | `exercises` | id, name, muscles[], equipment, videoUrl, custom |
 | `workouts` (schede) | id (uuid), version, author, source ('pt' \| 'own'), name, weekdays[], intro, warmup[], items[{exerciseId, name, sets, reps, kg, restSec, note, videoUrl, setsDetail?}], cardio, updatedAt |
 | `sessions` | id, workoutId, workoutVersion, startedAt, endedAt, readiness{sleep,mood,energy,stress,soreness}, sets[{exerciseId, setIndex, kg, reps, done}], userNotes{exerciseId: text}, rpe, cardioDone |
-| `dietPlans` | id, version, title, author, validFrom, active, archived, payload (formato § 8.2) |
+| `dietPlans` | id, version, title, author, validFrom, active, archived, importedAt, origin (`file` \| `mydiet`), payload (formato § 8.2) |
 | `dietLog` | date, planId, mealKey, eaten, swappedFromWeekday |
 | `shopping` | weekStart, checked{productKey: bool} |
 | `settings` | key, value (es. ultimo backup) |
@@ -246,6 +246,7 @@ Import di una scheda con lo stesso `id`: se `version` è maggiore chiedere **Sos
   "recipes": [{ "n": 5, "name": "...", "meta": "35 min · friggitrice", "dose": "...", "steps": ["..."], "tip": "..." }]
 }
 ```
+Facoltativo in `dayTypes[x]`: `targetsSource` (`plan` \| `manual` \| `estimated`, predefinito `plan`): i target vengono dal piano (nutrizionista), sono inseriti a mano o sono una stima accettata nel completamento guidato (M3).
 
 ### 8.3 Compatibilità MyDiet (schemaVersion 1)
 Importare anche il file di MyDiet (`"app": "dieta-e-spesa"`): `giorni[i]` → `days` (indice 0 = lunedì), `pasti.{colazione,spuntino1,pranzo,spuntino2,cena}` → `meals`, `abilita`/`fine` → `window`, `nota` → `note`, `prodotti` → `products` (`unita`, `spesa`, `cat`). Tollerare categorie non elencate (es. Integratori, Pasto libero) e pasti vuoti (`nome: ""`, `items: []`). Dopo l'import parte il completamento guidato (mancano valori nutrizionali e target).
@@ -296,7 +297,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 · [x] M1 · [x] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -331,3 +332,22 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - **Reattività**: `liveQuery` di Dexie avvolto in `liveState()` (`live.svelte.ts`): le liste si aggiornano da sole quando cambiano i dati letti, anche dopo un ripristino o da un'altra scheda.
 - **Pagina tecnica** `#/dev-data` (link "Dati (prova)" in `#/showcase`): conteggi, dati di prova (da `tests/fixtures/backup-valid.json`, finti), esporta, importa con anteprima e conferma, svuota con conferma, persistenza, spazio usato, ultimo backup. Da rimuovere o riusare nel Profilo (M7).
 - Da verificare su iPhone dopo il deploy: app installata → Componenti (prova) → Dati (prova) → Carica dati di prova → Esporta backup (Salva su File) → Svuota tutto → Importa backup dal file salvato.
+
+### Note M3 · Dieta
+- **Codice**: logica pura in `src/lib/diet/` (`import/` riconoscimento, adattatore MyDiet, anteprima, esportazione · `calc/` nutrienti, target, stima, osservazioni, completezza, spesa, pasto attuale, calendario · `edit.ts` completamento guidato · `swipe.ts` · `view.ts` cosa mostra la tab Piano). Schermate `src/routes/Diet.svelte` (`#/dieta`) e `src/routes/DietComplete.svelte` (`#/dieta/completa`), componenti in `src/routes/diet/`; layout con barra di navigazione in `src/routes/Screen.svelte` (usato anche dalla Home provvisoria). Nuova icona `file` in `Icon`.
+- **Import**: il tipo si riconosce dal contenuto (`app`). MyDiet: validato com'è arrivato (`mydiet-schema.ts`), convertito e validato di nuovo come piano esteso; errori in italiano con il percorso, nessun salvataggio parziale. `giorni[i]` → `weekday i+1`; pasti in ordine colazione, spuntino1, pranzo, spuntino2, cena (etichette Colazione/Spuntino/Pranzo/Spuntino/Cena; altre chiavi dopo, con un nome leggibile); `abilita`/`fine` → `window` (orari non validi: ignorati con avviso), `time: null`; categorie fuori elenco e pasti vuoti ammessi. Valori nutrizionali, target, tipi di giornata e ricette restano mancanti.
+- **Metadati MyDiet** (il file non li ha): id `mydiet-` + impronta FNV-1a del contenuto (lo stesso file reimportato viene riconosciuto), `version 1`, titolo dal mese di `esportato` ("Ottobre 2026", modificabile nell'anteprima; senza data "Piano MyDiet"), `validFrom` = data di `esportato`, autore vuoto ("Da MyDiet").
+- **Integratori MyDiet**: i prodotti di categoria "Integratori" usati in un pasto diventano anche `supplements` del giorno (`when` = pasto, `dose` = quantità) e restano nel pasto per i calcoli. Si aggiungono e tolgono a mano nel completamento guidato.
+- **Salvataggio**: in una transazione; il nuovo piano diventa attivo, quello attivo prima va in archivio (`archived: true`, mai cancellato). Stesso `id`: versione maggiore → "Sostituisci" o "Salva come copia"; uguale o minore → avviso e solo "Salva come copia" (nuovo UUID, titolo "… (copia)"). "Ripristina" dall'archivio riattiva un piano e archivia quello attivo.
+- **Esporta**: file esteso `healthy-dieta-<titolo>.json`, validato prima della consegna; Web Share con file, altrimenti download. **Condividi** (link, QR) è visibile ma dichiarato "in arrivo" (M8): al tocco spiega che arriverà e rimanda a "Esporta".
+- **Calcoli**: grammi da `g`, da `ml` (1 ml ≈ 1 g) e da `pz` × `pieceGrams`. Alimenti senza valori (o pezzi senza `pieceGrams`) mai contati come zero: totali "≥ …" con "* senza valori", "—" se non si sa niente. Target: quelli del tipo di giornata, con l'origine (`TARGET: NUTRIZIONISTA` / `INSERITO DA TE` / `STIMATO`); altrimenti `CALCOLATO` dal piano, solo se tutti gli alimenti hanno valori; altrimenti `TARGET: MANCANTE`.
+- **Stima** (solo kcal, solo se accettata): Mifflin-St Jeor × 1,2 riposo / 1,45 corsa / 1,55 palestra; dimagrire −15% (max −500), aumentare +10%; minimo 1.200 kcal (F) / 1.500 (M) con avviso. Servono anno di nascita, sesso, altezza (profilo) e un peso (misure): fino a M7 il pulsante dice cosa manca.
+- **Osservazioni** (tutti i piani importati sono del nutrizionista): scarto maggiore tra kcal/P/C/G e target se ≥ 5% (non con target calcolati; con valori mancanti "Non posso confrontare…"); giorni senza verdura (radici dei nomi in `calc/vegetables.ts`: la categoria non basta). Sempre con "L'app non modifica il piano: segnala soltanto."
+- **Completezza**: % = giorni con tipo + tipi usati con target + alimenti usati con valori; ricette e integratori in elenco ma fuori dalla %. Tipi predefiniti `gym`/`run`/`rest` (Palestra/Corsa/Riposo, rombo magenta/ciano/grigio; altre chiavi grigie). I target del nutrizionista non si modificano; gli alimenti già compilati si correggono solo nei piani MyDiet. L'editor completo (pasti, grammi) non è in M3.
+- **Tab Piano**: un solo `ProgressRing` nel riepilogo, mai ricreato (cambiano solo i valori); solo l'elenco del giorno è in un `{#key}`, con sola transizione di entrata. Il testo dell'anello resta nel foro (testato). Oggi: kcal mangiate / target; altri giorni: kcal del piano / target. Pasto attuale: primo pasto non vuoto e non mangiato la cui finestra contiene l'ora (senza finestra: da `time` al pasto successivo); si mostra `time` o la finestra. Pasti vuoti nascosti. Swipe orizzontale tra i giorni (segue il dito, molla al rilascio, resistenza su lunedì e domenica; con "Riduci movimento" cambio secco); `touch-action: pan-y` lascia lo scroll verticale.
+- **Scambio del giorno**: salvato in `dietLog.swappedFromWeekday`; cambiandolo le spunte di oggi si azzerano (con conferma se ce ne sono). La spesa ignora gli scambi.
+- **Spesa**: somma dei 7 giorni per prodotto (mai conversioni tra prodotti); reparti nell'ordine di `categories`, poi gli altri, "Altro" per i prodotti senza reparto; `g` → "1,6 kg" da 1.000, `ml` → "1,5 L", pezzi solo il numero; riga "Esclusi dalla lista: …" per `shop: false`. Spunte in `shopping` per settimana (lunedì). "Condividi" manda come testo ciò che resta da comprare (Web Share di testo → appunti → testo da copiare a mano).
+- **Scostamenti dal mockup**: il pannello del piano è un bottom sheet (non un riquadro che scende); negli altri giorni la didascalia dell'anello è "su 1.900" invece di "target 1.900" (non stava nel foro), "target —" se manca; la nota del nutrizionista è nel riquadro giallo tratteggiato (`NoteBox`) come le altre note.
+- **Correzioni di M2**: `listDietPlans()` ordinava con l'indice `validFrom`, che salta i `null`: ora ordina in memoria (`importedAt`, poi `validFrom`). `activateDietPlan()` ora archivia il piano attivo precedente.
+- **Test**: fixture finte `tests/fixtures/mydiet.json` (stessa struttura del file vero), `diet-extended.json`, `invalid/mydiet-bad.json`. `tests/unit/diet/private-file.test.ts` prova il file vero solo dove esiste `private/` (in CI viene saltato). Playwright `tests/e2e/diet.spec.ts` con l'ora fissata a lunedì 12/10/2026 13:00.
+- Prova fatta con il file vero di ottobre nella build (`npm run preview`): import, Piano, Spesa, ricarica offline. Da verificare su iPhone dopo il deploy: app installata → Dieta → Importa il file MyDiet (da File) → completa almeno un giorno → modalità aereo.

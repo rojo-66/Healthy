@@ -1,25 +1,26 @@
 <script lang="ts">
   import InstallBanner from '../lib/pwa/InstallBanner.svelte';
+  import Screen from './Screen.svelte';
 </script>
 
 <!-- Home provvisoria: la Home "Oggi" vera arriva in M6 (e con lei sparisce il link alla pagina di prova). -->
-<main>
-  <InstallBanner />
+<Screen nav="oggi">
+  <main>
+    <InstallBanner />
 
-  <h1 class="graffiti">Healthy</h1>
-  <p class="lead">
-    <span class="dot training" aria-hidden="true"></span>Allenamento
-    <span class="dot food" aria-hidden="true"></span>Alimentazione
-  </p>
-  <p class="wip mono-label">Lavori in corso</p>
-  <a class="showcase tap" href="#/showcase">Componenti (prova)</a>
-</main>
+    <h1 class="graffiti">Healthy</h1>
+    <p class="lead">
+      <span class="dot training" aria-hidden="true"></span>Allenamento
+      <span class="dot food" aria-hidden="true"></span>Alimentazione
+    </p>
+    <p class="wip mono-label">Lavori in corso</p>
+    <a class="showcase tap" href="#/showcase">Componenti (prova)</a>
+  </main>
+</Screen>
 
 <style>
   main {
-    min-height: 100dvh;
-    padding: calc(24px + var(--safe-top)) calc(16px + var(--safe-right)) calc(96px + var(--safe-bottom))
-      calc(16px + var(--safe-left));
+    padding: calc(24px + var(--safe-top)) calc(16px + var(--safe-right)) var(--space-8) calc(16px + var(--safe-left));
   }
 
   h1 {

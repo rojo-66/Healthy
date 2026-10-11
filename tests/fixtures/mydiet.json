@@ -1,0 +1,97 @@
+{
+  "app": "dieta-e-spesa",
+  "schemaVersion": 1,
+  "esportato": "2026-10-08T09:30:00",
+  "dieta": {
+    "schemaVersion": 1,
+    "categorie": ["Carne e pesce", "Scatolame", "Surgelati", "Latticini e uova", "Frutta e verdura", "Pane, pasta e cereali", "Dispensa"],
+    "prodotti": {
+      "pollo": { "nome": "Petto di pollo", "cat": "Carne e pesce", "unita": "g", "spesa": true },
+      "tonno": { "nome": "Tonno al naturale", "cat": "Scatolame", "unita": "g", "spesa": true },
+      "spinaci": { "nome": "Spinaci surgelati", "cat": "Surgelati", "unita": "g", "spesa": true },
+      "yogurt": { "nome": "Yogurt bianco", "cat": "Latticini e uova", "unita": "g", "spesa": true },
+      "uova": { "nome": "Uova", "cat": "Latticini e uova", "unita": "pz", "spesa": true },
+      "mela": { "nome": "Mela", "cat": "Frutta e verdura", "unita": "g", "spesa": true },
+      "zucchine": { "nome": "Zucchine", "cat": "Frutta e verdura", "unita": "g", "spesa": true },
+      "avena": { "nome": "Fiocchi d'avena", "cat": "Pane, pasta e cereali", "unita": "g", "spesa": true },
+      "pasta": { "nome": "Pasta", "cat": "Pane, pasta e cereali", "unita": "g", "spesa": true },
+      "riso": { "nome": "Riso", "cat": "Pane, pasta e cereali", "unita": "g", "spesa": true },
+      "fette": { "nome": "Fette biscottate", "cat": "Pane, pasta e cereali", "unita": "pz", "spesa": true },
+      "olio": { "nome": "Olio extravergine", "cat": "Dispensa", "unita": "g", "spesa": true },
+      "whey": { "nome": "Proteine in polvere", "cat": "Integratori", "unita": "g", "spesa": false },
+      "pizza": { "nome": "Pizza", "cat": "Pasto libero", "unita": "pz", "spesa": false }
+    },
+    "giorni": [
+      {
+        "nota": "Giornata di prova: bevi molta acqua.",
+        "pasti": {
+          "colazione": { "nome": "Yogurt e avena", "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 30 }], "abilita": "07:00", "fine": "08:30" },
+          "spuntino1": { "nome": "Mela", "items": [{ "p": "mela", "q": 150 }], "abilita": "10:00", "fine": "11:00" },
+          "pranzo": { "nome": "Pollo e riso", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }, { "p": "zucchine", "q": 200 }, { "p": "olio", "q": 10 }], "abilita": "12:00", "fine": "13:30" },
+          "spuntino2": { "nome": "Proteine", "items": [{ "p": "whey", "q": 30 }], "abilita": "17:00", "fine": "18:30" },
+          "cena": { "nome": "Pasta al tonno", "items": [{ "p": "pasta", "q": 80 }, { "p": "tonno", "q": 120 }, { "p": "olio", "q": 5 }], "abilita": "20:00", "fine": "21:30" }
+        }
+      },
+      {
+        "nota": "",
+        "pasti": {
+          "colazione": { "nome": "Fette e yogurt", "items": [{ "p": "fette", "q": 3 }, { "p": "yogurt", "q": 125 }], "abilita": "07:00", "fine": "08:30" },
+          "spuntino1": { "nome": "Mela", "items": [{ "p": "mela", "q": 150 }], "abilita": "10:00", "fine": "11:00" },
+          "pranzo": { "nome": "Riso e tonno", "items": [{ "p": "riso", "q": 80 }, { "p": "tonno", "q": 100 }, { "p": "spinaci", "q": 150 }], "abilita": "12:00", "fine": "13:30" },
+          "spuntino2": { "nome": "Proteine", "items": [{ "p": "whey", "q": 30 }], "abilita": "17:00", "fine": "18:30" },
+          "cena": { "nome": "Frittata e spinaci", "items": [{ "p": "uova", "q": 2 }, { "p": "spinaci", "q": 200 }, { "p": "olio", "q": 5 }], "abilita": "20:00", "fine": "21:30" }
+        }
+      },
+      {
+        "nota": "Giorno di riposo: porzioni più leggere.",
+        "pasti": {
+          "colazione": { "nome": "Yogurt e avena", "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 20 }], "abilita": "07:00", "fine": "08:30" },
+          "spuntino1": { "nome": "Mela", "items": [{ "p": "mela", "q": 120 }], "abilita": "10:00", "fine": "11:00" },
+          "pranzo": { "nome": "Pasta e zucchine", "items": [{ "p": "pasta", "q": 70 }, { "p": "zucchine", "q": 200 }, { "p": "olio", "q": 10 }], "abilita": "12:00", "fine": "13:30" },
+          "spuntino2": { "nome": "", "items": [], "abilita": "16:30", "fine": "18:30" },
+          "cena": { "nome": "Pollo e spinaci", "items": [{ "p": "pollo", "q": 150 }, { "p": "spinaci", "q": 200 }, { "p": "olio", "q": 5 }], "abilita": "19:30", "fine": "21:30" }
+        }
+      },
+      {
+        "nota": "",
+        "pasti": {
+          "colazione": { "nome": "Yogurt e avena", "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 30 }], "abilita": "07:00", "fine": "08:30" },
+          "spuntino1": { "nome": "Mela", "items": [{ "p": "mela", "q": 150 }], "abilita": "10:00", "fine": "11:00" },
+          "pranzo": { "nome": "Pollo e riso", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }, { "p": "zucchine", "q": 200 }, { "p": "olio", "q": 10 }], "abilita": "12:00", "fine": "13:30" },
+          "spuntino2": { "nome": "Proteine", "items": [{ "p": "whey", "q": 30 }], "abilita": "17:00", "fine": "18:30" },
+          "cena": { "nome": "Pasta al tonno", "items": [{ "p": "pasta", "q": 80 }, { "p": "tonno", "q": 120 }, { "p": "olio", "q": 5 }], "abilita": "20:00", "fine": "21:30" }
+        }
+      },
+      {
+        "nota": "Prepara il pranzo di sabato.",
+        "pasti": {
+          "colazione": { "nome": "Fette e yogurt", "items": [{ "p": "fette", "q": 3 }, { "p": "yogurt", "q": 125 }], "abilita": "07:00", "fine": "08:30" },
+          "spuntino1": { "nome": "Mela", "items": [{ "p": "mela", "q": 150 }], "abilita": "10:00", "fine": "11:00" },
+          "pranzo": { "nome": "Riso e tonno", "items": [{ "p": "riso", "q": 80 }, { "p": "tonno", "q": 100 }, { "p": "spinaci", "q": 150 }], "abilita": "12:00", "fine": "13:30" },
+          "spuntino2": { "nome": "Proteine", "items": [{ "p": "whey", "q": 30 }], "abilita": "17:00", "fine": "18:30" },
+          "cena": { "nome": "Frittata e spinaci", "items": [{ "p": "uova", "q": 2 }, { "p": "spinaci", "q": 200 }, { "p": "olio", "q": 5 }], "abilita": "20:00", "fine": "21:30" }
+        }
+      },
+      {
+        "nota": "Sera libera: una pizza.",
+        "pasti": {
+          "colazione": { "nome": "Yogurt e avena", "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 40 }], "abilita": "08:00", "fine": "09:30" },
+          "spuntino1": { "nome": "Mela", "items": [{ "p": "mela", "q": 150 }], "abilita": "10:30", "fine": "11:30" },
+          "pranzo": { "nome": "Pollo e riso", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 70 }, { "p": "zucchine", "q": 150 }, { "p": "olio", "q": 5 }], "abilita": "12:30", "fine": "14:00" },
+          "spuntino2": { "nome": "Yogurt", "items": [{ "p": "yogurt", "q": 125 }], "abilita": "16:30", "fine": "18:30" },
+          "cena": { "nome": "Pasto libero", "items": [{ "p": "pizza", "q": 1 }], "abilita": "19:30", "fine": "22:30" }
+        }
+      },
+      {
+        "nota": "",
+        "pasti": {
+          "colazione": { "nome": "Uova e fette", "items": [{ "p": "uova", "q": 2 }, { "p": "fette", "q": 3 }], "abilita": "08:00", "fine": "09:30" },
+          "spuntino1": { "nome": "", "items": [], "abilita": "10:30", "fine": "11:30" },
+          "pranzo": { "nome": "Pasta e zucchine", "items": [{ "p": "pasta", "q": 80 }, { "p": "zucchine", "q": 200 }, { "p": "olio", "q": 10 }], "abilita": "12:30", "fine": "14:00" },
+          "spuntino2": { "nome": "Mela", "items": [{ "p": "mela", "q": 150 }], "abilita": "16:30", "fine": "18:30" },
+          "cena": { "nome": "Pollo e spinaci", "items": [{ "p": "pollo", "q": 150 }, { "p": "spinaci", "q": 200 }, { "p": "olio", "q": 5 }], "abilita": "19:30", "fine": "21:30" }
+        }
+      }
+    ]
+  }
+}
