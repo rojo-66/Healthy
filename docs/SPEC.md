@@ -296,4 +296,38 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 (da confermare su iPhone dopo il primo deploy) · [ ] M1 · [ ] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [ ] M3 · [ ] M4 · [ ] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
+
+### Note M1 · design system
+- **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
+- **Rotte hash** con un router minimo (`src/lib/routes.ts`, `src/lib/router.svelte.ts`). Sono rotte solo gli hash `#/…`; `#import=…` (§ 8.4) resta libero. Una rotta sconosciuta porta alla Home.
+- **Componenti** (`src/lib/components/`): Card, NoteBox, Button, Stepper, CheckButton, Tabs, BottomSheet, BottomNav, TopBanner (+ SegmentBar), BottomBanner, ProgressRing, ProgressBar, Icon. Il colore di sezione si passa con `tone`.
+- **Font**: solo sottoinsieme latin, Permanent Marker 400, Space Grotesk 400/500/700, JetBrains Mono 500/700 (≈ 113 KB in woff2, tutti nel precache; i `.woff` di riserva non entrano nel precache).
+- **Animazioni**: solo transform/opacity. **Eccezione voluta**: gli anelli animano `stroke-dashoffset`. Barre e segmenti si riempiono con `translateX`, non con `width` come nei mockup. Il colore delle etichette dei tab cambia senza transizione.
+- **BottomSheet** usa `<dialog>` nativo con `showModal()` (focus bloccato, sfondo inerte, Esc), overlay e pannello disegnati da noi. Si chiude toccando fuori, trascinando giù la maniglia (oltre 1/4 dell'altezza o con un colpo veloce), con Esc o con ✕.
+- **Bordo delle card**: segue anche gli angoli tagliati (nei mockup il bordo `inset` spariva sulla diagonale). Il bagliore sta su un contenitore con `drop-shadow`, perché `clip-path` taglierebbe un `box-shadow`.
+- **BottomNav**: Oggi = verde come in `Main.dc.html`; Allena magenta, Dieta verde, Progressi e Profilo ciano.
+- TopBanner, BottomBanner e BottomNav non sono `position: fixed`: li tiene fermi il layout dello schermo (header, corpo `.scroll`, footer), come nei mockup.
+- Da verificare su iPhone dopo il deploy: app installata → "Componenti (prova)" → modalità aereo.
+
+### Note M2 · database, validazione, backup
+- **Codice** in `src/lib/data/`: `db.ts` (Dexie, database **`healthy-app`**), `versions.ts` (versioni dello schema), `schemas/` (zod, un file per tabella + file condivisi + backup), `repo/` (accesso ai dati), `backup.ts`, `read-file.ts`, `deliver-file.ts`, `storage.ts`, `limits.ts`, `errors.ts`. Nessuna dipendenza da Svelte tranne `live.svelte.ts`.
+- **Convenzioni**: id = UUID (`crypto.randomUUID()`), slug per gli esercizi della libreria; giorni `AAAA-MM-GG` (locale); istanti ISO 8601 UTC. Testi liberi sempre stringhe (vuoto = `''`); `null` solo per numeri, enum e oggetti facoltativi. Giorni della settimana 1 = lunedì … 7 = domenica.
+- **Chiavi e indici** (v1): `profile` `id` (sempre `"me"`) · `measurements` `id, date` · `exercises` `id, name, *muscles` · `workouts` `id, updatedAt, *weekdays` · `sessions` `id, startedAt, [workoutId+startedAt]` · `dietPlans` `id, validFrom` · `dietLog` `date, planId` · `shopping` `weekStart` · `settings` `key`. I booleani (`active`, `archived`, `custom`) non sono indicizzabili in IndexedDB: si filtrano in memoria.
+- **Scostamenti da § 7** (confermati):
+  - `dietLog`: **una riga per giorno** `{ date, planId, swappedFromWeekday, eaten: { mealKey: bool } }` invece di una riga per pasto.
+  - `sessions`: + `workoutName` (copia del nome della scheda); `sets[]` + `itemIndex` (la stessa scheda può contenere due volte lo stesso esercizio); `userNotes` è un elenco `[{ itemIndex, exerciseId, text }]` invece di un record per `exerciseId`; `cardioDone` è `{ type, minutes, distanceKm } | null`; `endedAt: null` = sessione in corso.
+  - `workouts.items[]`: + `muscles[]` (come § 8.1), `exerciseId` può essere `null` (esercizio arrivato da file, non ancora collegato alla libreria), `setsDetail` `[{ reps, kg }] | null` con una voce per serie.
+  - `profile.goal`: enum `lose | gain | maintain | recomp`; `sex`: `M | F | null`.
+  - `measurements`: FFM%, BCM%, BMI, ECW/TBW non si salvano, si calcolano (§ 6.3).
+  - `settings`: `lastBackupAt` e `storagePersist { granted, checkedAt }` sono **impostazioni del telefono**: non entrano nel backup, non contano nei conteggi e restano dopo "Svuota tutto" e dopo un ripristino.
+- **Piano alimentare** (§ 8.2, `schemaVersion 2`): pronto per MyDiet (M3): categorie libere, `products[].cat` anche fuori da `categories`, pasti con `name: ""` e `items: []`, `per100`/`targets`/`dayTypes`/`recipes` facoltativi, `unit` `g | pz | ml`. Controlla i riferimenti (prodotti, ricette, tipi di giornata) con messaggi tipo "Lunedì › Pranzo usa il prodotto «xyz» che non è nell'elenco dei prodotti".
+- **Validazione**: ogni scrittura nel database e ogni file passano da zod; errori in italiano "campo › motivo" (al massimo 10, poi "… e altri N errori"), mai stack trace; nessun salvataggio parziale. Chiavi dei dizionari solo `[a-z0-9_-]`, vietate `__proto__`, `constructor`, `prototype` (un file con `__proto__` viene rifiutato già alla lettura); link video solo `https://`.
+- **Limiti** (`limits.ts`): file scheda/dieta ≤ 1 MB, backup ≤ 20 MB (controllati prima di leggere il file); nomi ≤ 120 caratteri, note ≤ 2.000, introduzione e passaggi ≤ 4.000, URL ≤ 2.048; elenchi limitati (es. 60 esercizi per scheda, 20 serie, 1.000 prodotti; nel backup 20.000 sessioni).
+- **Versioni del database**: si aggiunge sempre una versione in fondo a `DB_VERSIONS` (`stores` + `upgrade`), mai si modificano quelle esistenti. Testato: v1 → v2 di prova con dati conservati e trasformati; se l'`upgrade` fallisce il database resta alla v1 con i dati intatti.
+- **Backup** (§ 8.5, `schemaVersion 1`): `{ app, kind: "backup", schemaVersion, createdAt, dbVersion, counts, tables }`, file `healthy-backup-AAAA-MM-GG.json` (in `.gitignore`). I conteggi devono coincidere con le righe (file troncato → errore). Formati vecchi migrati con `backup-migrations.ts`, formati più nuovi rifiutati. Ripristino in **una transazione** su tutte le tabelle: se una scrittura fallisce i dati attuali restano intatti. `isBackupStale(lastBackupAt, now)`: oltre 14 giorni (o mai) → `true`; il promemoria arriva nel Profilo (M7).
+- **Consegna del file**: Web Share API con file se disponibile, altrimenti download. Annullare il foglio di condivisione non è un errore. Se Safari rifiuta la condivisione perché è passato troppo tempo dal tocco (`NotAllowedError`), compare "Condividi il backup" per riprovare con un nuovo tocco.
+- **Persistenza**: a ogni avvio `navigator.storage.persist()` (se non è già persistente) con l'esito salvato in `settings`; `getStorageStatus()` legge persistenza e spazio usato (`null` dove il browser non lo dice). Dexie e zod sono in un chunk caricato dopo l'avvio (nel precache).
+- **Reattività**: `liveQuery` di Dexie avvolto in `liveState()` (`live.svelte.ts`): le liste si aggiornano da sole quando cambiano i dati letti, anche dopo un ripristino o da un'altra scheda.
+- **Pagina tecnica** `#/dev-data` (link "Dati (prova)" in `#/showcase`): conteggi, dati di prova (da `tests/fixtures/backup-valid.json`, finti), esporta, importa con anteprima e conferma, svuota con conferma, persistenza, spazio usato, ultimo backup. Da rimuovere o riusare nel Profilo (M7).
+- Da verificare su iPhone dopo il deploy: app installata → Componenti (prova) → Dati (prova) → Carica dati di prova → Esporta backup (Salva su File) → Svuota tutto → Importa backup dal file salvato.

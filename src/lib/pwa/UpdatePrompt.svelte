@@ -1,5 +1,6 @@
 <script lang="ts">
   import { useRegisterSW } from 'virtual:pwa-register/svelte';
+  import Button from '../components/Button.svelte';
 
   const { needRefresh, updateServiceWorker } = useRegisterSW({
     onRegisteredSW(_swUrl, registration) {
@@ -13,9 +14,9 @@
 </script>
 
 {#if $needRefresh}
-  <div class="update" role="status">
+  <div class="update rise" role="status">
     <span>Nuova versione disponibile</span>
-    <button type="button" class="tap" onclick={() => updateServiceWorker(true)}>Aggiorna</button>
+    <Button tone="tip" size="sm" onclick={() => updateServiceWorker(true)}>Aggiorna</Button>
   </div>
 {/if}
 
@@ -33,42 +34,6 @@
     background: var(--surface);
     border: 1px solid var(--tip);
     color: var(--text);
-    animation: rise 0.35s var(--spring) both;
-  }
-
-  button {
-    min-height: 44px;
-    padding: 0 18px;
-    border: 0;
-    background: var(--tip);
-    color: var(--bg);
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .tap {
-    transition: transform 0.25s var(--spring);
-  }
-
-  .tap:active {
-    transform: scale(0.94);
-    transition-duration: 0.08s;
-  }
-
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(24px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .update {
-      animation: none;
-    }
-    .tap,
-    .tap:active {
-      transition: none;
-    }
+    z-index: var(--z-toast);
   }
 </style>

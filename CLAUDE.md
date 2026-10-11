@@ -32,7 +32,8 @@ I mockup approvati sono in `docs/mockups/` (vedi `docs/mockups/README.md`).
   - scope del service worker limitato alla cartella dell'app (`/<nome-repo>/`).
 - **Tutto ciò che arriva dall'esterno** (file, link di condivisione, QR) va validato con zod e mostrato come testo, mai come HTML.
 - **Colori con significato fisso**: magenta = allenamento, verde acido = alimentazione, ciano = progressi/navigazione, giallo = consigli e note di PT/app. Token in `src/lib/design/tokens.css`.
-- **Animazioni**: solo `transform` e `opacity`; rispetta sempre `prefers-reduced-motion`. Ogni elemento toccabile ha un feedback visivo (su iPhone il web non può vibrare).
+- **Animazioni**: solo `transform` e `opacity`; rispetta sempre `prefers-reduced-motion`. Ogni elemento toccabile ha un feedback visivo (su iPhone il web non può vibrare). Unica eccezione voluta: gli anelli SVG (`ProgressRing`) animano `stroke-dashoffset`. Utility in `src/lib/design/motion.css`, transizioni Svelte in `src/lib/design/transitions.ts`; mai "classe di animazione + key" (duplica gli elementi).
+- **Design system**: componenti in `src/lib/components/` (pagina di prova `#/showcase`). Il colore di sezione si passa con `tone` (`training` / `food` / `progress` / `tip`), mai con colori scritti a mano.
 - **Accessibilità**: aree toccabili ≥ 44 px, `<button>`/`<a>` veri, `aria-label` sui pulsanti con sola icona, contrasto testo ≥ 4.5:1.
 - **iPhone**: usa `100dvh`, `env(safe-area-inset-*)`, Wake Lock durante la sessione; niente funzioni che Safari non supporta senza un'alternativa.
 

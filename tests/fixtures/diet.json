@@ -1,0 +1,49 @@
+{
+  "app": "healthy-app",
+  "kind": "diet",
+  "schemaVersion": 2,
+  "id": "d1111111-1111-4111-8111-111111111111",
+  "version": 1,
+  "title": "Piano di prova",
+  "author": "Nutrizionista di prova",
+  "validFrom": "2026-10-05",
+  "dayTypes": {
+    "gym": { "label": "Palestra", "targets": { "kcal": 1800, "protein": 140, "carbs": 220, "fat": 40, "fiber": 27 } },
+    "rest": { "label": "Riposo", "targets": { "kcal": 1600 } }
+  },
+  "categories": ["Carne e pesce", "Frutta e verdura", "Dispensa"],
+  "products": {
+    "pollo": { "name": "Petto di pollo", "cat": "Carne e pesce", "unit": "g", "shop": true,
+               "per100": { "kcal": 110, "protein": 22, "carbs": 0, "fat": 2.5, "fiber": 0 }, "pieceGrams": null },
+    "patate": { "name": "Patate", "cat": "Frutta e verdura", "unit": "g",
+                "per100": { "kcal": 77, "protein": 2, "carbs": 17, "fat": 0.1 } },
+    "uova": { "name": "Uova", "cat": "Carne e pesce", "unit": "pz", "pieceGrams": 60 },
+    "vitd": { "name": "Vitamina D3", "cat": "Integratori", "unit": "pz", "shop": false }
+  },
+  "days": [
+    {
+      "weekday": 1,
+      "type": "gym",
+      "note": "Bevi almeno 2 litri d'acqua.",
+      "supplements": [{ "name": "Vitamina D3", "when": "cena", "dose": "2.000 UI", "skip": false }],
+      "meals": [
+        { "key": "colazione", "label": "Colazione", "time": "07:30", "window": ["07:00", "09:00"],
+          "name": "Uova strapazzate", "items": [{ "p": "uova", "q": 2 }] },
+        { "key": "pranzo", "label": "Pranzo", "time": "13:00", "window": ["12:00", "13:30"],
+          "name": "Pollo e patate", "recipe": 5, "items": [{ "p": "pollo", "q": 185 }, { "p": "patate", "q": 250 }] },
+        { "key": "spuntino2", "label": "Spuntino", "name": "", "items": [] }
+      ]
+    },
+    {
+      "weekday": 2,
+      "type": "rest",
+      "meals": [
+        { "key": "pranzo", "label": "Pranzo", "name": "Pasto libero", "items": [] }
+      ]
+    }
+  ],
+  "recipes": [
+    { "n": 5, "name": "Pollo in friggitrice con patate", "meta": "35 min · friggitrice",
+      "dose": "185 g pollo, 250 g patate", "steps": ["Taglia le patate.", "Cuoci 20 minuti a 200 °C."], "tip": "Aggiungi rosmarino." }
+  ]
+}

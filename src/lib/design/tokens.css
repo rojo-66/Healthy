@@ -1,5 +1,6 @@
-/* Colori con significato fisso (SPEC § 3). Font e componenti arrivano in M1. */
+/* Design system (SPEC § 3). Ogni colore ha un significato fisso: non riusarlo per altro. */
 :root {
+  /* Colori */
   --bg: #12141a;
   --surface: #1b1e27;
   --line: #2c3040;
@@ -12,10 +13,66 @@
   --food: #a9e34b; /* alimentazione */
   --progress: #4cc9e6; /* progressi, navigazione, link */
   --tip: #f2c94c; /* consigli, note di PT/nutrizionista, avvisi */
-  --partial: #5a2a45;
+  --partial: #5a2a45; /* parte "non fatta" di un elemento iniziato */
 
+  /* Testo sopra un pieno di sezione (magenta, verde, ciano, giallo) */
+  --on-tone: var(--bg);
+  --overlay: rgba(6, 7, 10, 0.62);
+
+  /* Tinte e bagliori per sezione */
+  --training-tint: color-mix(in srgb, var(--training) 12%, transparent);
+  --food-tint: color-mix(in srgb, var(--food) 12%, transparent);
+  --progress-tint: color-mix(in srgb, var(--progress) 12%, transparent);
+  --tip-tint: color-mix(in srgb, var(--tip) 9%, transparent);
+  --training-edge: color-mix(in srgb, var(--training) 55%, transparent);
+  --food-edge: color-mix(in srgb, var(--food) 55%, transparent);
+  --progress-edge: color-mix(in srgb, var(--progress) 55%, transparent);
+  --tip-edge: color-mix(in srgb, var(--tip) 60%, transparent);
+  --training-glow: color-mix(in srgb, var(--training) 45%, transparent);
+  --food-glow: color-mix(in srgb, var(--food) 40%, transparent);
+  --progress-glow: color-mix(in srgb, var(--progress) 40%, transparent);
+  --tip-glow: color-mix(in srgb, var(--tip) 35%, transparent);
+
+  /* Tipografia */
+  --font-graffiti: 'Permanent Marker', 'Marker Felt', cursive;
+  --font-body: 'Space Grotesk', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --graffiti-tilt: -2deg;
+
+  /* Spaziature */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 18px;
+  --space-6: 24px;
+  --space-8: 32px;
+
+  /* Forme: angoli tagliati (clip-path) e raggi */
+  --cut-s: 8px;
+  --cut-m: 12px;
+  --cut-l: 18px;
+  --cut-sheet: 22px;
+  --radius-s: 2px;
+  --touch: 44px;
+
+  /* Movimento */
+  --dur-press: 0.12s;
+  --dur-ind: 0.32s;
+  --dur-sheet: 0.34s;
+  --dur-fade: 0.25s;
+  --dur-rise: 0.3s;
+  --dur-ring: 0.6s;
   --spring: cubic-bezier(0.2, 0.9, 0.3, 1.4);
+  --ease-out: cubic-bezier(0.2, 0.9, 0.3, 1.05);
+  --ease-ind: cubic-bezier(0.2, 0.9, 0.3, 1.1);
 
+  /* Livelli */
+  --z-banner: 10;
+  --z-nav: 20;
+  --z-toast: 30;
+
+  /* iPhone */
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);

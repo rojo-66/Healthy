@@ -1,0 +1,103 @@
+/*
+ * Animazioni base (SPEC § 4). Solo transform e opacity.
+ * Eccezione unica e voluta: .ring anima stroke-dashoffset (anelli SVG).
+ * Per elementi che entrano/escono dal DOM usare le transizioni Svelte di transitions.ts,
+ * non "classe di animazione + key" (duplica gli elementi).
+ */
+
+/* Pressione: scala rapida, ritorno a molla. [data-pressed] blocca lo stato per la pagina di prova. */
+.tap {
+  transition: transform var(--dur-ind) var(--spring);
+}
+.tap:not(:disabled):not([aria-disabled='true']):active,
+.tap[data-pressed] {
+  transform: scale(0.94);
+  transition-duration: var(--dur-press);
+  transition-timing-function: ease-out;
+}
+
+/* Evidenziatore che scorre (tabs). */
+.ind {
+  transition: transform var(--dur-ind) var(--ease-ind);
+}
+
+/* Riempimenti animati al cambio di valore. */
+.bar {
+  transform-origin: left center;
+  transition: transform var(--dur-ring) var(--ease-out);
+}
+.ring {
+  transition: stroke-dashoffset var(--dur-ring) var(--ease-out);
+}
+
+/* Ingressi una tantum al montaggio. */
+.rise {
+  animation: rise var(--dur-rise) var(--ease-out) both;
+}
+.drop {
+  animation: drop 0.26s var(--ease-out) both;
+}
+.fade {
+  animation: fade var(--dur-fade) ease both;
+}
+.sheet {
+  animation: sheet var(--dur-sheet) var(--ease-out) both;
+}
+.pop {
+  animation: pop 0.35s var(--spring) both;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+@keyframes drop {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+@keyframes fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes sheet {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+/* Scorrimento interno con scrollbar nascosta. */
+.scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.scroll::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

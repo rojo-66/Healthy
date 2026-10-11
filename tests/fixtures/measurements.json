@@ -1,0 +1,18 @@
+[
+  {
+    "id": "3ea51111-1111-4111-8111-111111111111",
+    "date": "2026-08-14",
+    "weightKg": 80.2, "fmKg": 16.1, "fmPct": 20.1, "ffmKg": 64.1, "bcmKg": 35.3,
+    "tbwL": 47.0, "ecwL": 20.1, "phaDeg": 6.4, "bmrKcal": 1750,
+    "chestCm": 101, "waistCm": 88, "abdomenCm": 92, "hipsCm": 99, "thighCm": 58, "armCm": 33, "calfCm": 38,
+    "notes": "Misura di prova."
+  },
+  {
+    "id": "3ea52222-2222-4222-8222-222222222222",
+    "date": "2026-09-25",
+    "weightKg": 78.9, "fmKg": 14.8, "fmPct": 18.8, "ffmKg": 64.1, "bcmKg": 35.9,
+    "tbwL": 47.2, "ecwL": 19.8, "phaDeg": 6.6, "bmrKcal": 1765,
+    "chestCm": 101, "waistCm": 86, "abdomenCm": 90, "hipsCm": 98, "thighCm": 58, "armCm": 33.5, "calfCm": null,
+    "notes": ""
+  }
+]

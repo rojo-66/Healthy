@@ -1,4 +1,5 @@
 <script lang="ts">
+  import Button from '../components/Button.svelte';
   import { isIos, isStandalone } from './standalone';
 
   // Stato solo in memoria: l'avviso ricompare a ogni nuova apertura in Safari.
@@ -8,7 +9,7 @@
 </script>
 
 {#if visible && !dismissed}
-  <aside class="banner" role="note" aria-labelledby="install-title">
+  <aside class="banner rise" role="note" aria-labelledby="install-title">
     <h2 id="install-title">Aggiungi alla schermata Home prima di inserire dati</h2>
     {#if ios}
       <p>
@@ -41,7 +42,7 @@
         installata possono essere separati.
       </p>
     {/if}
-    <button type="button" class="tap" onclick={() => (dismissed = true)}>Ho capito</button>
+    <Button tone="tip" size="sm" onclick={() => (dismissed = true)}>Ho capito</Button>
   </aside>
 {/if}
 
@@ -52,7 +53,6 @@
     border: 2px dashed var(--tip);
     background: color-mix(in srgb, var(--tip) 8%, var(--bg));
     color: var(--text);
-    animation: rise 0.35s var(--spring) both;
   }
 
   h2 {
@@ -82,42 +82,5 @@
     display: inline-flex;
     vertical-align: -3px;
     color: var(--progress);
-  }
-
-  button {
-    min-height: 44px;
-    min-width: 44px;
-    padding: 0 20px;
-    border: 0;
-    background: var(--tip);
-    color: var(--bg);
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  .tap {
-    transition: transform 0.25s var(--spring);
-  }
-
-  .tap:active {
-    transform: scale(0.94);
-    transition-duration: 0.08s;
-  }
-
-  @keyframes rise {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .banner {
-      animation: none;
-    }
-    .tap,
-    .tap:active {
-      transition: none;
-    }
   }
 </style>

@@ -1,0 +1,560 @@
+{
+  "app": "healthy-app",
+  "kind": "backup",
+  "schemaVersion": 1,
+  "createdAt": "2026-10-11T08:00:00.000Z",
+  "dbVersion": 1,
+  "counts": {
+    "profile": 1,
+    "measurements": 2,
+    "exercises": 3,
+    "workouts": 2,
+    "sessions": 5,
+    "dietPlans": 1,
+    "dietLog": 2,
+    "shopping": 1,
+    "settings": 0
+  },
+  "tables": {
+    "profile": [
+      {
+        "id": "me",
+        "name": "Utente di prova",
+        "birthYear": 1990,
+        "sex": "M",
+        "heightCm": 178,
+        "goal": "recomp"
+      }
+    ],
+    "measurements": [
+      {
+        "id": "3ea51111-1111-4111-8111-111111111111",
+        "date": "2026-08-14",
+        "weightKg": 80.2,
+        "fmKg": 16.1,
+        "fmPct": 20.1,
+        "ffmKg": 64.1,
+        "bcmKg": 35.3,
+        "tbwL": 47,
+        "ecwL": 20.1,
+        "phaDeg": 6.4,
+        "bmrKcal": 1750,
+        "chestCm": 101,
+        "waistCm": 88,
+        "abdomenCm": 92,
+        "hipsCm": 99,
+        "thighCm": 58,
+        "armCm": 33,
+        "calfCm": 38,
+        "notes": "Misura di prova."
+      },
+      {
+        "id": "3ea52222-2222-4222-8222-222222222222",
+        "date": "2026-09-25",
+        "weightKg": 78.9,
+        "fmKg": 14.8,
+        "fmPct": 18.8,
+        "ffmKg": 64.1,
+        "bcmKg": 35.9,
+        "tbwL": 47.2,
+        "ecwL": 19.8,
+        "phaDeg": 6.6,
+        "bmrKcal": 1765,
+        "chestCm": 101,
+        "waistCm": 86,
+        "abdomenCm": 90,
+        "hipsCm": 98,
+        "thighCm": 58,
+        "armCm": 33.5,
+        "calfCm": null,
+        "notes": ""
+      }
+    ],
+    "exercises": [
+      {
+        "id": "lat-machine",
+        "name": "Lat machine presa larga",
+        "muscles": [
+          "Dorsali",
+          "Bicipiti"
+        ],
+        "equipment": "Lat machine",
+        "videoUrl": "https://example.com/video/lat-machine",
+        "custom": false
+      },
+      {
+        "id": "panca-piana",
+        "name": "Panca piana",
+        "muscles": [
+          "Pettorali",
+          "Tricipiti"
+        ],
+        "equipment": "Bilanciere",
+        "videoUrl": null,
+        "custom": false
+      },
+      {
+        "id": "e3c11111-1111-4111-8111-111111111111",
+        "name": "Plank laterale",
+        "muscles": [
+          "Addome"
+        ],
+        "equipment": "",
+        "videoUrl": null,
+        "custom": true
+      }
+    ],
+    "workouts": [
+      {
+        "id": "a1111111-1111-4111-8111-111111111111",
+        "version": 4,
+        "author": "PT di prova",
+        "source": "pt",
+        "name": "Petto + Schiena",
+        "weekdays": [
+          1,
+          4
+        ],
+        "intro": "Scheda di prova: carichi finti, solo per i test.",
+        "warmup": [
+          {
+            "name": "Rotazioni spalle",
+            "hint": "Lente e ampie",
+            "dose": "2 × 15"
+          },
+          {
+            "name": "Cyclette",
+            "hint": "",
+            "dose": ""
+          }
+        ],
+        "items": [
+          {
+            "exerciseId": "lat-machine",
+            "name": "Lat machine presa larga",
+            "muscles": [
+              "Dorsali",
+              "Bicipiti"
+            ],
+            "sets": 4,
+            "reps": 10,
+            "kg": 57.5,
+            "restSec": 90,
+            "note": "Scendi lento.",
+            "videoUrl": "https://example.com/video/lat-machine",
+            "setsDetail": null
+          },
+          {
+            "exerciseId": "panca-piana",
+            "name": "Panca piana",
+            "muscles": [
+              "Pettorali"
+            ],
+            "sets": 3,
+            "reps": 8,
+            "kg": 60,
+            "restSec": 120,
+            "note": "",
+            "videoUrl": null,
+            "setsDetail": [
+              {
+                "reps": 10,
+                "kg": 55
+              },
+              {
+                "reps": 8,
+                "kg": 60
+              },
+              {
+                "reps": 6,
+                "kg": 65
+              }
+            ]
+          },
+          {
+            "exerciseId": null,
+            "name": "Plank",
+            "muscles": [],
+            "sets": 3,
+            "reps": 0,
+            "kg": 0,
+            "restSec": 60,
+            "note": "",
+            "videoUrl": null,
+            "setsDetail": null
+          }
+        ],
+        "cardio": {
+          "type": "tapis roulant",
+          "minutes": 12
+        },
+        "updatedAt": "2026-10-01T09:00:00.000Z"
+      },
+      {
+        "id": "a2222222-2222-4222-8222-222222222222",
+        "version": 1,
+        "author": "",
+        "source": "own",
+        "name": "Corsa 5 km",
+        "weekdays": [
+          6
+        ],
+        "intro": "",
+        "warmup": [],
+        "items": [],
+        "cardio": {
+          "type": "corsa",
+          "minutes": 28
+        },
+        "updatedAt": "2026-09-20T07:00:00.000Z"
+      }
+    ],
+    "sessions": [
+      {
+        "id": "5e551111-1111-4111-8111-111111111111",
+        "workoutId": "a1111111-1111-4111-8111-111111111111",
+        "workoutVersion": 4,
+        "workoutName": "Petto + Schiena",
+        "startedAt": "2026-10-05T16:00:00.000Z",
+        "endedAt": "2026-10-05T17:05:00.000Z",
+        "readiness": {
+          "sleep": 4,
+          "mood": 4,
+          "energy": 3,
+          "stress": 4,
+          "soreness": 5
+        },
+        "sets": [
+          {
+            "exerciseId": "lat-machine",
+            "itemIndex": 0,
+            "setIndex": 0,
+            "kg": 57.5,
+            "reps": 10,
+            "done": true
+          },
+          {
+            "exerciseId": "lat-machine",
+            "itemIndex": 0,
+            "setIndex": 1,
+            "kg": 57.5,
+            "reps": 9,
+            "done": true
+          },
+          {
+            "exerciseId": null,
+            "itemIndex": 1,
+            "setIndex": 0,
+            "kg": 55,
+            "reps": 10,
+            "done": true
+          },
+          {
+            "exerciseId": null,
+            "itemIndex": 1,
+            "setIndex": 1,
+            "kg": 60,
+            "reps": 0,
+            "done": false
+          }
+        ],
+        "userNotes": [
+          {
+            "itemIndex": 1,
+            "exerciseId": null,
+            "text": "Ultima serie saltata, ero senza energie."
+          }
+        ],
+        "rpe": 7,
+        "cardioDone": {
+          "type": "tapis roulant",
+          "minutes": 12,
+          "distanceKm": null
+        }
+      },
+      {
+        "id": "5e552222-2222-4222-8222-222222222222",
+        "workoutId": "a1111111-1111-4111-8111-111111111111",
+        "workoutVersion": 4,
+        "workoutName": "Petto + Schiena",
+        "startedAt": "2026-10-08T16:10:00.000Z",
+        "endedAt": "2026-10-08T17:00:00.000Z",
+        "readiness": {
+          "sleep": 4,
+          "mood": 4,
+          "energy": 3,
+          "stress": 4,
+          "soreness": 5
+        },
+        "sets": [
+          {
+            "exerciseId": "lat-machine",
+            "itemIndex": 0,
+            "setIndex": 0,
+            "kg": 57.5,
+            "reps": 10,
+            "done": true
+          },
+          {
+            "exerciseId": "lat-machine",
+            "itemIndex": 0,
+            "setIndex": 1,
+            "kg": 57.5,
+            "reps": 9,
+            "done": true
+          },
+          {
+            "exerciseId": null,
+            "itemIndex": 1,
+            "setIndex": 0,
+            "kg": 55,
+            "reps": 10,
+            "done": true
+          },
+          {
+            "exerciseId": null,
+            "itemIndex": 1,
+            "setIndex": 1,
+            "kg": 60,
+            "reps": 8,
+            "done": true
+          }
+        ],
+        "userNotes": [],
+        "rpe": 8,
+        "cardioDone": {
+          "type": "tapis roulant",
+          "minutes": 12,
+          "distanceKm": null
+        }
+      },
+      {
+        "id": "5e553333-3333-4333-8333-333333333333",
+        "workoutId": "a2222222-2222-4222-8222-222222222222",
+        "workoutVersion": 1,
+        "workoutName": "Corsa 5 km",
+        "startedAt": "2026-10-10T06:30:00.000Z",
+        "endedAt": "2026-10-10T06:58:00.000Z",
+        "readiness": null,
+        "sets": [],
+        "userNotes": [],
+        "rpe": 6,
+        "cardioDone": {
+          "type": "corsa",
+          "minutes": 27.7,
+          "distanceKm": 5.02
+        }
+      }
+    ],
+    "dietPlans": [
+      {
+        "id": "d1111111-1111-4111-8111-111111111111",
+        "version": 1,
+        "title": "Piano di prova",
+        "author": "Nutrizionista di prova",
+        "validFrom": "2026-10-05",
+        "active": true,
+        "archived": false,
+        "payload": {
+          "dayTypes": {
+            "gym": {
+              "label": "Palestra",
+              "targets": {
+                "protein": 140,
+                "carbs": 220,
+                "fat": 40,
+                "fiber": 27,
+                "kcal": 1800
+              }
+            },
+            "rest": {
+              "label": "Riposo",
+              "targets": {
+                "protein": null,
+                "carbs": null,
+                "fat": null,
+                "fiber": null,
+                "kcal": 1600
+              }
+            }
+          },
+          "categories": [
+            "Carne e pesce",
+            "Frutta e verdura",
+            "Dispensa"
+          ],
+          "products": {
+            "pollo": {
+              "name": "Petto di pollo",
+              "cat": "Carne e pesce",
+              "unit": "g",
+              "shop": true,
+              "per100": {
+                "fiber": 0,
+                "kcal": 110,
+                "protein": 22,
+                "carbs": 0,
+                "fat": 2.5
+              },
+              "pieceGrams": null
+            },
+            "patate": {
+              "name": "Patate",
+              "cat": "Frutta e verdura",
+              "unit": "g",
+              "shop": true,
+              "per100": {
+                "fiber": null,
+                "kcal": 77,
+                "protein": 2,
+                "carbs": 17,
+                "fat": 0.1
+              },
+              "pieceGrams": null
+            },
+            "uova": {
+              "name": "Uova",
+              "cat": "Carne e pesce",
+              "unit": "pz",
+              "shop": true,
+              "per100": null,
+              "pieceGrams": 60
+            },
+            "vitd": {
+              "name": "Vitamina D3",
+              "cat": "Integratori",
+              "unit": "pz",
+              "shop": false,
+              "per100": null,
+              "pieceGrams": null
+            }
+          },
+          "days": [
+            {
+              "weekday": 1,
+              "type": "gym",
+              "note": "Bevi almeno 2 litri d'acqua.",
+              "supplements": [
+                {
+                  "name": "Vitamina D3",
+                  "when": "cena",
+                  "dose": "2.000 UI",
+                  "skip": false
+                }
+              ],
+              "meals": [
+                {
+                  "key": "colazione",
+                  "label": "Colazione",
+                  "time": "07:30",
+                  "window": [
+                    "07:00",
+                    "09:00"
+                  ],
+                  "name": "Uova strapazzate",
+                  "recipe": null,
+                  "items": [
+                    {
+                      "p": "uova",
+                      "q": 2
+                    }
+                  ]
+                },
+                {
+                  "key": "pranzo",
+                  "label": "Pranzo",
+                  "time": "13:00",
+                  "window": [
+                    "12:00",
+                    "13:30"
+                  ],
+                  "name": "Pollo e patate",
+                  "recipe": 5,
+                  "items": [
+                    {
+                      "p": "pollo",
+                      "q": 185
+                    },
+                    {
+                      "p": "patate",
+                      "q": 250
+                    }
+                  ]
+                },
+                {
+                  "key": "spuntino2",
+                  "label": "Spuntino",
+                  "time": null,
+                  "window": null,
+                  "name": "",
+                  "recipe": null,
+                  "items": []
+                }
+              ]
+            },
+            {
+              "weekday": 2,
+              "type": "rest",
+              "note": "",
+              "supplements": [],
+              "meals": [
+                {
+                  "key": "pranzo",
+                  "label": "Pranzo",
+                  "time": null,
+                  "window": null,
+                  "name": "Pasto libero",
+                  "recipe": null,
+                  "items": []
+                }
+              ]
+            }
+          ],
+          "recipes": [
+            {
+              "n": 5,
+              "name": "Pollo in friggitrice con patate",
+              "meta": "35 min · friggitrice",
+              "dose": "185 g pollo, 250 g patate",
+              "steps": [
+                "Taglia le patate.",
+                "Cuoci 20 minuti a 200 °C."
+              ],
+              "tip": "Aggiungi rosmarino."
+            }
+          ]
+        }
+      }
+    ],
+    "dietLog": [
+      {
+        "date": "2026-10-05",
+        "planId": "d1111111-1111-4111-8111-111111111111",
+        "swappedFromWeekday": null,
+        "eaten": {
+          "colazione": true,
+          "pranzo": true,
+          "spuntino2": false
+        }
+      },
+      {
+        "date": "2026-10-06",
+        "planId": "d1111111-1111-4111-8111-111111111111",
+        "swappedFromWeekday": 1,
+        "eaten": {
+          "colazione": true
+        }
+      }
+    ],
+    "shopping": [
+      {
+        "weekStart": "2026-10-05",
+        "checked": {
+          "pollo": true,
+          "patate": false
+        }
+      }
+    ],
+    "settings": []
+  }
+}

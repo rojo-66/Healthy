@@ -9,3 +9,5 @@ private/
 # Playwright
 test-results/
 playwright-report/
+# backup esportati dall'app (dati reali): le fixture finte stanno in tests/fixtures con altri nomi
+healthy-backup-*.json

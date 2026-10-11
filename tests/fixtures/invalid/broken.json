@@ -1,0 +1,1 @@
+{"app":"healthy-app","kind":"backup","schemaVersion":1,"createdAt":"2026-10-11T08:00:00.000Z","dbVersion":1,"counts":{"profile":1,"measurements":2,"exercises":3,"workouts":2,"sessions":3,"dietPlans":1,"dietLog":2,"shopping":1,"settings":0},"tables":{"profile":[{"id":"me","name":"Utente di prova","bi
