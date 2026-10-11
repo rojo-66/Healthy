@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { MAX_ITEMS, MAX_TEXT } from '../limits';
-import { entityId, envelope, httpsUrl, requiredText, text } from './common';
+import { entityId, envelope, hhmm, httpsUrl, requiredText, text } from './common';
 import { musclesSchema } from './exercises';
 import {
   cardioSchema,
@@ -41,6 +41,7 @@ export const workoutFileSchema = z.object({
   author: text(MAX_TEXT.name).default(''),
   name: requiredText(MAX_TEXT.name),
   weekdays: weekdaysSchema.default([]),
+  time: hhmm.nullable().default(null),
   intro: text(MAX_TEXT.long).default(''),
   warmup: z
     .array(

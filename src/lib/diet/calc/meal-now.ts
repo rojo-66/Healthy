@@ -20,7 +20,8 @@ export function mealTimeLabel(meal: DietMeal): string {
 
 const DAY_END = 24 * 60;
 
-function startOf(meal: DietMeal): number | null {
+/** Inizio del pasto in minuti: inizio della finestra, altrimenti `time`; `null` se non ha orari. */
+export function mealStartMinutes(meal: DietMeal): number | null {
   if (meal.window) return toMinutes(meal.window[0]);
   if (meal.time) return toMinutes(meal.time);
   return null;
@@ -31,7 +32,7 @@ function rangeOf(meal: DietMeal, next: readonly DietMeal[]): [number, number] | 
   if (meal.window) return [toMinutes(meal.window[0]), toMinutes(meal.window[1])];
   if (!meal.time) return null;
   const start = toMinutes(meal.time);
-  const following = next.map(startOf).find((m): m is number => m !== null && m > start);
+  const following = next.map(mealStartMinutes).find((m): m is number => m !== null && m > start);
   return [start, following ?? DAY_END];
 }
 
@@ -71,7 +72,7 @@ export function upcomingMealKey(
   if (current) return current;
   const later = meals
     .filter((meal) => !isEmptyMeal(meal) && !(Object.hasOwn(eaten, meal.key) && eaten[meal.key]))
-    .map((meal) => ({ key: meal.key, start: startOf(meal) }))
+    .map((meal) => ({ key: meal.key, start: mealStartMinutes(meal) }))
     .filter((m): m is { key: string; start: number } => m.start !== null && m.start > nowMinutes)
     .sort((a, b) => a.start - b.start);
   return later[0]?.key ?? null;

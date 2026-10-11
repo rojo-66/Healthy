@@ -47,6 +47,18 @@ export const DB_VERSIONS: readonly DbVersion[] = [
           if (!('live' in s)) s.live = null;
         }),
   },
+  {
+    // M6: le schede hanno un orario facoltativo (`time`, Home e timeline). Indici invariati.
+    version: 3,
+    stores: {},
+    upgrade: (tx) =>
+      tx
+        .table('workouts')
+        .toCollection()
+        .modify((w: Record<string, unknown>) => {
+          if (!('time' in w)) w.time = null;
+        }),
+  },
 ];
 
 export function applyVersions(db: Dexie, versions: readonly DbVersion[]): void {

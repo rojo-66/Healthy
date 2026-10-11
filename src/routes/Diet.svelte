@@ -1,18 +1,14 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { nowClock } from '../lib/clock.svelte';
   import { toIsoDate } from '../lib/diet/calc/calendar';
   import DietScreen from './diet/DietScreen.svelte';
 
-  // L'orologio decide "oggi" e il pasto del momento: si aggiorna ogni 30 s.
-  let now = $state(new Date());
-  onMount(() => {
-    const timer = setInterval(() => (now = new Date()), 30_000);
-    return () => clearInterval(timer);
-  });
-  const today = $derived(toIsoDate(now));
+  // L'orologio decide "oggi" e il pasto del momento (ogni 30 s, a mezzanotte e al ritorno in primo piano).
+  const clock = nowClock();
+  const today = $derived(toIsoDate(clock.current));
 </script>
 
 <!-- A mezzanotte la schermata si ricrea: diario e spesa del nuovo giorno/settimana. -->
 {#key today}
-  <DietScreen {now} />
+  <DietScreen now={clock.current} />
 {/key}

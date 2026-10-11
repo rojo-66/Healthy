@@ -6,8 +6,10 @@ import type { Measurement } from '../../../src/lib/data/schemas/measurements';
 import { DB_VERSIONS, latestVersion, type DbVersion } from '../../../src/lib/data/versions';
 import { validate } from '../../../src/lib/data/errors';
 import { sessionSchema } from '../../../src/lib/data/schemas/sessions';
+import { workoutSchema } from '../../../src/lib/data/schemas/workouts';
 import measurementsFixture from '../../fixtures/measurements.json';
 import sessionFixture from '../../fixtures/session.json';
+import workoutFixture from '../../fixtures/sessions/workout.json';
 
 const opened: HealthyDb[] = [];
 
@@ -93,12 +95,26 @@ describe('migrazioni', () => {
     await old.table('sessions').add(structuredClone(sessionFixture));
     old.close();
 
-    const next = open('migration-sessions', DB_VERSIONS);
+    const next = open('migration-sessions', DB_VERSIONS.slice(0, 2));
     await next.open();
     expect(next.verno).toBe(2);
     const [row] = await next.sessions.toArray();
     expect(row).toEqual({ ...sessionFixture, snapshot: null, live: null });
     expect(validate(sessionSchema, row).ok).toBe(true);
+  });
+
+  it('v3 vera (M6): le schede già salvate ricevono un orario vuoto, valide per lo schema', async () => {
+    const old = open('migration-workouts', DB_VERSIONS.slice(0, 2));
+    const { time: _none, ...stored } = workoutSchema.parse(structuredClone(workoutFixture));
+    await old.table('workouts').add(stored);
+    old.close();
+
+    const next = open('migration-workouts', DB_VERSIONS);
+    await next.open();
+    expect(next.verno).toBe(3);
+    const [row] = await next.workouts.toArray();
+    expect(row).toEqual({ ...stored, time: null });
+    expect(validate(workoutSchema, row).ok).toBe(true);
   });
 
   it('se la migrazione fallisce il database resta alla versione precedente, dati intatti', async () => {

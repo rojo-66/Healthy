@@ -67,6 +67,11 @@ export function headerDate(date: Date): string {
   return `${WEEKDAYS_SHORT[isoWeekday(date) - 1]} ${date.getDate()} ${month} ${date.getFullYear()}`;
 }
 
+/** "12 OTT 2026" (riga in alto della Home). */
+export function dayMonthYear(date: Date): string {
+  return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]?.toUpperCase() ?? ''} ${date.getFullYear()}`;
+}
+
 /** "11 ott" (es. "importato l'11 ott"). */
 export function shortDate(date: Date): string {
   return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`;

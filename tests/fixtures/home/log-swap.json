@@ -1,0 +1,5 @@
+[
+  { "date": "2026-10-12", "planId": "e2e11111-1111-4111-8111-111111111111", "swappedFromWeekday": 3, "eaten": { "colazione": true } },
+  { "date": "2026-10-11", "planId": "e2e11111-1111-4111-8111-111111111111", "swappedFromWeekday": null, "eaten": { "colazione": true, "pranzo": true } },
+  { "date": "2026-10-10", "planId": "altro-piano", "swappedFromWeekday": null, "eaten": { "colazione": true } }
+]

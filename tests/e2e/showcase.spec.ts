@@ -13,17 +13,19 @@ async function expectNoHorizontalScroll(page: Page) {
   expect(scrollWidth).toBeLessThanOrEqual(clientWidth);
 }
 
-test('dalla Home si apre la pagina di prova, e il refresh la mantiene', async ({ page }) => {
+test('la pagina di prova si apre dall’indirizzo, e il refresh la mantiene', async ({ page }) => {
+  // Dal M6 la Home è "Oggi": il link "Componenti (prova)" non c'è più, la pagina resta su #/showcase.
   await page.goto('./');
-  await page.getByRole('link', { name: 'Componenti (prova)' }).click();
-  await expect(page).toHaveURL(/#\/showcase$/);
+  await expect(page.getByTestId('home-strip')).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Componenti (prova)' })).toHaveCount(0);
+  await page.goto('./#/showcase');
   await expect(page.getByRole('heading', { name: 'Componenti', level: 1 })).toBeVisible();
 
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Componenti', level: 1 })).toBeVisible();
 
   await page.getByRole('link', { name: 'Torna alla Home' }).click();
-  await expect(page.getByRole('heading', { name: 'Healthy', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('home-strip')).toBeVisible();
 });
 
 test('BottomSheet: si apre e si chiude con Esc, overlay, ✕ e trascinamento', async ({ page }) => {

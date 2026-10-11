@@ -12,6 +12,14 @@ export const TARGET_ORIGIN_LABELS: Readonly<Record<TargetOrigin, string>> = {
   calculated: 'TARGET: CALCOLATO',
 };
 
+/** Origine in forma di frase (Home: "Target del nutrizionista · giorno palestra"). */
+export const TARGET_ORIGIN_TEXT: Readonly<Record<TargetOrigin, string>> = {
+  nutritionist: 'Target del nutrizionista',
+  manual: 'Target inserito da te',
+  estimated: 'Target stimato',
+  calculated: 'Target calcolato dal piano',
+};
+
 const ORIGIN_OF_SOURCE: Readonly<Record<TargetsSource, TargetOrigin>> = {
   plan: 'nutritionist',
   manual: 'manual',

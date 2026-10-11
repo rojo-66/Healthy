@@ -1,18 +1,14 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { nowClock } from '../lib/clock.svelte';
   import { toIsoDate } from '../lib/diet/calc/calendar';
   import TrainScreen from './train/TrainScreen.svelte';
 
-  // "Oggi" decide la settimana e il prossimo allenamento: l'orologio si aggiorna ogni minuto.
-  let now = $state(new Date());
-  onMount(() => {
-    const timer = setInterval(() => (now = new Date()), 60_000);
-    return () => clearInterval(timer);
-  });
-  const today = $derived(toIsoDate(now));
+  // "Oggi" decide la settimana e il prossimo allenamento (ogni minuto, a mezzanotte e al ritorno in primo piano).
+  const clock = nowClock(60_000);
+  const today = $derived(toIsoDate(clock.current));
 </script>
 
 <!-- A mezzanotte la schermata si ricrea con la nuova data. -->
 {#key today}
-  <TrainScreen {now} />
+  <TrainScreen now={clock.current} />
 {/key}

@@ -34,7 +34,7 @@
     removeItem,
   } from '../../../lib/workouts/draft';
   import { flipRows } from '../../../lib/workouts/flip';
-  import { kgLabel } from '../../../lib/workouts/format';
+  import { kgLabel, parseTimeInput } from '../../../lib/workouts/format';
   import { keepFocusedVisible, keyboardState } from '../../../lib/workouts/keyboard.svelte';
   import ActionBar from '../ActionBar.svelte';
   import ConfirmSheet, { type ConfirmAction } from '../ConfirmSheet.svelte';
@@ -435,6 +435,19 @@
           >
         {/each}
       </div>
+      <div class="time-row">
+        <label class="time-label" for="ed-time">Orario <span class="muted">· facoltativo, per la Home</span></label>
+        <input
+          id="ed-time"
+          class="time"
+          type="time"
+          value={draft.time ?? ''}
+          onchange={(e) => set({ time: parseTimeInput(e.currentTarget.value) })}
+        />
+        {#if draft.time}
+          <button type="button" class="time-clear tap" onclick={() => set({ time: null })}>Togli orario</button>
+        {/if}
+      </div>
     </section>
 
     <section class="block" aria-label="Introduzione per il cliente">
@@ -638,6 +651,33 @@
     border-color: var(--tone);
     color: var(--on-tone);
     box-shadow: 0 0 12px var(--tone-glow);
+  }
+
+  .time-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-2) var(--space-3);
+    margin-top: var(--space-1);
+  }
+
+  .time-label {
+    font-size: 14px;
+    color: var(--text-2);
+  }
+
+  .time {
+    width: 7.5em;
+    font-family: var(--font-mono);
+  }
+
+  .time-clear {
+    min-height: var(--touch);
+    padding: 0 var(--space-3);
+    background: transparent;
+    border: 1px solid var(--line-strong);
+    color: var(--text-2);
+    font-size: 13px;
   }
 
   textarea,

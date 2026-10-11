@@ -63,6 +63,11 @@ export interface DayViewOptions {
   today: boolean;
   eaten: Readonly<Record<string, boolean>>;
   nowMinutes: number;
+  /**
+   * Usa le spunte anche se il giorno non è oggi (Home, giorni passati: si vede cosa era stato segnato,
+   * in sola lettura e senza "adesso").
+   */
+  keepEaten?: boolean;
 }
 
 const isEaten = (eaten: Readonly<Record<string, boolean>>, key: string) => Object.hasOwn(eaten, key) && eaten[key] === true;
@@ -75,7 +80,7 @@ export function buildDayView(payload: DietPayload, weekday: number, options: Day
   const day = findDay(payload, weekday);
   if (!day) return null;
   const { products } = payload;
-  const eaten = options.today ? options.eaten : {};
+  const eaten = options.today || options.keepEaten ? options.eaten : {};
   const plan = dayTotals(day, products);
   const resolved = resolveTargets(payload, day, plan);
   const nowKey = options.today ? currentMealKey(day.meals, eaten, options.nowMinutes) : null;

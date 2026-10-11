@@ -2,6 +2,7 @@ import { lookup } from '../../data/errors';
 import { APP_ID, hhmm, isoDate } from '../../data/schemas/common';
 import { DIET_FILE_KIND, DIET_FILE_VERSION } from '../../data/schemas/diet-file';
 import { weekdayName } from '../../data/schemas/diet-payload';
+import { fnv1a, FNV_OFFSET } from '../../hash';
 import { MONTHS } from '../calc/calendar';
 import { formatQuantity } from '../format';
 import type { MyDietDiet, MyDietFile } from './mydiet-schema';
@@ -43,21 +44,11 @@ function stableStringify(value: unknown): string {
   return JSON.stringify(value);
 }
 
-/** FNV-1a a 32 bit. */
-function fnv1a(input: string, seed: number): number {
-  let hash = seed >>> 0;
-  for (let i = 0; i < input.length; i++) {
-    hash ^= input.charCodeAt(i);
-    hash = Math.imul(hash, 0x01000193) >>> 0;
-  }
-  return hash >>> 0;
-}
-
 /** Impronta del contenuto (16 cifre esadecimali): reimportare lo stesso file dà lo stesso id. */
 export function myDietFingerprint(diet: MyDietDiet): string {
   const text = stableStringify(diet);
   const hex = (n: number) => n.toString(16).padStart(8, '0');
-  return hex(fnv1a(text, 0x811c9dc5)) + hex(fnv1a(text, 0x01000193));
+  return hex(fnv1a(text, FNV_OFFSET)) + hex(fnv1a(text, 0x01000193));
 }
 
 /** Data `AAAA-MM-GG` dall'inizio di `esportato` ("2026-10-08T09:52:30"), se valida. */

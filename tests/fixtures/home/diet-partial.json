@@ -1,0 +1,73 @@
+{
+  "app": "healthy-app",
+  "kind": "diet",
+  "schemaVersion": 2,
+  "id": "e2e22222-2222-4222-8222-222222222222",
+  "version": 1,
+  "title": "Piano finto parziale",
+  "author": "Nutrizionista di esempio",
+  "validFrom": "2026-10-01",
+  "dayTypes": {
+    "gym": { "label": "Palestra", "targets": { "kcal": 1700, "protein": 130, "carbs": 190, "fat": 50, "fiber": 25 } },
+    "rest": { "label": "Riposo" }
+  },
+  "categories": ["Carne e pesce", "Frutta e verdura", "Pane, pasta e cereali"],
+  "products": {
+    "pollo": { "name": "Petto di pollo", "cat": "Carne e pesce", "unit": "g", "per100": { "kcal": 100, "protein": 20, "carbs": 0, "fat": 2, "fiber": 0 } },
+    "riso": { "name": "Riso", "cat": "Pane, pasta e cereali", "unit": "g", "per100": { "kcal": 350, "protein": 7, "carbs": 80, "fat": 1, "fiber": 1 } },
+    "zucchine": { "name": "Zucchine", "cat": "Frutta e verdura", "unit": "g", "per100": { "kcal": 20, "protein": 1, "carbs": 3, "fat": 0, "fiber": 1 } },
+    "banana": { "name": "Banana", "cat": "Frutta e verdura", "unit": "g", "per100": { "kcal": 90, "protein": 1, "carbs": 23, "fat": 0, "fiber": 2 } },
+    "gallette": { "name": "Gallette di riso", "cat": "Pane, pasta e cereali", "unit": "pz", "pieceGrams": 8, "per100": { "kcal": 380, "protein": 8, "carbs": 80, "fat": 3, "fiber": 3 } }
+  },
+  "days": [
+    {
+      "weekday": 1,
+      "type": "gym",
+      "supplements": [
+        { "name": "Magnesio", "when": "mattina", "dose": "1 bustina" },
+        { "name": "Creatina", "when": "prima della palestra", "dose": "3 g" },
+        { "name": "Vitamina D3", "when": "Cena", "dose": "2.000 UI" },
+        { "name": "Omega-3", "when": "cena", "dose": "1 capsula", "skip": true }
+      ],
+      "meals": [
+        { "key": "colazione", "label": "Colazione", "time": "07:30", "window": ["07:00", "09:00"], "name": "Banana e gallette", "items": [{ "p": "banana", "q": 120 }, { "p": "gallette", "q": 3 }] },
+        { "key": "spuntino1", "label": "Spuntino", "name": "", "items": [] },
+        { "key": "pranzo", "label": "Pranzo", "time": "13:00", "window": ["12:00", "13:30"], "name": "Pollo e riso", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }, { "p": "zucchine", "q": 200 }] },
+        { "key": "pre", "label": "Pre-workout", "time": "17:00", "name": "Banana", "items": [{ "p": "banana", "q": 100 }] },
+        { "key": "cena", "label": "Cena", "time": "20:30", "window": ["20:00", "21:30"], "name": "Pasto libero", "items": [] }
+      ]
+    },
+    {
+      "weekday": 2,
+      "type": "rest",
+      "meals": [
+        { "key": "colazione", "label": "Colazione", "time": "08:00", "name": "Banana", "items": [{ "p": "banana", "q": 150 }] },
+        { "key": "pranzo", "label": "Pranzo", "time": "13:00", "name": "Pollo e zucchine", "items": [{ "p": "pollo", "q": 180 }, { "p": "zucchine", "q": 250 }] },
+        { "key": "cena", "label": "Cena", "time": "20:00", "name": "Riso e zucchine", "items": [{ "p": "riso", "q": 70 }, { "p": "zucchine", "q": 200 }] }
+      ]
+    },
+    {
+      "weekday": 3,
+      "type": "gym",
+      "meals": [
+        { "key": "spuntino1", "label": "Spuntino", "name": "", "items": [] },
+        { "key": "spuntino2", "label": "Spuntino", "name": "", "items": [] }
+      ]
+    },
+    {
+      "weekday": 4,
+      "type": null,
+      "meals": [
+        { "key": "pranzo", "label": "Pranzo", "time": "13:00", "name": "Pollo e riso", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }] }
+      ]
+    },
+    {
+      "weekday": 5,
+      "type": "rest",
+      "meals": [
+        { "key": "pranzo", "label": "Pranzo", "time": "13:00", "name": "Pollo e riso", "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }] }
+      ]
+    }
+  ],
+  "recipes": []
+}

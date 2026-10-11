@@ -5,6 +5,7 @@ import { numberToInput, parseNumberInput } from '../../../src/lib/diet/edit';
 import { atPercent } from '../../../src/lib/diet/format';
 import { parseDietImport } from '../../../src/lib/diet/import/detect';
 import { buildDayView, dayTypeTone, weekStrip } from '../../../src/lib/diet/view';
+import { parseRecipeParam, recipeHref } from '../../../src/lib/diet/links';
 import { planMeta } from '../../../src/routes/diet/plan-meta';
 import { extendedFile, myDietJson } from './helpers';
 
@@ -125,5 +126,27 @@ describe('testi e campi', () => {
       'Nutrizionista · importato il 12 ott · v2',
     );
     expect(planMeta({ ...base, origin: 'file', importedAt: null })).toBe('Da file · v1');
+  });
+});
+
+describe('Home (M6): spunte dei giorni passati e link alla ricetta', () => {
+  it('keepEaten: le spunte valgono anche se il giorno non è oggi, senza "adesso"', () => {
+    const past = buildDayView(plan, 1, { today: false, keepEaten: true, eaten: { pranzo: true }, nowMinutes: at('13:00') })!;
+    expect(Math.round(past.eatenTotals.total.kcal)).toBe(567);
+    expect(past.meals.find((m) => m.key === 'pranzo')!.eaten).toBe(true);
+    expect(past.meals.some((m) => m.isNow)).toBe(false);
+    // Senza l'opzione (tab Piano) nulla cambia.
+    const preview = buildDayView(plan, 1, { today: false, eaten: { pranzo: true }, nowMinutes: at('13:00') })!;
+    expect(preview.eatenTotals.total.kcal).toBe(0);
+  });
+
+  it('#/dieta?ricetta=N: solo numeri validi', () => {
+    expect(recipeHref(5)).toBe('#/dieta?ricetta=5');
+    expect(parseRecipeParam('5')).toBe(5);
+    expect(parseRecipeParam(undefined)).toBeNull();
+    expect(parseRecipeParam('0')).toBeNull();
+    expect(parseRecipeParam('5abc')).toBeNull();
+    expect(parseRecipeParam('<b>')).toBeNull();
+    expect(parseRecipeParam('99999')).toBeNull();
   });
 });

@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 test('in Safari mostra l\'avviso di installazione, chiudibile', async ({ page }) => {
   await page.goto('./');
-  await expect(page.getByRole('heading', { name: 'Healthy', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('home-strip')).toBeVisible();
 
   const banner = page.getByRole('note');
   await expect(banner).toContainText('Aggiungi alla schermata Home prima di inserire dati');
@@ -48,6 +48,6 @@ test('dopo la prima visita si apre offline e usa solo cache healthy-*', async ({
 
   await context.setOffline(true);
   await page.reload();
-  await expect(page.getByRole('heading', { name: 'Healthy', level: 1 })).toBeVisible();
+  await expect(page.getByTestId('home-strip')).toBeVisible();
   expect(await page.evaluate(() => navigator.serviceWorker.controller !== null)).toBe(true);
 });

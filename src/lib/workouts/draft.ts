@@ -20,6 +20,7 @@ export function emptyDraft(author: WorkoutAuthor): WorkoutDraft {
     ...newWorkoutOrigin(author),
     name: '',
     weekdays: [],
+    time: null,
     intro: '',
     warmup: [],
     items: [],
@@ -35,6 +36,7 @@ export function draftFromWorkout(w: Workout): WorkoutDraft {
     author: w.author,
     name: w.name,
     weekdays: [...w.weekdays],
+    time: w.time,
     intro: w.intro,
     warmup: w.warmup.map((x) => ({ key: newKey(), ...x })),
     items: w.items.map((item) => ({
@@ -86,6 +88,7 @@ export function draftToCandidate(d: WorkoutDraft, now: Date = new Date()): Recor
     source: d.source,
     name: d.name,
     weekdays: [...d.weekdays].sort((a, b) => a - b),
+    time: d.time,
     intro: d.intro,
     warmup: d.warmup.map(({ name, hint, dose }) => ({ name, hint, dose })),
     items: d.items.map((item) => ({

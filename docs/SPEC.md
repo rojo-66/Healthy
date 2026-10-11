@@ -68,7 +68,7 @@ Cyberpunk + graffiti, molti colori ma **mai più di un neon dominante per scherm
 
 ### Navigazione principale
 Barra in basso a 5 voci: **Oggi · Allena · Dieta · Progressi · Profilo**. La voce attiva prende il colore della sua sezione.
-Lo stato connessione (**SYNC OFFLINE ✓ / ONLINE ✓**) compare **solo nella Home**.
+L'indicatore **SYNC OFFLINE ✓** compare **solo nella Home**, sulla riga della data. Senza server "sincronizzato" vuol dire: dati salvati sul telefono in modo persistente, app installata e pronta offline (dettagli nelle note M6). Niente "ONLINE ✓": la rete non cambia nulla.
 
 ## 4. Animazioni e gesti
 
@@ -204,7 +204,7 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 | `profile` | id, name, birthYear, sex, heightCm, goal |
 | `measurements` | id, date, weightKg, fmKg, fmPct, ffmKg, bcmKg, tbwL, ecwL, phaDeg, bmrKcal, chestCm, waistCm, abdomenCm, hipsCm, thighCm, armCm, calfCm, notes |
 | `exercises` | id, name, muscles[], equipment, videoUrl, custom |
-| `workouts` (schede) | id (uuid), version, author, source ('pt' \| 'own'), name, weekdays[], intro, warmup[], items[{exerciseId, name, sets, reps, kg, restSec, note, videoUrl, setsDetail?}], cardio, updatedAt |
+| `workouts` (schede) | id (uuid), version, author, source ('pt' \| 'own'), name, weekdays[], time (HH:MM \| null, M6), intro, warmup[], items[{exerciseId, name, sets, reps, kg, restSec, note, videoUrl, setsDetail?}], cardio, updatedAt |
 | `sessions` | id, workoutId, workoutVersion, startedAt, endedAt, readiness{sleep,mood,energy,stress,soreness}, sets[{exerciseId, setIndex, kg, reps, done}], userNotes{exerciseId: text}, rpe, cardioDone |
 | `dietPlans` | id, version, title, author, validFrom, active, archived, importedAt, origin (`file` \| `mydiet`), payload (formato § 8.2) |
 | `dietLog` | date, planId, mealKey, eaten, swappedFromWeekday |
@@ -220,7 +220,7 @@ Tutti i file condivisi hanno `app`, `kind`, `schemaVersion`. Validazione con zod
 {
   "app": "healthy-app", "kind": "workout", "schemaVersion": 1,
   "id": "uuid", "version": 4, "author": "Nome PT",
-  "name": "Petto + Schiena", "weekdays": [1],
+  "name": "Petto + Schiena", "weekdays": [1], "time": "18:00",
   "intro": "testo", "warmup": [{ "name": "...", "hint": "...", "dose": "2 × 15" }],
   "items": [{ "name": "Lat machine presa larga", "muscles": ["Dorsali","Bicipiti"],
               "sets": 4, "reps": 10, "kg": 57.5, "restSec": 90,
@@ -228,6 +228,7 @@ Tutti i file condivisi hanno `app`, `kind`, `schemaVersion`. Validazione con zod
   "cardio": { "type": "tapis roulant", "minutes": 12 }
 }
 ```
+`time` (orario abituale, uno per scheda) è facoltativo (M6, `schemaVersion` invariata).
 Import di una scheda con lo stesso `id`: se `version` è maggiore chiedere **Sostituisci / Salva come copia**.
 
 ### 8.2 Piano alimentare (esteso)
@@ -297,7 +298,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [ ] M6 · [ ] M7 · [ ] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [ ] M7 · [ ] M8 · [ ] M9
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -461,3 +462,36 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
   - **Vitest** `tests/unit/sessions/` (readiness, creazione e copia, ultima volta e riordino, precompilazione, modifiche, volume e serie, segmenti, timer con orologio simulato e sospensione, coda delle scritture, ripresa dal database, una sola sessione in corso, PR, confronto, riepilogo, calendario e mese, formati, file e testo per il PT, condivisione, prossimo pasto, swipe, audio e Wake Lock con oggetti finti) + migrazione v1 → v2 in `tests/unit/data/db.test.ts`;
   - **Playwright** `tests/e2e/session.spec.ts` (390×844, `page.clock`, offline): sessione completa (readiness, intro, spunta, recupero e pannello, doppia spunta, PREC/SUCC, serie aggiunta, nota, ricarica a metà, uscita e "Riprendi", termina con cardio e RPE) → Riepilogo → Invia al PT (foglio simulato) → Fine → Storico dopo ricarica, mesi, swipe indietro, elimina; seconda sessione con "ultima volta", precompilazione, PR e confronto; abbandona e avvio con sessione in corso; 44 px, niente scroll orizzontale, banner fermi.
 - **Da verificare su iPhone dopo il deploy**: app installata → Avvia → schermo che resta acceso; suono a fine recupero con e senza tasto silenzioso (e con musica in riproduzione); tastiera sui kg; chiudere l'app dal multitasking a metà e riaprire → "Riprendi allenamento" con recupero giusto; "Invia al PT" verso Messaggi/WhatsApp (testo + file); swipe dal bordo sul Riepilogo; modalità aereo.
+
+### Note M6 · Home "Oggi"
+- **Codice**:
+  - **logica pura** in `src/lib/today/`: `home.ts` (tutto ciò che la Home mostra per una data, striscia della settimana), `day-type.ts` (tipo di giornata e conflitti), `meal-focus.ts` (pasto della card), `workout-day.ts` (allenamenti del giorno), `timeline.ts`, `tips.ts`, `sync.ts` (indicatore) + `sync-env.ts` (letture dal browser, non pure);
+  - **schermata** `src/routes/Home.svelte` (rotta `#/`, ora chunk caricato a richiesta come le altre pagine: Dexie e zod restano fuori dal primo bundle) e componenti in `src/routes/home/` (`HomeScreen`, `HomeHeader`, `CaloriesCard`, `MealFocusCard`, `WorkoutSection`, `DayTimeline`, `WelcomeCard`);
+  - **riusati senza copie**: `buildDayView`, `currentMealKey`/`upcomingMealKey`, `effectiveWeekday`, `resolveTargets`, `setMealEaten` (M3); `workoutsOn`, `workoutTotals`, `nextMeta` (M4); `StartGate`, `ResumeCard`, `sessionDate`, `summaryHref` (M5); `Card`, `NoteBox`, `ProgressRing`, `InstallBanner` (M0–M1); `normalize` della ricerca esercizi.
+- **Refactor condivisi** (testati): `KcalMacros.svelte` (anello + barre P/C/G, usato da Dieta e Home); azione `daySwipe` (`src/lib/design/day-swipe.ts`, ex codice di `PlanTab`); orologio `nowClock()` (`src/lib/clock.svelte.ts`: ogni 30 s, a mezzanotte e al ritorno in primo piano; usato da Home, Dieta e Allena, che quindi non restano più sul giorno prima); `fnv1a` in `src/lib/hash.ts`; `buildDayView` con `keepEaten` (giorni passati); `mealStartMinutes` esportata; `TARGET_ORIGIN_TEXT`; `dayMonthYear`; link `#/dieta?ricetta=N` (`src/lib/diet/links.ts`) che apre la ricetta nella tab Ricette.
+- **Schema** (DB v3, indici invariati): `workouts.time` (`HH:MM | null`), un orario per scheda valido in tutti i giorni assegnati. L'`upgrade` mette `null` nelle righe esistenti (testato v2 → v3); backup v1 e file § 8.1 restano validi (campo facoltativo, anche nella bozza). Editor: "Orario (facoltativo)" accanto a Giorni (`<input type="time">`, "Togli orario"); cambiarlo crea una nuova versione. La card "Prossimo" di Allena ora mostra l'orario (chiuso lo scostamento di M4).
+- **Regole decise**:
+  - **SYNC OFFLINE ✓** solo con quattro condizioni: database apribile e leggibile, app installata (standalone), service worker che controlla la pagina, storage persistente. Altrimenti una sola etichetta, in ordine: `NON SALVATO` (giallo) › `SOLO BROWSER` (giallo) › `OFFLINE NON PRONTO` (grigio) › `NON PROTETTO` (giallo); `VERIFICO…` durante il controllo. Non dipende dalla rete. Si ricontrolla al ritorno in primo piano, su `controllerchange` e poco dopo l'avvio (la persistenza viene chiesta in `main.ts`). Data e stato sempre su una riga (sotto i 360 px le lettere si stringono).
+  - **Tipo di giornata**: vince il piano (del giorno seguito, scambio compreso), perché decide i target. Piano riposo/corsa con una scheda: la scheda si mostra con la riga gialla "Il piano alimentare … è da giorno di riposo: i target restano quelli del piano". Piano palestra senza scheda: riga gialla e riquadro riposo. Senza piano o senza tipo: "Giorno palestra" se c'è una scheda, altrimenti "Riposo". Tipi del piano diversi da gym/run/rest: etichetta del piano, nessun conflitto.
+  - **Pasto della card**: quello del momento (stesse funzioni della Dieta); appena segnato resta nella card con "✓ Mangiato" (si annulla con un secondo tocco) finché è ancora il pasto di quell'ora, poi passa al prossimo ("Prossimo · …"). Prima del primo pasto e tra due finestre: il prossimo non segnato. Dopo l'ultimo: "Giornata chiusa · hai segnato N pasti su M". Pasti vuoti (MyDiet) esclusi; "Pasto libero" senza alimenti mostrato con "Nessun alimento indicato". Giorno senza pasti, giorno fuori dal piano, nessun piano: messaggi dedicati. Altri giorni: il pasto di quella stessa ora (domani "Anteprima", ieri "✓ Mangiato"/"Non segnato"), **sola lettura**.
+  - **Calorie**: oggi e giorni passati kcal mangiate / target, domani kcal del piano / target; origine come frase ("Target del nutrizionista · giorno palestra", "Target calcolato dal piano", "Target mancante · completa il piano").
+  - **Allenamenti del giorno**: schede assegnate (ordine per nome, tutte in elenco) più le sessioni concluse quel giorno con schede non assegnate ("Fuori programma"). Oggi: "Avvia allenamento" (passa da `StartGate`: con un'altra sessione in corso chiede Riprendi / Abbandona) e "Vedi scheda"; sessione in corso: la `ResumeCard` di M5 con "Riprendi allenamento"; fatta: adesivo "Fatto ✓" e "Vedi riepilogo". Orario: "18:00–19:15" (fine = durata stimata) oppure l'inizio reale della sessione; accanto "tra 5 h 20 min" / "adesso" / "fatto alle 19:10" / "non fatto" / "in programma".
+  - **Timeline**: pasti (orario del pasto, ordinati per inizio della finestra), allenamento e integratori. Allenamento: orario della scheda o inizio reale; senza orario subito prima di un pasto "post-workout" o dopo un "pre-workout" (riconosciuti da chiave, etichetta o nome), altrimenti in fondo senza orario. Integratori: dopo il pasto indicato in `when` (chiave o etichetta, senza badare a maiuscole e accenti), prima/dopo l'allenamento se `when` parla di palestra/allenamento/workout, altrimenti in fondo con il testo di `when`; seguono lo stato del pasto o dell'allenamento a cui sono legati.
+  - **Stati**: fatto (barrato), adesso (rombo verde, magenta per l'allenamento, più grande), dopo (ciano), **non segnato** (contorno grigio, non barrato: pasti e allenamenti passati non fatti), saltato (integratori "non serve oggi", barrati). Lo stato è letto anche dallo screen reader.
+  - **Tip del giorno**: `fnv1a(data) % n` sull'elenco che unisce le osservazioni M3 di quel giorno (scarto ≥ 5%, verdura; con "L'app non modifica il piano: segnala soltanto.") e 15 consigli generici originali, filtrati per tipo di giornata. Con un piano niente consigli su cosa mangiare (uno solo è riservato a chi non ha un piano); nessuno parla di quantità né fa promesse.
+- **Giorni**: oggi di default; striscia L–D della settimana corrente (oggi con contorno ciano, selezionato pieno nel colore del suo tipo) e swipe orizzontale sul contenuto (`daySwipe`: segue il dito, molla al rilascio, resistenza su lunedì e domenica, `touch-action: pan-y`, tocchi nei primi 24 px dal bordo sinistro lasciati allo swipe indietro di Safari, niente drag nativo né selezione del testo durante lo swipe). Il contenitore che ascolta resta fermo e si sposta solo il contenuto interno: uno swipe fatto mentre il contenuto torna a posto non va perso. "Torna a oggi" sugli altri giorni. A mezzanotte e al ritorno in primo piano la Home si ricrea sul nuovo giorno.
+- **Anti-doppioni**: la card calorie (unico anello) resta montata e cambiano solo i valori; i contenuti del giorno sono in `{#key selectedDate}` con sola transizione d'entrata; timeline con chiavi stabili e `animate:flip`; spunta con due rami `{#if}` e transizione `pop`. Mai classe di animazione + key. Testato cambiando giorno più di dieci volte di fila (striscia, swipe, "Riduci movimento").
+- **Stati vuoti**: primo avvio (niente piano e niente schede) con benvenuto e i due passi; l'`InstallBanner` di M0 resta in cima alla Home, non duplicato. Senza piano: "Nessun piano alimentare" → Dieta. Senza schede: "Nessuna scheda" → editor. Giorno senza scheda: riquadro "Riposo" tratteggiato. Database non disponibile: "Dati non disponibili".
+- **Scostamenti dal mockup**:
+  - badge del tipo di giornata scuro con il rombo colorato (come in Dieta) invece del badge verde pieno;
+  - "TIP DEL GIORNO" fisso invece di "TIP DELLA SERA";
+  - striscia con 4 px tra i giorni (6 nel mockup): su iPhone SE (375 px) ogni giorno resta largo almeno 44 px;
+  - titolo del giorno nel colore del suo tipo (magenta palestra, ciano corsa, testo chiaro riposo); si rimpicciolisce invece di andare a capo e, se serve, il badge scende sotto;
+  - "Avvia allenamento" a tutta larghezza come nel mockup, con il link "Vedi scheda" sotto;
+  - swipe e striscia restano nella settimana L–D (come la Dieta): il lunedì "ieri" non c'è;
+  - il link "Componenti (prova)" non c'è più (`#/showcase` e `#/dev-data` restano raggiungibili dall'indirizzo).
+- **Test**:
+  - **fixture finte** `tests/fixtures/home/`: `diet-partial.json` (solo lun–ven, pasti vuoti, pasto libero senza alimenti, pre-workout, pasti solo con `time`, integratori non collegati e "prima della palestra", tipo nullo, riposo senza target), `log-swap.json` (scambio di oggi, spunte di ieri, diario di un altro piano), `backup-home.json` e `backup-workouts-only.json` (piano esteso + schede M4 con orario, per gli e2e); riusate `diet-extended.json` e `workouts/week.json`;
+  - **Vitest** `tests/unit/today/` (pasto del momento con orari limite, scambio, calorie e origine, tipo di giornata e conflitti, timeline e stati, allenamento in corso/fatto/fuori programma, tip deterministico, `syncStatus`/`isSyncOk`, mezzanotte, settimana, fixture validate), più `clock.test.ts`, `workouts/time.test.ts`, migrazione v3 in `data/db.test.ts`, `keepEaten` e link ricetta in `diet/view.test.ts`;
+  - **Playwright** `tests/e2e/home.spec.ts` (390×844, `page.clock` su lun 12/10/2026 13:00): primo avvio, SYNC OFFLINE ✓ da app installata emulata (stessa riga della data a 390 e 320 px), NON SALVATO, pasto e allenamento, segna/annulla con anello e timeline, ricarica, ricetta, striscia e swipe senza doppioni, conflitto, Avvia → Readiness → Live → "Riprendi allenamento", mezzanotte, stati vuoti, offline, 44 px a 390 e 375 px. Aggiornati `pwa.spec.ts`, `showcase.spec.ts` e `session.spec.ts` (la Home dopo "Fine" mostra "Fatto ✓").
+- **Da verificare su iPhone dopo il deploy**: app installata → Home con "SYNC OFFLINE ✓" (in Safari deve dire "SOLO BROWSER"); swipe tra i giorni con il pollice mentre si scorre in verticale; swipe dal bordo sinistro in Safari (non deve cambiare giorno); "Segna come fatto" e Dieta allineate; lasciare l'app aperta oltre la mezzanotte (o riaprirla dal multitasking il giorno dopo); modalità aereo.

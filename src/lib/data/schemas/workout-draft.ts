@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { MAX_ITEMS, MAX_TEXT } from '../limits';
-import { entityId, int, text, weekday } from './common';
+import { entityId, hhmm, int, text, weekday } from './common';
 import { kgSchema, repsSchema, restSecSchema, setDetailSchema, versionSchema } from './workouts';
 
 /**
@@ -50,6 +50,8 @@ export const workoutDraftSchema = z.object({
   author: text(MAX_TEXT.name),
   name: text(MAX_TEXT.name),
   weekdays: z.array(weekday).max(7),
+  /** Orario della scheda (M6); le bozze salvate prima non lo hanno. */
+  time: hhmm.nullable().default(null),
   intro: text(MAX_TEXT.long),
   warmup: z.array(draftWarmupSchema).max(MAX_ITEMS.warmup),
   items: z.array(draftItemSchema).max(MAX_ITEMS.workoutItems),

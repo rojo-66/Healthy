@@ -15,7 +15,7 @@
 
 <Card tone="training" label="Prossimo allenamento">
   <div class="top">
-    <span class="mono-label kicker">▲ Prossimo · {weekdayShort(next.weekday)}</span>
+    <span class="mono-label kicker">▲ Prossimo · {weekdayShort(next.weekday)}{next.workout.time ? ` ${next.workout.time}` : ''}</span>
     <span class="when">{relativeDay(next.inDays)}</span>
   </div>
   <h2 class="name">{next.workout.name}</h2>

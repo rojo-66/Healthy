@@ -228,7 +228,10 @@ test('sessione completa offline: readiness, intro, serie, recupero, PREC/SUCC, r
 
   // --- Fine → Home; lo Storico ritrova la sessione dopo aver riaperto l'app (offline) ---
   await page.getByRole('link', { name: 'Fine' }).click();
-  await expect(page.getByRole('heading', { name: 'Healthy', level: 1 })).toBeVisible();
+  // La Home (M6) mostra l'allenamento di oggi come fatto, con il collegamento al Riepilogo.
+  const doneCard = page.getByRole('region', { name: 'Allenamento: Spinta finta' });
+  await expect(doneCard).toContainText('Fatto ✓');
+  await expect(doneCard.getByRole('link', { name: 'Vedi riepilogo' })).toBeVisible();
   await page.goto('./#/allena');
   await page.reload();
   await expect(page.getByRole('region', { name: 'Allenamento in corso' })).toHaveCount(0);

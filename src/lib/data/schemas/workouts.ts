@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { MAX_ITEMS, MAX_TEXT } from '../limits';
 import { musclesSchema } from './exercises';
-import { entityId, httpsUrl, int, isoDateTime, num, requiredText, text, uniqueArray, weekday } from './common';
+import { entityId, hhmm, httpsUrl, int, isoDateTime, num, requiredText, text, uniqueArray, weekday } from './common';
 
 export const setsSchema = int(1, MAX_ITEMS.setsPerItem);
 export const repsSchema = int(0, 1000);
@@ -66,6 +66,8 @@ export const workoutSchema = z.object({
   source: z.enum(['pt', 'own']),
   name: requiredText(MAX_TEXT.name),
   weekdays: weekdaysSchema,
+  /** Orario abituale (M6, facoltativo): uno per scheda, vale in tutti i giorni assegnati. */
+  time: hhmm.nullable().default(null),
   intro: text(MAX_TEXT.long),
   warmup: z.array(warmupItemSchema).max(MAX_ITEMS.warmup),
   items: z.array(workoutItemSchema).max(MAX_ITEMS.workoutItems),

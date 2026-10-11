@@ -80,3 +80,22 @@ export function lastRunLabel(lastIso: string | null): string {
   const months = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
   return `ultima: ${d.getDate()} ${months[d.getMonth()]}`;
 }
+
+/** Valore di `<input type="time">` ("18:00", anche "18:00:00") → `HH:MM`; vuoto o non valido → `null`. */
+export function parseTimeInput(value: string): string | null {
+  const match = /^([01]\d|2[0-3]):([0-5]\d)/.exec(value.trim());
+  return match ? `${match[1]}:${match[2]}` : null;
+}
+
+/** `HH:MM` + minuti → `HH:MM` (oltre la mezzanotte riparte da 00:00). */
+export function addMinutesToTime(hhmm: string, minutes: number): string {
+  const [h, m] = hhmm.split(':').map(Number);
+  const total = ((((h ?? 0) * 60 + (m ?? 0) + Math.round(minutes)) % 1440) + 1440) % 1440;
+  return `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+}
+
+/** Orario della scheda con la fine stimata: "18:00–19:15"; senza orario `''`. */
+export function workoutTimeRange(w: Pick<Workout, 'time' | 'items' | 'cardio'>): string {
+  if (!w.time) return '';
+  return `${w.time}–${addMinutesToTime(w.time, workoutTotals(w).totalMin)}`;
+}

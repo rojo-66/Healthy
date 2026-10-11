@@ -17,6 +17,8 @@
   import { headerDate, isoWeekday, minutesOfDay, toIsoDate, weekStartOf } from '../../lib/diet/calc/calendar';
   import { readDietImport, type DietImport } from '../../lib/diet/import/detect';
   import { atPercent } from '../../lib/diet/format';
+  import { parseRecipeParam } from '../../lib/diet/links';
+  import { route } from '../../lib/router.svelte';
   import { planExportFile } from '../../lib/diet/import/export';
   import { previewDietImport, type DietImportPreview } from '../../lib/diet/import/preview';
   import Screen from '../Screen.svelte';
@@ -52,10 +54,12 @@
     { id: 'spesa', label: 'Spesa' },
     { id: 'ricette', label: 'Ricette' },
   ];
-  let tab = $state<TabId>('piano');
+  // `#/dieta?ricetta=N` (link "Ricetta N" della Home) apre direttamente la ricetta nella tab Ricette.
+  const linkedRecipe = parseRecipeParam(untrack(() => route.query['ricetta']));
+  let tab = $state<TabId>(linkedRecipe === null ? 'piano' : 'ricette');
   let selected = $state(todayWeekday);
-  let openRecipe = $state<number | null>(null);
-  let focusToken = $state(0);
+  let openRecipe = $state<number | null>(linkedRecipe);
+  let focusToken = $state(linkedRecipe === null ? 0 : 1);
 
   function showRecipe(n: number) {
     openRecipe = n;

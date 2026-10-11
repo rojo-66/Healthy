@@ -1,9 +1,10 @@
 <script lang="ts">
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { route } from './lib/router.svelte';
-  import Home from './routes/Home.svelte';
 
   // Le pagine sono chunk separati: non pesano sull'avvio, ma sono nel precache (funzionano offline).
+  // Anche la Home: così Dexie e zod restano fuori dal primo bundle (M2).
+  const loadHome = () => import('./routes/Home.svelte');
   const loadShowcase = () => import('./routes/Showcase.svelte');
   const loadDevData = () => import('./routes/DevData.svelte');
   const loadDiet = () => import('./routes/Diet.svelte');
@@ -75,7 +76,9 @@
     {/key}
   {/await}
 {:else}
-  <Home />
+  {#await loadHome() then { default: Home }}
+    <Home />
+  {/await}
 {/if}
 
 <UpdatePrompt />

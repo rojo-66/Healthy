@@ -9,8 +9,8 @@
   import type { DietPlan } from '../../lib/data/schemas/diet-plans';
   import { effectiveWeekday } from '../../lib/diet/calc/calendar';
   import { OBSERVATION_DISCLAIMER } from '../../lib/diet/calc/observations';
-  import { lockAxis, swipeDecision, swipeOffset } from '../../lib/diet/swipe';
-  import { rise, prefersReducedMotion } from '../../lib/design/transitions';
+  import { daySwipe } from '../../lib/design/day-swipe';
+  import { rise } from '../../lib/design/transitions';
   import { buildDayView, findDay, weekStrip } from '../../lib/diet/view';
   import DayStrip from './DayStrip.svelte';
   import DaySummary from './DaySummary.svelte';
@@ -76,80 +76,17 @@
   }
 
   // --- Swipe tra i giorni (§ 4): il contenuto segue il dito ---
-  let swipeEl = $state<HTMLDivElement>();
-  let start: { x: number; y: number } | null = null;
-  let axis: boolean | null = null;
-  let dx = 0;
-  let lastX = 0;
-  let lastT = 0;
-  let velocity = 0;
-  let suppressClick = false;
-
   const inPlan = (weekday: number) => findDay(payload, weekday === todayWeekday ? follows : weekday) !== undefined;
   const neighbour = (dir: -1 | 1) => {
     for (let d = selected + dir; d >= 1 && d <= 7; d += dir) if (inPlan(d)) return d;
     return null;
   };
+  const prevDay = $derived(neighbour(-1));
+  const nextDay = $derived(neighbour(1));
 
-  function onpointerdown(e: PointerEvent) {
-    if (e.pointerType === 'mouse' && e.button !== 0) return;
-    start = { x: e.clientX, y: e.clientY };
-    axis = null;
-    dx = 0;
-    velocity = 0;
-    lastX = e.clientX;
-    lastT = e.timeStamp;
-  }
-
-  function onpointermove(e: PointerEvent) {
-    if (!start || !swipeEl) return;
-    const ddx = e.clientX - start.x;
-    if (axis === null) {
-      axis = lockAxis(ddx, e.clientY - start.y);
-      if (axis === false) {
-        start = null;
-        return;
-      }
-      if (axis === true) {
-        swipeEl.setPointerCapture(e.pointerId);
-        swipeEl.style.transition = 'none';
-      }
-    }
-    if (axis !== true) return;
-    const dt = e.timeStamp - lastT;
-    if (dt > 0) velocity = (e.clientX - lastX) / dt;
-    lastX = e.clientX;
-    lastT = e.timeStamp;
-    dx = ddx;
-    if (!prefersReducedMotion()) {
-      swipeEl.style.transform = `translateX(${swipeOffset(dx, neighbour(-1) !== null, neighbour(1) !== null)}px)`;
-    }
-  }
-
-  function onpointerup(e: PointerEvent) {
-    if (!start || !swipeEl) return;
-    const horizontal = axis === true;
-    start = null;
-    axis = null;
-    if (!horizontal) return;
-    // Il tocco finito con uno swipe non deve premere il pulsante sotto il dito.
-    suppressClick = true;
-    setTimeout(() => (suppressClick = false), 50);
-    if (e.timeStamp - lastT > 100) velocity = 0;
-    const prev = neighbour(-1);
-    const next = neighbour(1);
-    const dir = swipeDecision(dx, velocity, swipeEl.offsetWidth, prev !== null, next !== null);
-    swipeEl.style.transition = prefersReducedMotion() ? 'none' : 'transform var(--dur-ind) var(--spring)';
-    swipeEl.style.transform = '';
-    if (dir === -1 && prev !== null) selected = prev;
-    if (dir === 1 && next !== null) selected = next;
-  }
-
-  function onclickcapture(e: MouseEvent) {
-    if (!suppressClick) return;
-    suppressClick = false;
-    e.stopPropagation();
-    e.preventDefault();
+  function onswipe(dir: -1 | 1) {
+    const target = dir === -1 ? prevDay : nextDay;
+    if (target !== null) selected = target;
   }
 </script>
 
@@ -161,13 +98,8 @@
       class="swipe"
       role="group"
       aria-label="Giorno mostrato: scorri a destra o a sinistra per cambiare giorno"
-      bind:this={swipeEl}
       data-testid="day-swipe"
-      {onpointerdown}
-      {onpointermove}
-      {onpointerup}
-      onpointercancel={onpointerup}
-      onclickcapture={onclickcapture}
+      use:daySwipe={{ hasPrevious: prevDay !== null, hasNext: nextDay !== null, onswipe }}
     >
       <!-- Il riepilogo (con l'unico anello) resta montato: cambiano solo i valori. -->
       <DaySummary {view} today={isToday} calendarWeekday={selected} />
