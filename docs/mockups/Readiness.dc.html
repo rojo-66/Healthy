@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Readiness survey</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease,color .25s ease}
+.tap:active{transform:scale(.9)}
+.scroll{scrollbar-width:none}.scroll::-webkit-scrollbar{display:none}
+@media (prefers-reduced-motion: reduce){.tap{transition:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 90% 8%, rgba(240,85,159,0.16), transparent 40%); color: #ece8df; font-family: 'Space Grotesk', system-ui, sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+
+  <header style="flex: none; padding: 48px 18px 12px 8px; background-color: rgba(18,20,26,0.96); border-bottom: 1px solid #2c3040; display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <a href="Main.dc.html" aria-label="Annulla e torna indietro" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #ece8df">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4l-8 8 8 8"></path></svg>
+      </a>
+      <h1 style="flex: 1; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 32px; line-height: 1.2; color: #f0559f; text-shadow: 0 0 16px rgba(240,85,159,0.4)">Petto &amp; schiena</h1>
+    </div>
+    <div aria-label="Passo 1 di 3" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; padding-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px">
+      <div style="display: flex; flex-direction: column; gap: 5px; color: #f0559f"><span style="height: 4px; background-color: #f0559f; box-shadow: 0 0 8px rgba(240,85,159,0.8)"></span>READINESS</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; color: #77748a"><span style="height: 4px; background-color: #2c3040"></span>INTRO PT</div>
+      <div style="display: flex; flex-direction: column; gap: 5px; color: #77748a"><span style="height: 4px; background-color: #2c3040"></span>ESERCIZI</div>
+    </div>
+  </header>
+
+  <main class="scroll" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 18px 18px 130px 18px; display: flex; flex-direction: column; gap: 18px">
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 30px; line-height: 1.1; transform: rotate(-2deg); transform-origin: left">Come stai oggi?</h2>
+      <span style="font-size: 14px; color: #c9c5d3">Le risposte arrivano al tuo PT. Su tutte le voci, 5 = meglio.</span>
+    </div>
+
+    <sc-for list="{{items}}" as="q" hint-placeholder-count="5">
+      <fieldset style="margin: 0; border: none; padding: 14px; background-color: #1b1e27; display: flex; flex-direction: column; gap: 10px; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)">
+        <legend style="float: left; padding: 0; width: 100%; display: flex; justify-content: space-between; align-items: baseline">
+          <span style="font-size: 16px; font-weight: 700">{{ q.label }}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #f0559f">{{ q.valueText }}</span>
+        </legend>
+        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+          <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="5">
+            <button class="tap" onClick="{{ o.pick }}" aria-label="{{ o.aria }}" aria-pressed="{{ o.on }}" style="{{ o.style }}">{{ o.n }}</button>
+          </sc-for>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #a9a6b5">
+          <span>{{ q.low }}</span><span>{{ q.high }}</span>
+        </div>
+      </fieldset>
+    </sc-for>
+  </main>
+
+  <footer style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 14px 18px 30px 18px; background-color: #1b1e27; box-shadow: inset 0 1px 0 rgba(240,85,159,0.45); display: flex; align-items: center; gap: 14px">
+    <div style="display: flex; flex-direction: column; gap: 2px; flex-shrink: 0">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #a9a6b5">READINESS</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 22px">{{ total }}<span style="font-size: 13px; color: #a9a6b5">/25</span></span>
+    </div>
+    <sc-if value="{{ complete }}" hint-placeholder-val="{{ false }}">
+      <a href="IntroPT.dc.html" class="tap" style="flex: 1; height: 54px; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; background-color: #f0559f; color: #12141a; font-weight: 700; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 22px rgba(240,85,159,0.45)">Avanti
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4l8 8-8 8"></path></svg>
+      </a>
+    </sc-if>
+    <sc-if value="{{ incomplete }}" hint-placeholder-val="{{ true }}">
+      <button disabled style="flex: 1; height: 54px; border: 1px solid #3a3f52; background-color: transparent; color: #77748a; font-family: inherit; font-weight: 700; font-size: 14px">Rispondi a tutte ({{ answered }}/5)</button>
+    </sc-if>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { v: { sonno: 4, umore: 4, energia: 0, stress: 0, soreness: 0 } }; }
+  renderVals() {
+    var self = this, v = this.state.v;
+    var defs = [
+      ['sonno', 'Sonno', 'pessimo', 'ottimo'],
+      ['umore', 'Umore', 'giù di morale', 'alle stelle'],
+      ['energia', 'Energia', 'a terra', 'carico'],
+      ['stress', 'Stress', 'molto stressato', 'rilassato'],
+      ['soreness', 'Affaticamento muscolare', 'molto indolenzito', 'nessun dolore']
+    ];
+    var total = 0, answered = 0;
+    var items = defs.map(function (d) {
+      var cur = v[d[0]];
+      if (cur) { total += cur; answered += 1; }
+      var opts = [1, 2, 3, 4, 5].map(function (n) {
+        var on = cur === n;
+        return {
+          n: n, on: on, aria: d[1] + ': ' + n + ' su 5',
+          pick: function () { var nv = Object.assign({}, self.state.v); nv[d[0]] = n; self.setState({ v: nv }); },
+          style: 'height: 48px; font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 17px; cursor: pointer; ' +
+            (on ? 'background-color: #f0559f; color: #12141a; border: none; box-shadow: 0 0 14px rgba(240,85,159,0.5);'
+                : (cur && n < cur ? 'background-color: rgba(240,85,159,0.14); color: #ece8df; border: 1px solid rgba(240,85,159,0.35);' : 'background-color: #12141a; color: #ece8df; border: 1px solid #2c3040;'))
+        };
+      });
+      return { label: d[1], low: '1 · ' + d[2], high: d[3] + ' · 5', valueText: cur ? cur + '/5' : '—', opts: opts };
+    });
+    return { items: items, total: total, answered: answered, complete: answered === 5, incomplete: answered < 5 };
+  }
+}
+</script>
+</body>
+</html>

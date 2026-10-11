@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Crea o modifica scheda</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease,color .25s ease}
+.tap:active{transform:scale(.92)}
+.scroll{scrollbar-width:none}.scroll::-webkit-scrollbar{display:none}
+input::placeholder,textarea::placeholder{color:#77748a}
+input:focus,textarea:focus{outline:1px solid #f0559f;outline-offset:0}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes sheetIn{from{transform:translateY(100%)}to{transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.drop{animation:drop .26s cubic-bezier(.2,.9,.3,1.05)}
+.sheet{animation:sheetIn .34s cubic-bezier(.2,.9,.3,1.05)}
+.fade{animation:fadeIn .25s ease}
+@media (prefers-reduced-motion: reduce){.tap{transition:none}.drop,.sheet,.fade{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 90% 8%, rgba(240,85,159,0.14), transparent 40%); color: #ece8df; font-family: 'Space Grotesk', system-ui, sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+
+  <header style="flex: none; z-index: 3; padding: 48px 18px 12px 8px; background-color: rgba(18,20,26,0.96); border-bottom: 1px solid #2c3040; display: flex; flex-direction: column; gap: 8px">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <a href="Allena.dc.html" aria-label="Torna alle schede" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #ece8df">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4l-8 8 8 8"></path></svg>
+      </a>
+      <label for="nome-scheda" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Nome della scheda</label>
+      <input id="nome-scheda" type="text" value="{{ name }}" onChange="{{ onName }}" placeholder="Nome della scheda" style="flex: 1; min-width: 0; height: 44px; box-sizing: border-box; padding: 0 8px; background-color: transparent; border: none; border-bottom: 1px dashed #3a3f52; color: #f0559f; font-family: 'Permanent Marker', cursive; font-size: 28px; text-shadow: 0 0 14px rgba(240,85,159,0.35)">
+      <span style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #f2c94c; border: 1px solid rgba(242,201,76,0.6); padding: 2px 6px; margin-left: 8px">v3 → v4</span>
+    </div>
+    <div style="display: flex; gap: 14px; padding-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5; white-space: nowrap">
+      <span><b style="color: #ece8df">{{ exCount }}</b> esercizi</span>
+      <span><b style="color: #ece8df">{{ setCount }}</b> serie</span>
+      <span>~<b style="color: #ece8df">{{ minutes }}</b> min</span>
+    </div>
+  </header>
+
+  <main class="scroll" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 16px 18px 120px 18px; display: flex; flex-direction: column; gap: 18px">
+
+    <section aria-label="Quando" style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; font-weight: 500; color: #a9a6b5">GIORNI</h2>
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+          <button class="tap" onClick="{{ d.toggle }}" aria-pressed="{{ d.on }}" aria-label="{{ d.full }}" style="{{ d.style }}">{{ d.l }}</button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section aria-label="Introduzione per il cliente" style="display: flex; flex-direction: column; gap: 8px">
+      <label for="intro" style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #a9a6b5">INTRODUZIONE <span style="color: #77748a">· si legge prima di iniziare</span></label>
+      <textarea id="intro" rows="3" placeholder="Obiettivo della sessione, istruzioni generali…" style="box-sizing: border-box; padding: 12px 14px; background-color: #1b1e27; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 14px; line-height: 1.45; resize: none">Oggi si spinge sui dorsali. 5 minuti di tapis leggero, poi la mobilità.</textarea>
+      <button class="tap" style="height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; background-color: #1b1e27; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 14px; cursor: pointer">
+        <span>Riscaldamento e mobilità</span>
+        <span style="display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">4 voci
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+        </span>
+      </button>
+    </section>
+
+    <section aria-label="Esercizi" style="display: flex; flex-direction: column; gap: 8px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #f0559f">Esercizi</h2>
+        <span style="font-size: 12px; color: #a9a6b5">tieni premuto ⠿ per spostare</span>
+      </div>
+
+      <sc-for list="{{exs}}" as="e" hint-placeholder-count="6">
+        <div style="{{ e.cardStyle }}">
+          <div style="display: flex; align-items: center">
+            <span aria-hidden="true" style="width: 32px; flex-shrink: 0; display: flex; justify-content: center; color: #5b5870; font-size: 18px; cursor: grab">⠿</span>
+            <button class="tap" onClick="{{ e.toggle }}" aria-expanded="{{ e.open }}" style="flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 0; min-height: 60px; border: none; background-color: transparent; color: #ece8df; font-family: inherit; text-align: left; cursor: pointer">
+              <span style="width: 28px; height: 28px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-color: #12141a; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; color: #f0559f">{{ e.n }}</span>
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+                <span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ e.name }}</span>
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">{{ e.summary }}</span>
+              </span>
+              <span style="{{ e.chev }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+            </button>
+          </div>
+
+          <sc-if value="{{ e.open }}" hint-placeholder-val="{{ false }}">
+            <div class="drop" style="padding: 4px 14px 16px 14px; display: flex; flex-direction: column; gap: 14px">
+              <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+                <sc-for list="{{ e.steppers }}" as="s" hint-placeholder-count="3">
+                  <div role="group" aria-label="{{ s.label }}" style="display: flex; flex-direction: column; gap: 6px; align-items: stretch">
+                    <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #a9a6b5; text-align: center">{{ s.label }}</span>
+                    <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 26px; text-align: center; line-height: 1">{{ s.value }}</span>
+                    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px">
+                      <button class="tap" onClick="{{ s.dec }}" aria-label="{{ s.decLabel }}" style="height: 44px; background-color: #12141a; border: 1px solid #2c3040; color: #ece8df; font-size: 20px; cursor: pointer">−</button>
+                      <button class="tap" onClick="{{ s.inc }}" aria-label="{{ s.incLabel }}" style="height: 44px; background-color: #12141a; border: 1px solid #2c3040; color: #ece8df; font-size: 20px; cursor: pointer">+</button>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #a9a6b5">RECUPERO</span>
+                <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+                  <sc-for list="{{ e.rests }}" as="r" hint-placeholder-count="4">
+                    <button class="tap" onClick="{{ r.pick }}" aria-pressed="{{ r.on }}" style="{{ r.style }}">{{ r.label }}</button>
+                  </sc-for>
+                </div>
+              </div>
+
+              <button class="tap" style="align-self: flex-start; height: 36px; padding: 0; border: none; background-color: transparent; color: #a9a6b5; font-family: inherit; font-size: 13px; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Serie diverse tra loro (es. piramidale)</button>
+
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="nota-ex" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #f2c94c">✎ NOTA PER IL CLIENTE</label>
+                <textarea id="nota-ex" rows="3" value="{{ e.note }}" onChange="{{ e.onNote }}" placeholder="Esecuzione, errori da evitare, quando scalare il carico…" style="box-sizing: border-box; padding: 10px 12px; background-color: rgba(242,201,76,0.06); border: 1px dashed rgba(242,201,76,0.5); color: #ece8df; font-family: inherit; font-size: 14px; line-height: 1.45; resize: none"></textarea>
+              </div>
+
+              <div style="display: flex; flex-direction: column; gap: 6px">
+                <label for="video-ex" style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #4cc9e6">▶ LINK VIDEO</label>
+                <input id="video-ex" type="url" placeholder="https://… (si apre con la rete)" style="height: 44px; box-sizing: border-box; padding: 0 12px; background-color: #12141a; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 14px">
+              </div>
+
+              <div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px">
+                <button class="tap" onClick="{{ e.up }}" aria-label="Sposta su" style="height: 44px; background-color: transparent; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 12px; cursor: pointer">↑ Su</button>
+                <button class="tap" onClick="{{ e.down }}" aria-label="Sposta giù" style="height: 44px; background-color: transparent; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 12px; cursor: pointer">↓ Giù</button>
+                <button class="tap" onClick="{{ e.dup }}" style="height: 44px; background-color: transparent; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 12px; cursor: pointer">Duplica</button>
+                <button class="tap" onClick="{{ e.del }}" style="height: 44px; background-color: transparent; border: 1px solid rgba(242,201,76,0.5); color: #f2c94c; font-family: inherit; font-size: 12px; cursor: pointer">Elimina</button>
+              </div>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+
+      <button class="tap" onClick="{{ openLib }}" style="height: 56px; display: flex; align-items: center; justify-content: center; gap: 8px; background-color: transparent; border: 1px dashed #f0559f; color: #f0559f; font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg>Aggiungi esercizio
+      </button>
+    </section>
+
+    <section aria-label="Cardio finale" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; background-color: #1b1e27">
+      <span style="font-size: 14px">Cardio finale</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #f0559f">tapis roulant · 12'</span>
+    </section>
+  </main>
+
+  <footer style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 14px 18px 30px 18px; background-color: #1b1e27; box-shadow: inset 0 1px 0 rgba(240,85,159,0.45); display: grid; grid-template-columns: 1fr 2fr; gap: 10px">
+    <button class="tap" style="height: 52px; border: 1px solid #3a3f52; background-color: transparent; color: #ece8df; font-family: inherit; font-weight: 700; font-size: 14px; cursor: pointer">Anteprima</button>
+    <button class="tap" style="height: 52px; display: flex; align-items: center; justify-content: center; gap: 8px; border: none; background-color: #f0559f; color: #12141a; font-family: inherit; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 20px rgba(240,85,159,0.4)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>Salva e invia
+    </button>
+  </footer>
+
+  <sc-if value="{{ libOpen }}" hint-placeholder-val="{{ false }}">
+    <div style="position: absolute; inset: 0; z-index: 10">
+      <button class="fade" onClick="{{ closeLib }}" aria-label="Chiudi" style="position: absolute; inset: 0; width: 100%; height: 100%; border: none; background-color: rgba(6,7,10,0.62); cursor: pointer"></button>
+      <div class="sheet" role="dialog" aria-label="Aggiungi esercizio" style="position: absolute; left: 0; right: 0; bottom: 0; height: 640px; box-sizing: border-box; background-color: #1b1e27; padding: 14px 18px 24px 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(22px 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%, 0 22px); box-shadow: inset 0 1px 0 rgba(240,85,159,0.6)">
+        <span style="align-self: center; width: 40px; height: 4px; background-color: #3a3f52; border-radius: 2px"></span>
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 26px; color: #f0559f">Libreria</h2>
+          <button class="tap" onClick="{{ closeLib }}" aria-label="Chiudi" style="width: 44px; height: 44px; border: none; background-color: transparent; color: #a9a6b5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+          </button>
+        </div>
+        <label for="cerca" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Cerca esercizio</label>
+        <input id="cerca" type="search" value="{{ q }}" onChange="{{ onQ }}" placeholder="Cerca: panca, squat, curl…" style="height: 46px; box-sizing: border-box; padding: 0 14px; background-color: #12141a; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; font-size: 15px">
+        <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px" class="scroll">
+          <sc-for list="{{filters}}" as="f" hint-placeholder-count="7">
+            <button class="tap" onClick="{{ f.pick }}" aria-pressed="{{ f.on }}" style="{{ f.style }}">{{ f.label }}</button>
+          </sc-for>
+        </div>
+        <div class="scroll" style="flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: 6px">
+          <sc-for list="{{lib}}" as="x" hint-placeholder-count="8">
+            <div style="display: flex; align-items: center; gap: 10px; padding: 8px 8px 8px 12px; background-color: #12141a">
+              <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+                <span style="font-size: 15px; font-weight: 700">{{ x.name }}</span>
+                <span style="font-size: 12px; color: #a9a6b5">{{ x.muscles }}</span>
+              </span>
+              <button class="tap" onClick="{{ x.add }}" aria-label="{{ x.aria }}" style="{{ x.btnStyle }}">{{ x.btn }}</button>
+            </div>
+          </sc-for>
+          <button class="tap" style="min-height: 48px; border: 1px dashed #3a3f52; background-color: transparent; color: #a9a6b5; font-family: inherit; font-size: 14px; cursor: pointer">Non c'è? Crea esercizio personalizzato</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = {
+      name: 'Petto + Schiena',
+      days: [true, false, false, false, false, false, false],
+      open: 1, lib: false, q: '', filter: 'Tutti', nextId: 7,
+      exs: [
+        { id: 1, name: 'Panca piana bilanciere', sets: 4, reps: 8, kg: 72.5, rest: 120, note: 'Scapole addotte e piedi ben piantati.' },
+        { id: 2, name: 'Lat machine presa larga', sets: 4, reps: 10, kg: 57.5, rest: 90, note: 'Tira con i gomiti, non con le mani. Se alla serie 3 non chiudi 10 ripetizioni pulite, nell’ultima scendi a 55 kg.' },
+        { id: 3, name: 'Panca inclinata manubri', sets: 3, reps: 10, kg: 22, rest: 90, note: '' },
+        { id: 4, name: 'Rematore manubrio', sets: 3, reps: 10, kg: 32, rest: 90, note: '' },
+        { id: 5, name: 'Croci ai cavi', sets: 3, reps: 12, kg: 15, rest: 60, note: '' },
+        { id: 6, name: 'Pulley basso', sets: 3, reps: 12, kg: 50, rest: 60, note: '' }
+      ]
+    };
+  }
+  renderVals() {
+    var self = this, st = this.state;
+    function fmtKg(k) { return k ? String(k).replace('.', ',') : '—'; }
+    function upd(i, patch) {
+      var arr = st.exs.map(function (e) { return Object.assign({}, e); });
+      Object.assign(arr[i], patch); self.setState({ exs: arr });
+    }
+    var setCount = 0, secs = 0;
+    st.exs.forEach(function (e) { setCount += e.sets; secs += e.sets * (e.rest + 45); });
+    var exs = st.exs.map(function (e, i) {
+      var open = st.open === e.id;
+      return {
+        n: i + 1, name: e.name, open: open, note: e.note,
+        summary: e.sets + ' × ' + e.reps + ' · ' + fmtKg(e.kg) + ' kg · rec ' + e.rest + ' s',
+        toggle: function () { self.setState({ open: open ? -1 : e.id }); },
+        cardStyle: 'background-color: #1b1e27; display: flex; flex-direction: column; transition: box-shadow .25s ease; ' + (open ? 'box-shadow: inset 0 0 0 1px rgba(240,85,159,0.6);' : ''),
+        chev: 'flex-shrink: 0; display: flex; color: #a9a6b5; transition: transform .25s ease; transform: rotate(' + (open ? 180 : 0) + 'deg);',
+        steppers: [
+          { label: 'SERIE', value: e.sets, decLabel: 'Una serie in meno', incLabel: 'Una serie in più',
+            dec: function () { upd(i, { sets: Math.max(1, e.sets - 1) }); }, inc: function () { upd(i, { sets: Math.min(10, e.sets + 1) }); } },
+          { label: 'RIPETIZIONI', value: e.reps, decLabel: 'Una ripetizione in meno', incLabel: 'Una ripetizione in più',
+            dec: function () { upd(i, { reps: Math.max(1, e.reps - 1) }); }, inc: function () { upd(i, { reps: Math.min(50, e.reps + 1) }); } },
+          { label: 'KG', value: fmtKg(e.kg), decLabel: 'Meno 2,5 kg', incLabel: 'Più 2,5 kg',
+            dec: function () { upd(i, { kg: Math.max(0, e.kg - 2.5) }); }, inc: function () { upd(i, { kg: e.kg + 2.5 }); } }
+        ],
+        rests: [60, 90, 120, 180].map(function (v) {
+          var on = e.rest === v;
+          return { label: v + ' s', on: on, pick: function () { upd(i, { rest: v }); },
+            style: 'height: 44px; font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 13px; cursor: pointer; ' +
+              (on ? 'background-color: rgba(240,85,159,0.16); color: #f0559f; border: 1px solid #f0559f;' : 'background-color: #12141a; color: #ece8df; border: 1px solid #2c3040;') };
+        }),
+        onNote: function (ev) { upd(i, { note: ev.target.value }); },
+        up: function () { if (i === 0) return; var a = st.exs.slice(); var t = a[i - 1]; a[i - 1] = a[i]; a[i] = t; self.setState({ exs: a }); },
+        down: function () { if (i === st.exs.length - 1) return; var a = st.exs.slice(); var t = a[i + 1]; a[i + 1] = a[i]; a[i] = t; self.setState({ exs: a }); },
+        dup: function () { var a = st.exs.slice(); var c = Object.assign({}, e, { id: st.nextId }); a.splice(i + 1, 0, c); self.setState({ exs: a, nextId: st.nextId + 1, open: c.id }); },
+        del: function () { var a = st.exs.slice(); a.splice(i, 1); self.setState({ exs: a, open: -1 }); }
+      };
+    });
+    var dayNames = ['Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato', 'Domenica'];
+    var days = ['L', 'M', 'M', 'G', 'V', 'S', 'D'].map(function (l, i) {
+      var on = st.days[i];
+      return { l: l, on: on, full: dayNames[i],
+        toggle: function () { var d = st.days.slice(); d[i] = !d[i]; self.setState({ days: d }); },
+        style: 'height: 44px; font-weight: 700; font-size: 14px; font-family: inherit; cursor: pointer; ' +
+          (on ? 'background-color: #f0559f; color: #12141a; border: none; box-shadow: 0 0 12px rgba(240,85,159,0.45);' : 'background-color: #1b1e27; color: #ece8df; border: 1px solid #2c3040;') };
+    });
+    var library = [
+      ['Panca piana bilanciere', 'Petto', 'Pettorali · Tricipiti'], ['Spinte manubri panca piana', 'Petto', 'Pettorali · Spalle'],
+      ['Dip alle parallele', 'Petto', 'Pettorali · Tricipiti'], ['Trazioni alla sbarra', 'Schiena', 'Dorsali · Bicipiti'],
+      ['Rematore bilanciere', 'Schiena', 'Dorsali · Romboidi'], ['Face pull ai cavi', 'Spalle', 'Deltoidi posteriori'],
+      ['Lento avanti manubri', 'Spalle', 'Deltoidi'], ['Squat bilanciere', 'Gambe', 'Quadricipiti · Glutei'],
+      ['Leg press', 'Gambe', 'Quadricipiti · Glutei'], ['Curl manubri', 'Braccia', 'Bicipiti'],
+      ['Push down ai cavi', 'Braccia', 'Tricipiti'], ['Plank', 'Core', 'Addome · Core']
+    ];
+    var names = st.exs.map(function (e) { return e.name; });
+    var q = st.q.toLowerCase();
+    var lib = library.filter(function (x) {
+      return (st.filter === 'Tutti' || x[1] === st.filter) && (!q || x[0].toLowerCase().indexOf(q) >= 0);
+    }).map(function (x) {
+      var inIt = names.indexOf(x[0]) >= 0;
+      return {
+        name: x[0], muscles: x[2], aria: inIt ? x[0] + ' è già nella scheda' : 'Aggiungi ' + x[0], btn: inIt ? '✓' : '+',
+        add: function () {
+          if (inIt) return;
+          var c = { id: st.nextId, name: x[0], sets: 3, reps: 10, kg: 0, rest: 90, note: '' };
+          self.setState({ exs: st.exs.concat([c]), nextId: st.nextId + 1, lib: false, open: c.id, q: '' });
+        },
+        btnStyle: 'width: 44px; height: 44px; flex-shrink: 0; font-size: 22px; font-family: inherit; cursor: pointer; ' +
+          (inIt ? 'background-color: transparent; color: #f0559f; border: 1px solid #3a3f52; font-size: 16px;' : 'background-color: #f0559f; color: #12141a; border: none;')
+      };
+    });
+    var filters = ['Tutti', 'Petto', 'Schiena', 'Spalle', 'Gambe', 'Braccia', 'Core'].map(function (f) {
+      var on = st.filter === f;
+      return { label: f, on: on, pick: function () { self.setState({ filter: f }); },
+        style: 'flex-shrink: 0; height: 36px; padding: 0 14px; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer; ' +
+          (on ? 'background-color: #f0559f; color: #12141a; border: none;' : 'background-color: transparent; color: #c9c5d3; border: 1px solid #3a3f52;') };
+    });
+    return {
+      name: st.name, onName: function (ev) { self.setState({ name: ev.target.value }); },
+      exCount: st.exs.length, setCount: setCount, minutes: Math.round(secs / 60) + 12,
+      days: days, exs: exs,
+      libOpen: st.lib, openLib: function () { self.setState({ lib: true }); }, closeLib: function () { self.setState({ lib: false }); },
+      q: st.q, onQ: function (ev) { self.setState({ q: ev.target.value }); },
+      filters: filters, lib: lib
+    };
+  }
+}
+</script>
+</body>
+</html>

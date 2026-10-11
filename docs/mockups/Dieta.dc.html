@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Dieta – piano, spesa e ricette</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease,color .25s ease,opacity .25s ease}
+.tap:active{transform:scale(.94)}
+.ind{transition:transform .32s cubic-bezier(.2,.9,.3,1.1)}
+.ring{transition:stroke-dasharray .6s cubic-bezier(.2,.9,.3,1)}
+.bar{transition:width .5s cubic-bezier(.2,.9,.3,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+@keyframes drop{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+.rise{animation:rise .3s cubic-bezier(.2,.9,.3,1.05)}
+.drop{animation:drop .26s cubic-bezier(.2,.9,.3,1.05)}
+@media (prefers-reduced-motion: reduce){.tap,.ind,.ring,.bar{transition:none}.rise,.drop{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 2000px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 88% 4%, rgba(169,227,75,0.14), transparent 38%); color: #ece8df; font-family: 'Space Grotesk', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px; padding: 54px 18px 0 18px">
+
+  <header style="display: flex; flex-direction: column; gap: 10px">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #a9a6b5; white-space: nowrap">LUN 12 OTT 2026</span>
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 54px; line-height: 1; color: #a9e34b; text-shadow: 0 0 18px rgba(169,227,75,0.4); transform: rotate(-3deg); transform-origin: left bottom">Dieta</h1>
+      <button class="tap" onClick="{{ togglePlan }}" aria-expanded="{{ planOpen }}" aria-label="Piano Ottobre 2026: importa, esporta, modifica, condividi" style="height: 44px; padding: 0 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; background-color: transparent; border: 1px solid #3a3f52; color: #ece8df; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"></path><path d="M14 3v6h6"></path></svg>Ottobre 2026
+      </button>
+    </div>
+  </header>
+
+  <sc-if value="{{ planOpen }}" hint-placeholder-val="{{ false }}">
+    <section class="drop" role="dialog" aria-label="Gestisci il piano alimentare" style="background-color: #1b1e27; padding: 16px; display: flex; flex-direction: column; gap: 14px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(169,227,75,0.6), 0 0 26px rgba(169,227,75,0.12)">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px">
+        <div style="display: flex; flex-direction: column; gap: 4px">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: #a9e34b">PIANO ATTIVO</span>
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 28px; line-height: 1.05">Ottobre 2026</h2>
+          <span style="font-size: 12px; color: #a9a6b5">Dal nutrizionista · importato l'8 ott · v1</span>
+        </div>
+        <button class="tap" onClick="{{ togglePlan }}" aria-label="Chiudi" style="width: 44px; height: 44px; flex-shrink: 0; border: none; background-color: transparent; color: #a9a6b5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg>
+        </button>
+      </div>
+      <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px">
+        <span style="padding: 4px 8px; border: 1px solid rgba(169,227,75,0.5); color: #a9e34b">✓ target</span>
+        <span style="padding: 4px 8px; border: 1px solid rgba(169,227,75,0.5); color: #a9e34b">✓ macro per alimento</span>
+        <span style="padding: 4px 8px; border: 1px solid rgba(169,227,75,0.5); color: #a9e34b">✓ 12 ricette</span>
+        <span style="padding: 4px 8px; border: 1px solid rgba(169,227,75,0.5); color: #a9e34b">✓ integratori</span>
+      </div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+        <sc-for list="{{planActions}}" as="a" hint-placeholder-count="4">
+          <button class="tap" style="min-height: 72px; padding: 10px 12px; display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 3px; background-color: #12141a; border: 1px solid #2c3040; color: #ece8df; font-family: inherit; text-align: left; cursor: pointer">
+            <span style="font-size: 15px; font-weight: 700">{{ a.t }}</span>
+            <span style="font-size: 12px; color: #a9a6b5">{{ a.s }}</span>
+          </button>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid #2c3040; font-size: 13px">
+        <span style="color: #a9a6b5">Archivio · Settembre 2026</span>
+        <button class="tap" style="height: 36px; padding: 0 10px; background-color: transparent; border: 1px solid #3a3f52; color: #c9c5d3; font-family: inherit; font-size: 12px; cursor: pointer">Ripristina</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <div role="tablist" aria-label="Sezioni" style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background-color: #1b1e27; padding: 4px">
+    <span class="ind" aria-hidden="true" style="{{ indStyle }}"></span>
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+      <button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isPiano }}" hint-placeholder-val="{{ true }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 16px">
+
+      <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 5px">
+        <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+          <button class="tap" onClick="{{ d.pick }}" aria-pressed="{{ d.on }}" aria-label="{{ d.aria }}" style="{{ d.style }}">
+            <span style="font-size: 11px; font-weight: 700">{{ d.l }}</span>
+            <span style="{{ d.dot }}"></span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px">{{ d.kcal }}</span>
+          </button>
+        </sc-for>
+      </div>
+
+      <section aria-label="Riepilogo del giorno" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 14px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(169,227,75,0.35)">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px">
+          <span style="{{ typeStyle }}">{{ typeLabel }}</span>
+          <span style="font-size: 12px; color: #a9a6b5">{{ dayFull }}</span>
+        </div>
+        <div style="display: flex; gap: 18px; align-items: center">
+          <div style="position: relative; width: 112px; height: 112px; flex-shrink: 0">
+            <svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="{{ ringAria }}">
+              <circle cx="56" cy="56" r="46" fill="none" stroke="#2c3040" stroke-width="11"></circle>
+              <circle class="ring" cx="56" cy="56" r="46" fill="none" stroke="#a9e34b" stroke-width="11" stroke-linecap="round" stroke-dasharray="{{ ringDash }}" transform="rotate(-90 56 56)" style="filter: drop-shadow(0 0 6px rgba(169,227,75,0.55))"></circle>
+            </svg>
+            <div style="position: absolute; inset: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center; overflow: hidden">
+              <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px; line-height: 1.1; white-space: nowrap">{{ ringValue }}</span>
+              <span style="font-size: 10px; line-height: 1.2; color: #a9a6b5; white-space: nowrap">{{ ringSub }}</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 9px; flex-grow: 1">
+            <sc-for list="{{macros}}" as="m" hint-placeholder-count="3">
+              <div style="display: flex; flex-direction: column; gap: 4px">
+                <div style="display: flex; justify-content: space-between; font-size: 12px"><span>{{ m.label }}</span><span style="font-family: 'JetBrains Mono', monospace">{{ m.text }}</span></div>
+                <div style="height: 6px; background-color: #2c3040; border-radius: 3px"><div class="bar" style="{{ m.bar }}"></div></div>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5; border-top: 1px solid #2c3040; padding-top: 10px">
+          <span>PIANO {{ planKcal }} kcal · FIBRE {{ planFib }} g</span>
+          <span>TARGET: NUTRIZIONISTA</span>
+        </div>
+      </section>
+
+      <sc-for list="{{meals}}" as="m" hint-placeholder-count="6">
+        <article style="{{ m.cardStyle }}">
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px">
+            <span style="{{ m.headStyle }}">{{ m.head }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a9a6b5">{{ m.kcal }} kcal</span>
+          </div>
+          <h3 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 21px; line-height: 1.15">{{ m.name }}</h3>
+          <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 12px; font-size: 13px">
+            <sc-for list="{{ m.items }}" as="it" hint-placeholder-count="4">
+              <span style="display: flex; justify-content: space-between; gap: 6px; border-bottom: 1px dashed #2c3040; padding-bottom: 3px"><span style="color: #c9c5d3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ it.n }}</span><b style="flex-shrink: 0; font-family: 'JetBrains Mono', monospace; color: #a9e34b">{{ it.q }}</b></span>
+            </sc-for>
+          </div>
+          <div style="display: flex; align-items: center; gap: 8px">
+            <span style="flex: 1; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">{{ m.macro }}</span>
+            <sc-if value="{{ m.hasRecipe }}" hint-placeholder-val="{{ false }}">
+              <button class="tap" onClick="{{ m.openRecipe }}" style="height: 44px; padding: 0 12px; background-color: transparent; border: 1px solid #3a3f52; color: #ece8df; font-family: inherit; font-size: 13px; cursor: pointer">{{ m.recipeLabel }}</button>
+            </sc-if>
+            <sc-if value="{{ m.canTick }}" hint-placeholder-val="{{ true }}">
+              <button class="tap" onClick="{{ m.toggle }}" aria-pressed="{{ m.eaten }}" aria-label="{{ m.tickLabel }}" style="{{ m.tickStyle }}">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"></path></svg>
+              </button>
+            </sc-if>
+          </div>
+        </article>
+      </sc-for>
+
+      <section aria-label="Integratori" style="display: flex; flex-direction: column; gap: 8px">
+        <h3 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; font-weight: 500; color: #a9a6b5">INTEGRATORI</h3>
+        <div style="display: flex; flex-wrap: wrap; gap: 6px">
+          <sc-for list="{{supps}}" as="s" hint-placeholder-count="3">
+            <span style="{{ s.style }}">{{ s.t }}</span>
+          </sc-for>
+        </div>
+      </section>
+
+      <section aria-label="Nota del nutrizionista" style="padding: 14px 16px; border: 1px solid #3a3f52; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: #a9e34b">✎ NOTA DEL NUTRIZIONISTA</span>
+        <span style="font-size: 14px; line-height: 1.45">{{ note }}</span>
+      </section>
+
+      <section aria-label="Osservazione dell'app" style="background-color: rgba(242,201,76,0.1); border: 1px dashed rgba(242,201,76,0.6); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: #f2c94c">✦ OSSERVAZIONE DELL'APP</span>
+        <span style="font-size: 14px; line-height: 1.45">{{ obs }}</span>
+        <span style="font-size: 11px; color: #a9a6b5">L'app non modifica il piano: segnala soltanto.</span>
+      </section>
+
+      <button class="tap" style="height: 48px; background-color: transparent; border: 1px dashed #3a3f52; color: #c9c5d3; font-family: inherit; font-size: 14px; cursor: pointer">⇄ Oggi seguo il piano di un altro giorno</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isSpesa }}" hint-placeholder-val="{{ false }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 14px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 26px">Settimana 12–18 ott</h2>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a9e34b">{{ boughtCount }}/{{ shopTotal }}</span>
+      </div>
+      <div style="height: 6px; background-color: #2c3040"><div class="bar" style="{{ shopBar }}"></div></div>
+      <sc-for list="{{shop}}" as="c" hint-placeholder-count="7">
+        <section style="display: flex; flex-direction: column; gap: 4px">
+          <h3 style="margin: 4px 0 2px 0; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; font-weight: 500; color: #a9a6b5">{{ c.cat }}</h3>
+          <sc-for list="{{ c.items }}" as="it" hint-placeholder-count="4">
+            <button class="tap" onClick="{{ it.toggle }}" aria-pressed="{{ it.on }}" style="{{ it.rowStyle }}">
+              <span style="{{ it.boxStyle }}"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12l5 5L20 6"></path></svg></span>
+              <span style="{{ it.nameStyle }}">{{ it.n }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; color: #a9e34b">{{ it.q }}</span>
+            </button>
+          </sc-for>
+        </section>
+      </sc-for>
+      <span style="font-size: 12px; color: #a9a6b5">Esclusi dalla lista: whey (integratore) e pizza (pasto libero).</span>
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px">
+        <button class="tap" onClick="{{ resetShop }}" style="height: 52px; border: none; background-color: #a9e34b; color: #12141a; font-family: inherit; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 18px rgba(169,227,75,0.35)">Spesa finita ✓</button>
+        <button class="tap" style="height: 52px; background-color: transparent; border: 1px solid #3a3f52; color: #ece8df; font-family: inherit; font-size: 14px; cursor: pointer">Condividi</button>
+      </div>
+      <span style="font-size: 12px; color: #a9a6b5; text-align: center">"Spesa finita" toglie tutte le spunte e prepara la lista per la prossima settimana.</span>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isRicette }}" hint-placeholder-val="{{ false }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 8px">
+      <sc-for list="{{recipes}}" as="r" hint-placeholder-count="12">
+        <div style="background-color: #1b1e27; display: flex; flex-direction: column">
+          <button class="tap" onClick="{{ r.toggle }}" aria-expanded="{{ r.open }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 60px; border: none; background-color: transparent; color: #ece8df; font-family: inherit; text-align: left; cursor: pointer">
+            <span style="width: 32px; height: 32px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background-color: #12141a; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; color: #a9e34b">{{ r.n }}</span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+              <span style="font-size: 15px; font-weight: 700">{{ r.name }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">{{ r.meta }}</span>
+            </span>
+            <span style="{{ r.chev }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></span>
+          </button>
+          <sc-if value="{{ r.open }}" hint-placeholder-val="{{ false }}">
+            <div class="drop" style="padding: 0 14px 16px 14px; display: flex; flex-direction: column; gap: 10px">
+              <sc-if value="{{ r.hasDose }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; font-weight: 700; color: #a9e34b">{{ r.dose }}</span>
+              </sc-if>
+              <ol style="margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; font-size: 14px; line-height: 1.45">
+                <sc-for list="{{ r.steps }}" as="s" hint-placeholder-count="4"><li>{{ s }}</li></sc-for>
+              </ol>
+              <sc-if value="{{ r.hasTip }}" hint-placeholder-val="{{ false }}">
+                <span style="font-size: 13px; line-height: 1.45; color: #c9c5d3; padding: 10px 12px; border: 1px solid #3a3f52">{{ r.tip }}</span>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <nav aria-label="Navigazione principale" style="position: sticky; bottom: 0; margin: auto -18px 0 -18px; padding: 10px 12px 28px 12px; background-color: rgba(18,20,26,0.94); border-top: 1px solid #2c3040; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Oggi</a>
+    <a href="Allena.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg>Allena</a>
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9e34b; font-size: 11px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18M17 3c-2 2-2 6 0 8v10"></path></svg>Dieta</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M6 16l4-5 3 3 5-7"></path></svg>Progressi</a>
+    <a href="Profilo.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>Profilo</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'piano', day: 0, eaten: [true, true, false, false, false, false], bought: {}, recipe: 5 };
+  }
+  data() {
+    var COL = ['Colazione', '06:45', 'Yogurt greco, avena e banana', 368, 26.9, 57.8, 3.1, 'Yogurt greco 0%|215 g;Fiocchi d’avena|35 g;Banana|100 g;Miele|9 g', 1];
+    var SP1 = ['Spuntino', '10:00', 'Mela, grana e gallette', 209, 8.6, 26.9, 6.9, 'Mela|130 g;Grana a scaglie|20 g;Gallette di riso|2', 4];
+    var PRE = ['Pre-workout', '17:30', 'Banana e gallette', 148, 2.3, 35.4, 0.8, 'Banana|100 g;Gallette di riso|2', 0];
+    var POST = ['Post-workout', '20:15', 'Whey in acqua', 98, 19.6, 2.0, 1.3, 'Proteine whey|25 g;Creatina|3-5 g', 0];
+    var YA = ['Spuntino', '17:00', 'Yogurt greco e arachidi', 131, 16.7, 5.8, 4.4, 'Yogurt greco 0%|145 g;Arachidi|9 g', 4];
+    var POLLO = ['Pollo e patate in friggitrice', 480, 47.4, 42.9, 13.8, 'Petto di pollo|185 g;Patate|215 g;Verdure miste|170 g;Olio EVO|9 g', 5];
+    var LONZA = ['Lonza e patate', 487, 42.8, 42.9, 15.9, 'Lonza di maiale|170 g;Patate|215 g;Verdure miste|170 g;Olio EVO|9 g', 8];
+    function m(label, time, x) { return [label, time].concat(x); }
+    return [
+      { l: 'L', full: 'Lunedì', type: 'gym', t: [1812, 137.9, 225.5, 41.3, 24.1],
+        meals: [COL, SP1, m('Pranzo', '13:00', POLLO), PRE, POST,
+          ['Cena', '21:00', 'Riso con sgombro e verdure', 509, 33.1, 60.5, 15.5, 'Riso (crudo)|70 g;Sgombro sgocciolato|100 g;Verdure miste|170 g', 6]],
+        supps: [['Whey + creatina · dopo palestra', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · oggi c’è lo sgombro', 0]],
+        note: 'Cuoci 120 g di riso: 70 g stasera, 50 g per il pranzo di domani. Niente olio aggiunto: basta quello dello sgombro.' },
+      { l: 'M', full: 'Martedì', type: 'gym', t: [1837, 139.2, 232.0, 38.0, 27.5],
+        meals: [COL, SP1, ['Pranzo', '13:00', 'Riso con sgombro e verdure', 449, 31.9, 47.1, 15.3, 'Riso (crudo)|50 g;Sgombro sgocciolato|100 g;Verdure miste|170 g', 6], PRE, POST,
+          ['Cena', '21:00', 'Pasta al tonno', 565, 50.1, 62.9, 10.6, 'Pasta integrale|85 g;Tonno sgocciolato|135 g;Passata|130 g;Grana grattugiato|9 g;Verdure miste|130 g;Olio EVO|4 g', 7]],
+        supps: [['Whey + creatina · dopo palestra', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · sgombro a pranzo', 0]],
+        note: 'Cuoci 155 g di pasta: 85 g stasera, 70 g per il pranzo di domani.' },
+      { l: 'M', full: 'Mercoledì', type: 'rest', t: [1455, 136.3, 154.3, 30.1, 24.6],
+        meals: [['Colazione', '06:45', 'Yogurt, avena e banana (leggera)', 297, 25.6, 42.5, 2.5, 'Yogurt greco 0%|215 g;Fiocchi d’avena|25 g;Banana piccola|85 g', 1],
+          ['Spuntino', '10:00', 'Whey e mela', 164, 19.9, 16.5, 1.5, 'Proteine whey|25 g;Mela|130 g', 4],
+          ['Pranzo', '13:00', 'Pasta al tonno', 507, 48.0, 52.4, 10.2, 'Pasta integrale|70 g;Tonno sgocciolato|135 g;Passata|130 g;Grana grattugiato|9 g;Verdure miste|130 g;Olio EVO|4 g', 7],
+          m('Cena', '20:00', LONZA)],
+        supps: [['Whey + creatina · metà mattina', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · cena', 1]],
+        note: 'Ricetta 8 in porzione doppia: diventa il pranzo di giovedì.' },
+      { l: 'G', full: 'Giovedì', type: 'gym', t: [1836, 148.6, 225.6, 37.5, 27.4],
+        meals: [COL, SP1, m('Pranzo', '13:00', LONZA), PRE, POST,
+          ['Cena', '21:00', 'Riso, pollo e piselli', 526, 48.4, 60.6, 9.5, 'Riso (crudo)|60 g;Petto di pollo|170 g;Piselli surgelati|130 g;Olio EVO|4 g', 9]],
+        supps: [['Whey + creatina · dopo palestra', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · cena', 1]],
+        note: 'Riso cotto fresco: 110 g in tutto, 60 g stasera e 50 g per domani.' },
+      { l: 'V', full: 'Venerdì', type: 'gym', t: [1800, 140.3, 224.7, 38.0, 29.2],
+        meals: [COL, SP1, ['Pranzo', '13:00', 'Riso, pollo e piselli', 496, 47.9, 53.9, 9.4, 'Riso (crudo)|50 g;Petto di pollo|170 g;Piselli surgelati|130 g;Olio EVO|4 g', 9], PRE, POST,
+          ['Cena', '21:00', 'Frittata con pane', 481, 35.2, 48.7, 16.5, 'Uova intere|2;Albumi|130 g;Verdure miste|170 g;Pane integrale|85 g;Olio EVO|4 g', 10]],
+        supps: [['Whey + creatina · dopo palestra', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · cena', 1]],
+        note: 'Porzione singola: il sabato si cucina fresco.' },
+      { l: 'S', full: 'Sabato', type: 'run', t: [1721, 111.4, 197.6, 49.8, 19.6],
+        meals: [['Colazione', '08:00', 'Pancake di avena', 407, 23.0, 57.8, 8.9, 'Fiocchi d’avena|50 g;Uovo intero|1;Albumi|85 g;Banana piccola|85 g;Miele|9 g', 2],
+          ['Post-corsa', '10:30', 'Whey in acqua', 98, 19.6, 2.0, 1.3, 'Proteine whey|25 g;Creatina|3-5 g', 0],
+          ['Pranzo', '13:00', 'Piadina al tacchino', 405, 25.0, 51.3, 11.4, 'Piadina integrale|70 g;Fesa di tacchino|70 g;Spalmabile light|25 g;Insalata e pomodoro|70 g;Frutta di stagione|130 g', 11],
+          ['Spuntino (opz.)', '17:00', 'Yogurt greco e arachidi', 131, 16.7, 5.8, 4.4, 'Yogurt greco 0%|145 g;Arachidi|9 g', 4],
+          ['Cena', '20:30', 'Pasto libero moderato', 680, 27.2, 80.8, 23.8, 'Pizza margherita (stima)|1', 0]],
+        supps: [['Whey + creatina · dopo la corsa', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · cena', 1]],
+        note: 'Corsa 6 km a 6:00/km dopo colazione (aspetta almeno un’ora) o dopo pranzo. Se salti la corsa: niente whey, la giornata scende a circa 1.600 kcal.' },
+      { l: 'D', full: 'Domenica', type: 'rest', t: [1453, 134.4, 124.6, 46.1, 21.6],
+        meals: [['Colazione', '08:30', 'Uova strapazzate e pane tostato', 391, 25.3, 36.8, 16.0, 'Uova intere|2;Albumi|60 g;Pane integrale|70 g;Pomodorini|85 g;Olio EVO|4 g', 3],
+          ['Pranzo', '13:00', 'Merluzzo con pane e verdure', 451, 45.0, 39.1, 11.9, 'Merluzzo surgelato|215 g;Pane integrale|70 g;Verdure miste|170 g;Olio EVO|9 g', 12],
+          YA, m('Cena', '20:00', POLLO)],
+        supps: [['Creatina in acqua · cena', 1], ['Vitamina D3 · cena', 1], ['Omega-3 · cena', 1]],
+        note: 'Ricetta 5 in porzione doppia: diventa il pranzo di lunedì. Lunedì mattina pesati a digiuno.' }
+    ];
+  }
+  recipes() {
+    return [
+      ['Bowl di yogurt greco, avena e banana', '3 min · zero cottura · lun–ven', '', ['Versa lo yogurt greco in una ciotola e aggiungi l’avena cruda.', 'Mescola e lascia riposare un paio di minuti: l’avena si ammorbidisce da sola.', 'Banana a rondelle sopra e, nei giorni di palestra, il cucchiaino di miele.'], 'Mercoledì versione leggera: 25 g di avena, banana piccola, niente miele.'],
+      ['Pancake di avena', '10 min · padella antiaderente · sabato', '', ['Frulla avena, uovo, albumi e mezza banana fino a una pastella liscia.', 'Padella antiaderente calda, senza grassi: versa la pastella in 2-3 pancake.', 'Cuoci 2-3 minuti per lato a fuoco medio.', 'Servi con l’altra mezza banana e il miele.'], 'Se corri dopo colazione, lascia passare almeno un’ora.'],
+      ['Uova strapazzate e pane tostato', '10 min · padella + friggitrice · domenica', '', ['Sbatti uova e albumi con un pizzico di sale.', 'Padella con 4 g d’olio a fuoco basso: mescola finché sono cremose (3-4 minuti).', 'Tosta il pane in friggitrice: 3 minuti a 180°.', 'Pomodorini conditi solo con sale e origano.'], ''],
+      ['Spuntini e shaker fuori frigo', '2 min · la sera prima o alle 6:45', '', ['Palestra: mela + 20 g di grana + 2 gallette in un contenitore piccolo.', 'Mercoledì: whey e creatina nello shaker asciutto; alle 10 aggiungi 250 ml d’acqua.', 'Pre-workout (17:30): banana + 2 gallette, tenute in borsa.', 'Post-workout: shaker asciutto preparato da casa, acqua in spogliatoio.'], 'La domenica porziona il grana della settimana in 4 sacchetti da 20 g.'],
+      ['Pollo e patate in friggitrice', '35 min · friggitrice · cena dom → pranzo lun', 'Porzione doppia: 375 g di pollo, 425 g di patate, 340 g di verdure, 17 g di olio', ['Patate a cubetti da 2 cm, asciugate e mescolate con metà dell’olio, sale e paprika.', 'Friggitrice a 200° per 20-22 minuti, scuotendo il cestello a metà.', 'Pollo a straccetti con il resto dell’olio: 190° per 12-15 minuti.', 'Verdure surgelate in padella con un dito d’acqua e coperchio, 5-6 minuti.', 'Dividi a metà: una porzione stasera, una nel contenitore per domani.'], 'Le sovracosce disossate costano meno e restano più morbide: circa 2 g di grassi in più a porzione.'],
+      ['Riso con sgombro e verdure', '20 min · pentola e padella · cena lun → pranzo mar', 'Totale: 120 g di riso crudo, 205 g di sgombro sgocciolato, 340 g di verdure', ['Bolli il riso in acqua salata 12-15 minuti.', 'Verdure surgelate in padella con il coperchio, 5-6 minuti.', 'Sgocciola lo sgombro e spezzettalo sul riso con le verdure.', 'La porzione di domani va in frigo appena tiepida.'], 'Lo sgombro ha gli stessi omega-3 del salmone a un terzo del prezzo.'],
+      ['Pasta al tonno', '15 min · pentola + padella · cena mar → pranzo mer', 'Totale: 155 g di pasta, 270 g di tonno, 255 g di passata, 255 g di verdure, 17 g di grana, 9 g di olio', ['Metti l’acqua sul fuoco appena entri in casa.', 'Cuoci tutta la pasta insieme.', 'In padella passata, verdure, tonno e olio: 5-6 minuti.', 'Condisci, spolvera il grana, metti da parte la porzione di domani.'], ''],
+      ['Lonza e patate', '25 min · friggitrice · cena mer → pranzo gio', 'Porzione doppia: 340 g di lonza, 425 g di patate, 340 g di verdure, 17 g di olio', ['Patate a cubetti come nella ricetta 5: 200° per 20 minuti.', 'Fette di lonza da 1 cm, leggermente oliate: 190° per 8-10 minuti, non di più.', 'In alternativa padella: 3 minuti per lato a fuoco vivo.', 'Verdure in padella nel frattempo, poi dividi a metà.'], ''],
+      ['Riso, pollo e piselli', '20 min · pentola + friggitrice + padella · cena gio → pranzo ven', 'Totale: 110 g di riso, 340 g di pollo, 255 g di piselli, 9 g di olio', ['Appena rientri metti a bollire il riso (12-15 minuti).', 'Pollo a straccetti in friggitrice con metà dell’olio: 190° per 12 minuti.', 'Piselli in padella con un dito d’acqua e il resto dell’olio, 6-7 minuti.', 'Unisci tutto in padella per un minuto.'], 'Raffredda in fretta il riso del giorno dopo: in frigo entro un’ora.'],
+      ['Frittata in friggitrice con pane', '15 min · padella + friggitrice · venerdì', '2 uova, 130 g di albumi, 170 g di verdure, 4 g di olio, 85 g di pane', ['Salta le verdure in padella per 5 minuti.', 'Sbatti uova e albumi con un pizzico di sale, unisci le verdure.', 'Stampo unto, friggitrice a 160° per 12-14 minuti.', 'Pane a fianco, anche tostato.'], ''],
+      ['Piadina al tacchino', '5 min · sabato', '', ['Scalda la piadina in padella, 30 secondi per lato.', 'Spalma il formaggio, aggiungi tacchino, insalata e pomodoro. Arrotola.', 'Frutto a fine pasto.'], ''],
+      ['Merluzzo con pane e verdure', '15 min · friggitrice · domenica', '215 g di merluzzo, 70 g di pane, 170 g di verdure, 9 g di olio', ['Sabato sera sposta i filetti dal congelatore al frigo.', 'Tamponali, condisci con olio, sale, origano e limone: 180° per 10-12 minuti.', 'Verdure in padella, pane a fianco.'], 'I filetti surgelati costano molto meno del pesce fresco, con risultato identico.']
+    ];
+  }
+  renderVals() {
+    var self = this, st = this.state, D = this.data(), day = D[st.day], today = st.day === 0;
+    function f1(n) { return n.toFixed(1).replace('.', ','); }
+    function fk(n) { n = Math.round(n); return n >= 1000 ? Math.floor(n / 1000) + '.' + String(n % 1000).padStart(3, '0') : String(n); }
+    var targets = { gym: [1819, 141, 227, 39, 27], run: [1717, 111, 197, 50, 20], rest: [1454, 135, 139, 38, 23] };
+    var tlabels = { gym: 'GIORNO PALESTRA', run: 'CORSA + PASTO LIBERO', rest: 'RIPOSO' };
+    var tcolors = { gym: '#f0559f', run: '#4cc9e6', rest: '#77748a' };
+    var T = targets[day.type];
+    var week = D.map(function (d, i) {
+      var on = st.day === i;
+      return {
+        l: d.l, on: on, kcal: fk(d.t[0]), aria: d.full + ', ' + fk(d.t[0]) + ' kcal',
+        pick: function () { self.setState({ day: i }); },
+        dot: 'width: 6px; height: 6px; transform: rotate(45deg); background-color: ' + tcolors[d.type] + ';',
+        style: 'min-height: 62px; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 5px; cursor: pointer; font-family: inherit; ' +
+          (on ? 'background-color: #a9e34b; color: #12141a; border: none; box-shadow: 0 0 14px rgba(169,227,75,0.45);' : 'background-color: #1b1e27; color: #ece8df; border: none;') +
+          (i === 0 && !on ? ' outline: 1px solid #a9e34b; outline-offset: -1px;' : '')
+      };
+    });
+    var eaten = [0, 0, 0, 0];
+    var meals = day.meals.map(function (x, k) {
+      var isEaten = today && !!st.eaten[k];
+      if (isEaten) { eaten[0] += x[3]; eaten[1] += x[4]; eaten[2] += x[5]; eaten[3] += x[6]; }
+      var now = today && k === 2 && !isEaten;
+      var items = x[7].split(';').map(function (s) { var p = s.split('|'); return { n: p[0], q: p[1] }; });
+      return {
+        head: (now ? '● ADESSO · ' : '') + x[0].toUpperCase() + ' · ' + x[1],
+        headStyle: 'font-family: \'JetBrains Mono\', monospace; font-size: 12px; letter-spacing: 1px; color: ' + (now ? '#a9e34b' : '#a9a6b5') + ';',
+        name: x[2], kcal: x[3], items: items,
+        macro: 'P ' + f1(x[4]) + ' · C ' + f1(x[5]) + ' · G ' + f1(x[6]),
+        hasRecipe: x[8] > 0, recipeLabel: 'Ricetta ' + x[8],
+        openRecipe: function () { self.setState({ tab: 'ricette', recipe: x[8] }); },
+        canTick: today, eaten: isEaten,
+        tickLabel: isEaten ? x[0] + ' mangiato, tocca per annullare' : 'Segna ' + x[0] + ' come mangiato',
+        toggle: function () { var e = st.eaten.slice(); e[k] = !e[k]; self.setState({ eaten: e }); },
+        tickStyle: 'width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; cursor: pointer; ' +
+          (isEaten ? 'background-color: #a9e34b; color: #12141a; border: none;' : 'background-color: transparent; color: #77748a; border: 1px solid #3a3f52;'),
+        cardStyle: 'background-color: #1b1e27; padding: 16px; display: flex; flex-direction: column; gap: 10px; transition: opacity .3s ease, box-shadow .3s ease; ' +
+          (now ? 'box-shadow: inset 0 0 0 1px rgba(169,227,75,0.7), 0 0 22px rgba(169,227,75,0.12); clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 16px 100%, 0 calc(100% - 16px));' : '') +
+          (isEaten ? ' opacity: .6;' : '')
+      };
+    });
+    var shown = today ? eaten : [day.t[0], day.t[1], day.t[2], day.t[3]];
+    var mac = [['Proteine', 1, '#f0559f'], ['Carboidrati', 2, '#a9e34b'], ['Grassi', 3, '#4cc9e6']].map(function (m) {
+      var v = shown[m[1]], t = T[m[1]];
+      return { label: m[0], text: Math.round(v) + ' / ' + t + ' g', bar: 'height: 6px; border-radius: 3px; background-color: ' + m[2] + '; width: ' + Math.min(100, Math.round(v / t * 100)) + '%;' };
+    });
+    var c = 289, frac = Math.min(1, shown[0] / T[0]);
+    var dev = [['calorie', 0, 'kcal'], ['proteine', 1, 'g'], ['carboidrati', 2, 'g'], ['grassi', 3, 'g']].map(function (k) {
+      var diff = day.t[k[1]] - T[k[1]]; return { name: k[0], diff: diff, pct: diff / T[k[1]] * 100, u: k[2] };
+    }).sort(function (a, b) { return Math.abs(b.pct) - Math.abs(a.pct); });
+    var top = dev[0], obs;
+    if (Math.abs(top.pct) < 5) obs = 'Il piano di oggi è in linea con i target del nutrizionista: tutti gli scarti sono sotto il 5%.';
+    else obs = 'Il piano di ' + day.full.toLowerCase() + ' ha ' + top.name + ' ' + (top.diff > 0 ? '+' : '−') + f1(Math.abs(top.diff)).replace(',0', '') + ' ' + top.u + ' rispetto al target (' + (top.diff > 0 ? '+' : '−') + Math.round(Math.abs(top.pct)) + '%). Se ti sembra strano, chiedi conferma al nutrizionista.';
+    var tabNames = [['piano', 'Piano'], ['spesa', 'Spesa'], ['ricette', 'Ricette']];
+    var tabIdx = tabNames.map(function (t) { return t[0]; }).indexOf(st.tab);
+    var tabs = tabNames.map(function (t) {
+      var on = st.tab === t[0];
+      return { label: t[1], on: on, pick: function () { self.setState({ tab: t[0] }); },
+        style: 'position: relative; z-index: 1; height: 44px; border: none; background-color: transparent; font-family: inherit; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: color .25s ease; color: ' + (on ? '#12141a' : '#a9a6b5') + ';' };
+    });
+    var shopData = [
+      ['CARNE E PESCE', 'Petto di pollo|715 g;Lonza di maiale|340 g;Fesa di tacchino a fette|70 g'],
+      ['SCATOLAME', 'Sgombro sott’olio|205 g;Tonno al naturale|270 g;Passata di pomodoro|255 g'],
+      ['SURGELATI', 'Verdure miste|1,6 kg;Piselli|255 g;Filetti di merluzzo|215 g'],
+      ['LATTICINI E UOVA', 'Yogurt greco 0%|1,4 kg;Grana a scaglie|85 g;Grana grattugiato|17 g;Uova|5;Albumi|270 g;Spalmabile light|25 g'],
+      ['FRUTTA E VERDURA', 'Banane|1 kg;Mele|640 g;Patate|850 g;Insalata e pomodoro|70 g;Frutta di stagione|130 g;Pomodorini|85 g'],
+      ['PANE, PASTA E CEREALI', 'Fiocchi d’avena|215 g;Gallette di riso|16;Riso|230 g;Pasta integrale|155 g;Pane integrale|220 g;Piadina integrale|70 g'],
+      ['DISPENSA', 'Miele|45 g;Olio EVO|70 g;Arachidi non salate|17 g']
+    ];
+    var total = 0, bought = 0;
+    var shop = shopData.map(function (cat) {
+      return { cat: cat[0], items: cat[1].split(';').map(function (s) {
+        var p = s.split('|'), key = p[0], on = !!st.bought[key]; total++; if (on) bought++;
+        return { n: p[0], q: p[1], on: on,
+          toggle: function () { var b = Object.assign({}, st.bought); b[key] = !b[key]; self.setState({ bought: b }); },
+          rowStyle: 'display: flex; align-items: center; gap: 12px; width: 100%; min-height: 48px; padding: 0 12px; border: none; cursor: pointer; font-family: inherit; color: #ece8df; text-align: left; transition: opacity .25s ease; background-color: #1b1e27;' + (on ? ' opacity: .5;' : ''),
+          boxStyle: 'width: 24px; height: 24px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; ' + (on ? 'background-color: #a9e34b; color: #12141a;' : 'border: 1px solid #3a3f52; color: transparent;'),
+          nameStyle: 'flex: 1; font-size: 14px;' + (on ? ' text-decoration: line-through;' : '') };
+      }) };
+    });
+    var recipes = this.recipes().map(function (r, i) {
+      var n = i + 1, open = st.recipe === n;
+      return { n: n, name: r[0], meta: r[1], dose: r[2], hasDose: !!r[2], steps: r[3], tip: r[4], hasTip: !!r[4], open: open,
+        toggle: function () { self.setState({ recipe: open ? 0 : n }); },
+        chev: 'flex-shrink: 0; display: flex; color: #a9a6b5; transition: transform .25s ease; transform: rotate(' + (open ? 180 : 0) + 'deg);' };
+    });
+    return {
+      tabs: tabs,
+      indStyle: 'position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: 44px; background-color: #a9e34b; box-shadow: 0 0 14px rgba(169,227,75,0.4); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); transform: translateX(' + (tabIdx * 100) + '%);',
+      isPiano: st.tab === 'piano', isSpesa: st.tab === 'spesa', isRicette: st.tab === 'ricette',
+      week: week, dayKey: st.day, dayFull: day.full + (today ? ' · oggi' : ' · anteprima'),
+      typeLabel: tlabels[day.type],
+      typeStyle: 'font-family: \'JetBrains Mono\', monospace; font-size: 12px; letter-spacing: 2px; color: ' + (day.type === 'rest' ? '#a9a6b5' : tcolors[day.type]) + ';',
+      ringValue: fk(shown[0]), ringSub: (today ? 'di ' : 'target ') + fk(T[0]),
+      planOpen: !!st.plan,
+      togglePlan: function () { self.setState({ plan: !st.plan }); },
+      planActions: [
+        { t: 'Importa', s: 'nuovo piano (file JSON)' }, { t: 'Esporta', s: 'salva il file JSON' },
+        { t: 'Modifica', s: 'pasti, grammi, target' }, { t: 'Condividi', s: 'link, QR o file' }
+      ],
+      resetShop: function () { self.setState({ bought: {} }); },
+      ringDash: (c * frac).toFixed(1) + ' ' + c, ringAria: fk(shown[0]) + ' di ' + fk(T[0]) + ' kcal',
+      macros: mac, planKcal: fk(day.t[0]), planFib: f1(day.t[4]),
+      meals: meals,
+      supps: day.supps.map(function (s) { return { t: s[0], style: 'font-size: 13px; padding: 7px 10px; ' + (s[1] ? 'border: 1px solid #f2c94c; color: #f2c94c;' : 'border: 1px solid #3a3f52; color: #8a879a; text-decoration: line-through;') }; }),
+      note: day.note, obs: obs,
+      shop: shop, shopTotal: total, boughtCount: bought,
+      shopBar: 'height: 6px; background-color: #a9e34b; width: ' + Math.round(bought / total * 100) + '%;',
+      recipes: recipes
+    };
+  }
+}
+</script>
+</body>
+</html>

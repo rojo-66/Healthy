@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Oggi – Spray Neon</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease}
+.tap:active{transform:scale(.96)}
+@keyframes pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.pop{animation:pop .35s cubic-bezier(.2,.9,.3,1.4)}
+@media (prefers-reduced-motion: reduce){.tap,.pop{transition:none;animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1120px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 88% 4%, rgba(240,85,159,0.16), transparent 38%), radial-gradient(circle at 6% 30%, rgba(169,227,75,0.08), transparent 32%); color: #ece8df; font-family: 'Space Grotesk', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px; padding: 54px 18px 0 18px; position: relative">
+
+  <header style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; white-space: nowrap">
+      <span style="color: #a9a6b5">12 OTT 2026</span>
+      <span style="color: #4cc9e6">SYNC OFFLINE ✓</span>
+    </div>
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 2px">
+        <h1 style="margin: 0; font-family: 'Permanent Marker', cursive; font-size: 54px; line-height: 1; color: #f0559f; text-shadow: 0 0 18px rgba(240,85,159,0.45); transform: rotate(-3deg); transform-origin: left bottom">Lunedì</h1>
+      </div>
+      <span style="white-space: nowrap; flex-shrink: 0; margin-bottom: 6px; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 12px; letter-spacing: 1px; text-transform: uppercase; color: #12141a; background-color: #a9e34b; padding: 6px 10px; clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px)">Giorno palestra</span>
+    </div>
+    <nav aria-label="Giorni della settimana" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+      <sc-for list="{{days}}" as="d" hint-placeholder-count="7">
+        <button class="tap" onClick="{{ d.pick }}" aria-label="{{ d.full }}" style="{{ d.style }}">
+          <span style="font-size: 11px; opacity: .8">{{ d.short }}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px">{{ d.num }}</span>
+        </button>
+      </sc-for>
+    </nav>
+    <span style="font-size: 12px; color: #a9a6b5; text-align: center">← scorri per ieri e domani →</span>
+  </header>
+
+  <section aria-label="Calorie e macro di oggi" style="background-color: #1b1e27; padding: 18px; display: flex; gap: 18px; align-items: center; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(169,227,75,0.35)">
+    <div style="position: relative; width: 124px; height: 124px; flex-shrink: 0">
+      <svg width="124" height="124" viewBox="0 0 124 124" role="img" aria-label="577 di 1819 kcal">
+        <circle cx="62" cy="62" r="52" fill="none" stroke="#2c3040" stroke-width="12"></circle>
+        <circle cx="62" cy="62" r="52" fill="none" stroke="#a9e34b" stroke-width="12" stroke-linecap="round" stroke-dasharray="104 327" transform="rotate(-90 62 62)" style="filter: drop-shadow(0 0 6px rgba(169,227,75,0.6))"></circle>
+      </svg>
+      <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center">
+        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 24px">577</span>
+        <span style="font-size: 11px; color: #a9a6b5">di 1.819 kcal</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 10px; flex-grow: 1">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; justify-content: space-between; font-size: 12px"><span>Proteine</span><span style="font-family: 'JetBrains Mono', monospace">35 / 141 g</span></div>
+        <div style="height: 6px; background-color: #2c3040; border-radius: 3px"><div style="width: 25%; height: 6px; background-color: #f0559f; border-radius: 3px"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; justify-content: space-between; font-size: 12px"><span>Carboidrati</span><span style="font-family: 'JetBrains Mono', monospace">85 / 227 g</span></div>
+        <div style="height: 6px; background-color: #2c3040; border-radius: 3px"><div style="width: 37%; height: 6px; background-color: #a9e34b; border-radius: 3px"></div></div>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <div style="display: flex; justify-content: space-between; font-size: 12px"><span>Grassi</span><span style="font-family: 'JetBrains Mono', monospace">10 / 39 g</span></div>
+        <div style="height: 6px; background-color: #2c3040; border-radius: 3px"><div style="width: 26%; height: 6px; background-color: #4cc9e6; border-radius: 3px"></div></div>
+      </div>
+      <span style="font-size: 11px; color: #a9a6b5">Target del nutrizionista · giorno palestra</span>
+    </div>
+  </section>
+
+  <section aria-label="Pasto del momento" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px)); box-shadow: inset 0 0 0 1px rgba(169,227,75,0.55)">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #a9e34b">● ADESSO · PRANZO 13:00</span>
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a9a6b5">480 kcal</span>
+    </div>
+    <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-size: 26px; font-weight: 400; line-height: 1.1">Pollo e patate in friggitrice</h2>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 12px; font-size: 14px">
+      <span>Petto di pollo <b style="font-family: 'JetBrains Mono', monospace; color: #a9e34b">185 g</b></span>
+      <span>Patate <b style="font-family: 'JetBrains Mono', monospace; color: #a9e34b">215 g</b></span>
+      <span>Verdure miste <b style="font-family: 'JetBrains Mono', monospace; color: #a9e34b">170 g</b></span>
+      <span>Olio EVO <b style="font-family: 'JetBrains Mono', monospace; color: #a9e34b">9 g</b></span>
+    </div>
+    <div style="display: flex; gap: 10px">
+      <button class="tap" onClick="{{ toggleMeal }}" style="{{ mealBtnStyle }}">
+        <sc-if value="{{ mealDone }}" hint-placeholder-val="{{ false }}"><span class="pop">✓ Mangiato</span></sc-if>
+        <sc-if value="{{ mealTodo }}" hint-placeholder-val="{{ true }}"><span>Segna come fatto</span></sc-if>
+      </button>
+      <button class="tap" style="height: 48px; padding: 0 16px; background-color: transparent; color: #ece8df; border: 1px solid #3a3f52; font-family: 'Space Grotesk', sans-serif; font-weight: 500; font-size: 14px; cursor: pointer">Ricetta 5</button>
+    </div>
+  </section>
+
+  <section aria-label="Allenamento di oggi" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(240,85,159,0.5)">
+    <div style="display: flex; justify-content: space-between; align-items: center">
+      <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #f0559f">▲ PALESTRA · 18:00–20:00</span>
+      <span style="font-size: 12px; color: #a9a6b5">tra 5 h 20 min</span>
+    </div>
+    <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-size: 30px; font-weight: 400; line-height: 1; color: #f0559f">Petto &amp; schiena</h2>
+    <span style="font-size: 14px; color: #c9c5d3">[Scheda da collegare] + 12' tapis roulant</span>
+    <a href="Readiness.dc.html" class="tap" style="height: 52px; display: flex; align-items: center; justify-content: center; text-decoration: none; background-color: #f0559f; color: #12141a; font-family: 'Space Grotesk', sans-serif; font-weight: 700; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 20px rgba(240,85,159,0.4)">Avvia allenamento</a>
+  </section>
+
+  <section aria-label="Programma della giornata" style="display: flex; flex-direction: column; gap: 0">
+    <h3 style="margin: 0 0 10px 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #a9a6b5; font-weight: 500">LA TUA GIORNATA</h3>
+    <sc-for list="{{timeline}}" as="t" hint-placeholder-count="7">
+      <div style="display: flex; gap: 12px; align-items: stretch">
+        <div style="display: flex; flex-direction: column; align-items: center; width: 16px">
+          <span style="{{ t.dot }}"></span>
+          <span style="width: 2px; flex-grow: 1; background-color: #2c3040"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; flex-grow: 1; padding-bottom: 14px; font-size: 14px">
+          <span style="{{ t.textStyle }}">{{ t.label }}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #a9a6b5">{{ t.time }}</span>
+        </div>
+      </div>
+    </sc-for>
+  </section>
+
+  <section aria-label="Consiglio" style="background-color: rgba(242,201,76,0.1); border: 1px dashed rgba(242,201,76,0.6); padding: 14px 16px; display: flex; flex-direction: column; gap: 4px">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #f2c94c">✦ TIP DELLA SERA</span>
+    <span style="font-size: 14px; line-height: 1.45">Cuoci 140 g di riso: 80 g per stasera, 60 g per il pranzo di domani.</span>
+  </section>
+
+  <nav aria-label="Navigazione principale" style="position: sticky; bottom: 0; margin: 4px -18px 0 -18px; padding: 10px 12px 28px 12px; background-color: rgba(18,20,26,0.94); border-top: 1px solid #2c3040; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px">
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9e34b; font-size: 11px; font-weight: 700">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Oggi</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg>Allena</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18M17 3c-2 2-2 6 0 8v10"></path></svg>Dieta</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M6 16l4-5 3 3 5-7"></path></svg>Progressi</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>Profilo</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1120}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { day: 0, mealDone: false }; }
+  renderVals() {
+    var names = [['L','Lunedì',12],['M','Martedì',13],['M','Mercoledì',14],['G','Giovedì',15],['V','Venerdì',16],['S','Sabato',17],['D','Domenica',18]];
+    var self = this;
+    var days = names.map(function (n, i) {
+      var on = self.state.day === i;
+      return {
+        short: n[0], full: n[1], num: n[2],
+        pick: function () { self.setState({ day: i }); },
+        style: 'min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: none; cursor: pointer; font-family: inherit; ' +
+          (on ? 'background-color: #f0559f; color: #12141a; box-shadow: 0 0 14px rgba(240,85,159,0.5); clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);'
+              : 'background-color: #1b1e27; color: #ece8df;')
+      };
+    });
+    var done = this.state.mealDone;
+    var rows = [
+      ['Colazione · yogurt, avena, banana', '06:45', 'done'],
+      ['Spuntino · mela, grana, gallette', '10:00', 'done'],
+      ['Pranzo · pollo e patate', '13:00', done ? 'done' : 'now'],
+      ['Pre-workout · banana e gallette', '17:30', 'next'],
+      ['Palestra · petto e schiena', '18:00', 'gym'],
+      ['Post-workout · whey + creatina', '20:15', 'next'],
+      ['Cena · riso, sgombro, verdure · D3', '21:00', 'next']
+    ];
+    var timeline = rows.map(function (r) {
+      var c = r[2] === 'done' ? '#3a3f52' : r[2] === 'now' ? '#a9e34b' : r[2] === 'gym' ? '#f0559f' : '#4cc9e6';
+      return {
+        label: r[0], time: r[1],
+        dot: 'width: 12px; height: 12px; margin-top: 3px; flex-shrink: 0; background-color: ' + c + '; transform: rotate(45deg);' + (r[2] === 'now' ? ' box-shadow: 0 0 10px ' + c + ';' : ''),
+        textStyle: r[2] === 'done' ? 'color: #77748a; text-decoration: line-through' : (r[2] === 'now' ? 'color: #ece8df; font-weight: 700' : 'color: #c9c5d3')
+      };
+    });
+    return {
+      days: days,
+      timeline: timeline,
+      mealDone: done,
+      mealTodo: !done,
+      toggleMeal: function () { self.setState({ mealDone: !self.state.mealDone }); },
+      mealBtnStyle: 'flex-grow: 1; height: 48px; border: none; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 15px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); ' +
+        (done ? 'background-color: #2c3040; color: #a9e34b;' : 'background-color: #a9e34b; color: #12141a; box-shadow: 0 0 18px rgba(169,227,75,0.35);')
+    };
+  }
+}
+</script>
+</body>
+</html>

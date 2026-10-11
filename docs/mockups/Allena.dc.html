@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Allena – schede e storico</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease,color .25s ease}
+.tap:active{transform:scale(.95)}
+.ind{transition:transform .32s cubic-bezier(.2,.9,.3,1.1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.rise{animation:rise .3s cubic-bezier(.2,.9,.3,1.05)}
+@media (prefers-reduced-motion: reduce){.tap,.ind{transition:none}.rise{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; min-height: 1400px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 88% 4%, rgba(240,85,159,0.16), transparent 38%); color: #ece8df; font-family: 'Space Grotesk', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px; padding: 54px 18px 0 18px">
+
+  <header style="display: flex; flex-direction: column; gap: 10px">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #a9a6b5; white-space: nowrap">LUN 12 OTT 2026</span>
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px">
+      <h1 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 54px; line-height: 1; color: #f0559f; text-shadow: 0 0 18px rgba(240,85,159,0.45); transform: rotate(-3deg); transform-origin: left bottom">Allena</h1>
+      <button class="tap" aria-label="Importa una scheda da link, QR o file" style="height: 44px; padding: 0 12px; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; background-color: transparent; border: 1px solid #3a3f52; color: #ece8df; font-family: inherit; font-size: 13px; font-weight: 700; cursor: pointer">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM14 14h2v2h-2zM18 18h2v2h-2zM14 18h2"></path></svg>Importa
+      </button>
+    </div>
+  </header>
+
+  <section aria-label="La tua settimana" style="display: flex; flex-direction: column; gap: 10px">
+    <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+      <sc-for list="{{week}}" as="d" hint-placeholder-count="7">
+        <button class="tap" onClick="{{ d.pick }}" aria-label="{{ d.aria }}" aria-pressed="{{ d.on }}" style="{{ d.style }}">
+          <span style="font-size: 11px; opacity: .85">{{ d.letter }}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 14px">{{ d.mark }}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; opacity: .85">{{ d.tag }}</span>
+        </button>
+      </sc-for>
+    </div>
+    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 12px; background-color: #1b1e27; font-size: 13px">
+      <span><b>{{ dayName }}</b> · {{ dayText }}</span>
+      <span style="{{ dayStateStyle }}">{{ dayState }}</span>
+    </div>
+  </section>
+
+  <div role="tablist" aria-label="Sezioni" style="position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); background-color: #1b1e27; padding: 4px">
+    <span class="ind" aria-hidden="true" style="{{ indStyle }}"></span>
+    <button role="tab" aria-selected="{{ isSchede }}" onClick="{{ showSchede }}" style="{{ tabSchedeStyle }}">Schede</button>
+    <button role="tab" aria-selected="{{ isStorico }}" onClick="{{ showStorico }}" style="{{ tabStoricoStyle }}">Storico</button>
+  </div>
+
+  <sc-if value="{{ isSchede }}" hint-placeholder-val="{{ true }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 14px">
+      <section aria-label="Prossimo allenamento" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 10px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(240,85,159,0.55)">
+        <div style="display: flex; justify-content: space-between; align-items: center">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #f0559f">▲ PROSSIMO · MAR 18:00</span>
+          <span style="font-size: 12px; color: #a9a6b5">domani</span>
+        </div>
+        <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 32px; line-height: 1; color: #f0559f">Gambe</h2>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; color: #c9c5d3">5 esercizi · 18 serie · ~70' + 12' tapis</span>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 8px; margin-top: 4px">
+          <a href="Readiness.dc.html" class="tap" style="height: 50px; display: flex; align-items: center; justify-content: center; text-decoration: none; background-color: #f0559f; color: #12141a; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 20px rgba(240,85,159,0.4)">Avvia</a>
+          <button class="tap" style="height: 50px; background-color: transparent; border: 1px solid #3a3f52; color: #ece8df; font-family: inherit; font-size: 14px; cursor: pointer">Vedi scheda</button>
+        </div>
+      </section>
+
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h3 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; font-weight: 500; color: #a9a6b5">LE TUE SCHEDE</h3>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">6</span>
+      </div>
+      <sc-for list="{{cards}}" as="c" hint-placeholder-count="6">
+        <div style="background-color: #1b1e27; display: flex; align-items: stretch">
+          <button class="tap" style="flex: 1; min-width: 0; padding: 14px; display: flex; flex-direction: column; gap: 6px; border: none; background-color: transparent; color: #ece8df; font-family: inherit; text-align: left; cursor: pointer">
+            <span style="display: flex; align-items: center; gap: 8px; width: 100%">
+              <span style="font-family: 'Permanent Marker', cursive; font-size: 21px; line-height: 1.1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ c.name }}</span>
+              <span style="{{ c.srcStyle }}">{{ c.src }}</span>
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">{{ c.meta }}</span>
+            <span style="display: flex; gap: 6px; align-items: center; font-size: 12px">
+              <span style="padding: 2px 8px; background-color: #12141a; font-family: 'JetBrains Mono', monospace; font-weight: 700; color: #f0559f">{{ c.day }}</span>
+              <span style="color: #a9a6b5">{{ c.last }}</span>
+            </span>
+          </button>
+          <button class="tap" aria-label="{{ c.shareLabel }}" style="width: 52px; flex-shrink: 0; border: none; border-left: 1px solid #2c3040; background-color: transparent; color: #a9a6b5; cursor: pointer; display: flex; align-items: center; justify-content: center">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>
+          </button>
+        </div>
+      </sc-for>
+      <button class="tap" style="height: 52px; background-color: transparent; border: 1px dashed #f0559f; color: #f0559f; font-family: inherit; font-weight: 700; font-size: 15px; cursor: pointer">+ Nuova scheda</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isStorico }}" hint-placeholder-val="{{ false }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 14px">
+      <section aria-label="Ottobre 2026" style="background-color: #1b1e27; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px">Ottobre</h2>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">9 sessioni · 2 PR</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: #77748a; text-align: center">
+          <span>L</span><span>M</span><span>M</span><span>G</span><span>V</span><span>S</span><span>D</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px">
+          <sc-for list="{{cal}}" as="k" hint-placeholder-count="35"><span style="{{ k.style }}">{{ k.n }}</span></sc-for>
+        </div>
+        <div style="display: flex; gap: 14px; font-size: 11px; color: #a9a6b5">
+          <span><b style="color: #f0559f">■</b> palestra</span>
+          <span><b style="color: #4cc9e6">■</b> corsa</span>
+          <span><b style="color: #3a3f52">■</b> riposo</span>
+        </div>
+      </section>
+
+      <h3 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; font-weight: 500; color: #a9a6b5">SESSIONI</h3>
+      <sc-for list="{{sessions}}" as="s" hint-placeholder-count="6">
+        <a href="{{ s.href }}" class="tap" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; background-color: #1b1e27; text-decoration: none; color: #ece8df">
+          <span style="width: 44px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; font-family: 'JetBrains Mono', monospace">
+            <span style="font-size: 10px; letter-spacing: 1px; color: #a9a6b5">{{ s.dow }}</span>
+            <span style="{{ s.numStyle }}">{{ s.n }}</span>
+          </span>
+          <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+            <span style="display: flex; align-items: center; gap: 8px">
+              <span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ s.name }}</span>
+              <sc-if value="{{ s.hasPr }}" hint-placeholder-val="{{ false }}">
+                <span style="flex-shrink: 0; padding: 1px 6px; background-color: #f0559f; color: #12141a; font-family: 'Permanent Marker', cursive; font-size: 12px; transform: rotate(-4deg)">{{ s.pr }}</span>
+              </sc-if>
+            </span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">{{ s.meta }}</span>
+          </span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a9a6b5" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+        </a>
+      </sc-for>
+    </div>
+  </sc-if>
+
+  <nav aria-label="Navigazione principale" style="position: sticky; bottom: 0; margin: auto -18px 0 -18px; padding: 10px 12px 28px 12px; background-color: rgba(18,20,26,0.94); border-top: 1px solid #2c3040; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Oggi</a>
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #f0559f; font-size: 11px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg>Allena</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18M17 3c-2 2-2 6 0 8v10"></path></svg>Dieta</a>
+    <a href="#" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M6 16l4-5 3 3 5-7"></path></svg>Progressi</a>
+    <a href="Profilo.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>Profilo</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1400}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { tab: 'schede', day: 1 }; }
+  renderVals() {
+    var self = this, st = this.state;
+    var days = [
+      ['L', 'Lunedì', 'PET', 'Petto + Schiena · 18:00–20:00 + 12’ tapis', 'done'],
+      ['M', 'Martedì', 'GAM', 'Gambe · 18:00–20:00 + 12’ tapis', 'next'],
+      ['M', 'Mercoledì', 'MOB', 'Riposo o mobilità · 20’', 'rest'],
+      ['G', 'Giovedì', 'SPA', 'Spalle e braccia · 18:00–20:00 + 12’ tapis', 'todo'],
+      ['V', 'Venerdì', 'TOT', 'Total body · 18:00–20:00 + 12’ tapis', 'todo'],
+      ['S', 'Sabato', 'RUN', 'Corsa 5 km a 5:30/km', 'todo'],
+      ['D', 'Domenica', '—', 'Riposo completo', 'rest']
+    ];
+    var states = { done: ['FATTO ✓', '#f0559f'], next: ['DOMANI', '#f0559f'], todo: ['IN PROGRAMMA', '#a9a6b5'], rest: ['RIPOSO', '#77748a'] };
+    var week = days.map(function (d, i) {
+      var on = st.day === i, k = d[4];
+      var look = k === 'done' ? 'background-color: #f0559f; color: #12141a; border: none;'
+        : k === 'next' ? 'background-color: #1b1e27; color: #ece8df; border: 1px solid #f0559f; box-shadow: 0 0 12px rgba(240,85,159,0.35);'
+        : k === 'rest' ? 'background-color: transparent; color: #77748a; border: 1px dashed #2c3040;'
+        : 'background-color: #1b1e27; color: #ece8df; border: 1px solid #1b1e27;';
+      return {
+        letter: d[0], tag: d[2], mark: k === 'done' ? '✓' : (12 + i), on: on, aria: d[1] + ': ' + d[3],
+        pick: function () { self.setState({ day: i }); },
+        style: 'min-height: 64px; padding: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; cursor: pointer; font-family: inherit; ' + look +
+          (on ? ' outline: 2px solid #ece8df; outline-offset: 2px;' : '')
+      };
+    });
+    var sel = days[st.day], s = states[sel[4]];
+    var cards = [
+      ['Petto + Schiena', 'PT · v3', '6 esercizi · 20 serie · ~75’', 'LUN', 'fatta oggi'],
+      ['Gambe', 'PT · v2', '5 esercizi · 18 serie · ~70’', 'MAR', 'ultima: 6 ott'],
+      ['Mobilità', 'TUA', '8 esercizi · ~20’', 'MER', 'ultima: 30 set'],
+      ['Spalle e braccia', 'PT · v3', '6 esercizi · 19 serie · ~70’', 'GIO', 'ultima: 8 ott'],
+      ['Total body', 'PT · v1', '5 esercizi · 15 serie · ~60’', 'VEN', 'ultima: 9 ott'],
+      ['Corsa 5 km', 'TUA', 'cardio · 5:30/km · ~28’', 'SAB', 'ultima: 10 ott']
+    ].map(function (c) {
+      var pt = c[1] !== 'TUA';
+      return {
+        name: c[0], src: c[1], meta: c[2], day: c[3], last: c[4], shareLabel: 'Condividi ' + c[0],
+        srcStyle: 'flex-shrink: 0; padding: 1px 6px; font-family: \'JetBrains Mono\', monospace; font-size: 10px; letter-spacing: 1px; ' +
+          (pt ? 'border: 1px solid rgba(242,201,76,0.6); color: #f2c94c;' : 'border: 1px solid #3a3f52; color: #a9a6b5;')
+      };
+    });
+    var trained = { 1: 'g', 2: 'g', 3: 'r', 5: 'g', 6: 'g', 8: 'g', 9: 'g', 10: 'r', 12: 'g' };
+    var cal = [];
+    for (var b = 0; b < 3; b++) cal.push({ n: '', style: 'height: 34px;' });
+    for (var n = 1; n <= 31; n++) {
+      var t = trained[n], future = n > 12;
+      var st2 = 'height: 34px; display: flex; align-items: center; justify-content: center; font-family: \'JetBrains Mono\', monospace; font-size: 12px; ';
+      if (t === 'g') st2 += 'background-color: #f0559f; color: #12141a; font-weight: 700;';
+      else if (t === 'r') st2 += 'background-color: #4cc9e6; color: #12141a; font-weight: 700;';
+      else if (future) st2 += 'background-color: transparent; color: #4a4760;';
+      else st2 += 'background-color: #2c3040; color: #a9a6b5;';
+      if (n === 12) st2 += ' outline: 2px solid #ece8df; outline-offset: 1px;';
+      cal.push({ n: n, style: st2 });
+    }
+    var sessions = [
+      ['LUN', 12, 'Petto + Schiena', '1:16 · 7.775 kg · R18', '2 PR', 'Riepilogo.dc.html', 'g'],
+      ['SAB', 10, 'Corsa 5 km', '27:40 · 5,02 km · 5:31/km · R20', '', '#', 'r'],
+      ['VEN', 9, 'Total body', '1:02 · 6.140 kg · R16', '', '#', 'g'],
+      ['GIO', 8, 'Spalle e braccia', '1:08 · 5.380 kg · R19', '1 PR', '#', 'g'],
+      ['MAR', 6, 'Gambe', '1:11 · 9.920 kg · R17', '', '#', 'g'],
+      ['LUN', 5, 'Petto + Schiena', '1:14 · 7.540 kg · R18', '', '#', 'g']
+    ].map(function (x) {
+      return {
+        dow: x[0], n: x[1], name: x[2], meta: x[3], pr: x[4], hasPr: !!x[4], href: x[5],
+        numStyle: 'font-weight: 700; font-size: 20px; color: ' + (x[6] === 'r' ? '#4cc9e6' : '#f0559f') + ';'
+      };
+    });
+    var isS = st.tab === 'schede';
+    var tabBase = 'position: relative; z-index: 1; height: 44px; border: none; background-color: transparent; font-family: inherit; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: color .25s ease; ';
+    return {
+      week: week,
+      dayKey: st.day,
+      dayName: sel[1], dayText: sel[3], dayState: s[0],
+      dayStateStyle: 'flex-shrink: 0; font-family: \'JetBrains Mono\', monospace; font-size: 11px; letter-spacing: 1px; color: ' + s[1] + ';',
+      isSchede: isS, isStorico: !isS,
+      showSchede: function () { self.setState({ tab: 'schede' }); },
+      showStorico: function () { self.setState({ tab: 'storico' }); },
+      indStyle: 'position: absolute; top: 4px; left: 4px; width: calc(50% - 4px); height: 44px; background-color: #f0559f; box-shadow: 0 0 14px rgba(240,85,159,0.45); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px); transform: translateX(' + (isS ? '0' : '100%') + ');',
+      tabSchedeStyle: tabBase + 'color: ' + (isS ? '#12141a' : '#a9a6b5') + ';',
+      tabStoricoStyle: tabBase + 'color: ' + (isS ? '#a9a6b5' : '#12141a') + ';',
+      cards: cards, cal: cal, sessions: sessions
+    };
+  }
+}
+</script>
+</body>
+</html>

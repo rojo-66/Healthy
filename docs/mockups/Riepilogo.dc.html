@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Riepilogo allenamento</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease,color .25s ease}
+.tap:active{transform:scale(.95)}
+.scroll{scrollbar-width:none}.scroll::-webkit-scrollbar{display:none}
+@keyframes drop{0%{opacity:0;transform:translateY(-8px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes stamp{0%{opacity:0;transform:rotate(-12deg) scale(1.6)}70%{opacity:1;transform:rotate(-6deg) scale(.95)}100%{transform:rotate(-6deg) scale(1)}}
+.drop{animation:drop .28s cubic-bezier(.2,.9,.3,1.05)}
+.stamp{animation:stamp .5s cubic-bezier(.2,.9,.3,1.3) both}
+@media (prefers-reduced-motion: reduce){.tap{transition:none}.drop,.stamp{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 90% 8%, rgba(240,85,159,0.16), transparent 40%), radial-gradient(circle at 5% 60%, rgba(76,201,230,0.07), transparent 35%); color: #ece8df; font-family: 'Space Grotesk', system-ui, sans-serif; display: flex; flex-direction: column; position: relative; overflow: hidden">
+
+  <header style="flex: none; z-index: 3; padding: 48px 18px 12px 8px; background-color: rgba(18,20,26,0.96); border-bottom: 1px solid #2c3040; display: flex; flex-direction: column; gap: 6px">
+    <div style="display: flex; align-items: center; gap: 4px">
+      <a href="#" aria-label="Torna allo storico" style="width: 44px; height: 44px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: #ece8df">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 4l-8 8 8 8"></path></svg>
+      </a>
+      <h1 style="flex: 1; min-width: 0; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 32px; line-height: 1.2; color: #f0559f; text-shadow: 0 0 16px rgba(240,85,159,0.4)">Petto + Schiena</h1>
+    </div>
+    <div style="display: flex; justify-content: space-between; padding-left: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 1px; color: #a9a6b5; white-space: nowrap">
+      <span>RIEPILOGO · LUN 12 OTT 2026</span>
+      <span>18:02 → 19:18</span>
+    </div>
+  </header>
+
+  <main class="scroll" style="flex: 1 1 auto; min-height: 0; overflow-y: auto; padding: 18px 18px 130px 18px; display: flex; flex-direction: column; gap: 18px">
+
+    <section aria-label="Numeri della sessione" style="position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <sc-for list="{{stats}}" as="s" hint-placeholder-count="4">
+        <div style="background-color: #1b1e27; padding: 14px; display: flex; flex-direction: column; gap: 4px; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px)">
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; color: #a9a6b5">{{ s.label }}</span>
+          <span style="{{ s.valueStyle }}">{{ s.value }}</span>
+          <span style="font-size: 12px; color: #a9a6b5">{{ s.sub }}</span>
+        </div>
+      </sc-for>
+      <span class="stamp" aria-hidden="true" style="position: absolute; right: -6px; top: -14px; padding: 4px 10px; background-color: #a9e34b; color: #12141a; font-family: 'Permanent Marker', cursive; font-size: 16px; transform: rotate(-6deg); box-shadow: 0 0 16px rgba(169,227,75,0.4)">Fatto!</span>
+    </section>
+
+    <section aria-label="Readiness prima dell'allenamento" style="background-color: #1b1e27; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; font-weight: 500; color: #a9a6b5">READINESS PRE-ALLENAMENTO</h2>
+        <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 16px; color: #f0559f">18<span style="font-size: 12px; color: #a9a6b5">/25</span></span>
+      </div>
+      <sc-for list="{{ready}}" as="r" hint-placeholder-count="5">
+        <div style="display: grid; grid-template-columns: 112px minmax(0, 1fr) 24px; gap: 10px; align-items: center; font-size: 13px">
+          <span>{{ r.label }}</span>
+          <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px">
+            <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="5"><span style="{{ c }}"></span></sc-for>
+          </div>
+          <span style="font-family: 'JetBrains Mono', monospace; text-align: right; color: #c9c5d3">{{ r.v }}</span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section aria-label="Esercizi" style="display: flex; flex-direction: column; gap: 8px">
+      <h2 style="margin: 0 0 2px 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #f0559f">Esercizi</h2>
+      <sc-for list="{{exs}}" as="e" hint-placeholder-count="6">
+        <div style="background-color: #1b1e27; display: flex; flex-direction: column">
+          <button class="tap" onClick="{{ e.toggle }}" aria-expanded="{{ e.open }}" style="display: flex; align-items: center; gap: 12px; padding: 12px 14px; min-height: 64px; width: 100%; border: none; background-color: transparent; color: #ece8df; font-family: inherit; text-align: left; cursor: pointer">
+            <span style="{{ e.badgeStyle }}">{{ e.count }}</span>
+            <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+              <span style="display: flex; align-items: center; gap: 8px">
+                <span style="font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ e.name }}</span>
+                <sc-if value="{{ e.pr }}" hint-placeholder-val="{{ false }}">
+                  <span style="flex-shrink: 0; padding: 1px 6px; background-color: #f0559f; color: #12141a; font-family: 'Permanent Marker', cursive; font-size: 12px; transform: rotate(-4deg)">PR</span>
+                </sc-if>
+              </span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">top {{ e.best }} · {{ e.volume }}</span>
+            </span>
+            <span style="{{ e.deltaStyle }}">{{ e.delta }}</span>
+            <span style="{{ e.chevStyle }}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg>
+            </span>
+          </button>
+          <sc-if value="{{ e.open }}" hint-placeholder-val="{{ false }}">
+            <div class="drop" style="padding: 0 14px 14px 14px; display: flex; flex-direction: column; gap: 6px">
+              <sc-for list="{{ e.sets }}" as="s" hint-placeholder-count="4">
+                <div style="display: grid; grid-template-columns: 30px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 6px 8px; background-color: #12141a; font-family: 'JetBrains Mono', monospace; font-size: 13px">
+                  <span style="color: #a9a6b5">{{ s.n }}</span>
+                  <span style="{{ s.textStyle }}">{{ s.text }}</span>
+                  <span style="{{ s.markStyle }}">{{ s.mark }}</span>
+                </div>
+              </sc-for>
+              <sc-if value="{{ e.hasNote }}" hint-placeholder-val="{{ false }}">
+                <div style="margin-top: 4px; padding: 10px 12px; border: 1px solid #3a3f52; display: flex; flex-direction: column; gap: 4px">
+                  <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 2px; color: #4cc9e6">TUA NOTA PER IL PT</span>
+                  <span style="font-size: 13px; line-height: 1.45">{{ e.note }}</span>
+                </div>
+              </sc-if>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+      <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 14px; border: 1px dashed #3a3f52; font-size: 14px">
+        <span>Cardio · tapis roulant</span>
+        <span style="font-family: 'JetBrains Mono', monospace; color: #f0559f">12' ✓</span>
+      </div>
+    </section>
+
+    <section aria-label="Sforzo percepito" style="background-color: #1b1e27; padding: 16px; display: flex; flex-direction: column; gap: 10px">
+      <div style="display: flex; justify-content: space-between; align-items: baseline">
+        <h2 style="margin: 0; font-size: 15px; font-weight: 700">Quanto è stata dura?</h2>
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">RPE 1–10</span>
+      </div>
+      <div role="group" aria-label="Sforzo percepito da 1 a 10" style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px">
+        <sc-for list="{{rpe}}" as="p" hint-placeholder-count="10">
+          <button class="tap" onClick="{{ p.pick }}" aria-pressed="{{ p.on }}" aria-label="{{ p.aria }}" style="{{ p.style }}">{{ p.n }}</button>
+        </sc-for>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 11px; color: #a9a6b5"><span>passeggiata</span><span>al limite</span></div>
+    </section>
+
+    <section aria-label="Prossimo pasto" style="padding: 14px 16px; box-shadow: inset 0 0 0 1px rgba(169,227,75,0.55); background-color: rgba(169,227,75,0.06); display: flex; justify-content: space-between; align-items: center; gap: 12px">
+      <div style="display: flex; flex-direction: column; gap: 3px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 2px; color: #a9e34b">● ORA · POST-WORKOUT</span>
+        <span style="font-size: 15px; font-weight: 700">Whey 30 g + creatina 3-5 g</span>
+        <span style="font-size: 12px; color: #a9a6b5">entro 15-20 minuti · poi cena alle 21:00</span>
+      </div>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#a9e34b" stroke-width="2" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+    </section>
+  </main>
+
+  <footer style="position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 14px 18px 30px 18px; background-color: #1b1e27; box-shadow: inset 0 1px 0 rgba(240,85,159,0.45); display: grid; grid-template-columns: 2fr 1fr; gap: 10px">
+    <button class="tap" style="height: 54px; display: flex; align-items: center; justify-content: center; gap: 10px; border: none; background-color: #f0559f; color: #12141a; font-family: inherit; font-weight: 700; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); box-shadow: 0 0 22px rgba(240,85,159,0.45)">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15V3M7 8l5-5 5 5M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"></path></svg>Invia al PT
+    </button>
+    <a href="Main.dc.html" class="tap" style="height: 54px; display: flex; align-items: center; justify-content: center; text-decoration: none; border: 1px solid #3a3f52; color: #ece8df; font-weight: 700; font-size: 15px">Fine</a>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { open: 1, rpe: 8 }; }
+  renderVals() {
+    var self = this, st = this.state;
+    var mono = 'font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 24px; line-height: 1.1;';
+    var stats = [
+      { label: 'DURATA', value: '1:16:40', sub: 'recupero medio 94 s', valueStyle: mono },
+      { label: 'VOLUME', value: '7.775 kg', sub: 'kg × ripetizioni', valueStyle: mono },
+      { label: 'SERIE', value: '19/20', sub: '1 saltata', valueStyle: mono },
+      { label: 'RECORD', value: '2', sub: 'panca piana · lat machine', valueStyle: mono + ' color: #f0559f; text-shadow: 0 0 12px rgba(240,85,159,0.5);' }
+    ];
+    var ready = [['Sonno', 4], ['Umore', 4], ['Energia', 4], ['Stress', 3], ['Affaticamento', 3]].map(function (r) {
+      var cells = [1, 2, 3, 4, 5].map(function (n) { return 'height: 8px; background-color: ' + (n <= r[1] ? '#f0559f' : '#2c3040') + ';'; });
+      return { label: r[0], v: r[1], cells: cells };
+    });
+    var data = [
+      ['Panca piana bilanciere', 4, 4, '72,5 × 8', '2.227,5 kg', '+2,5 kg', 'up', true, ['72,5 × 8', '72,5 × 8', '72,5 × 7', '70 × 8'], ''],
+      ['Lat machine presa larga', 4, 4, '57,5 × 10', '2.217,5 kg', '+2,5 kg', 'up', true, ['57,5 × 10', '57,5 × 10', '57,5 × 9', '55 × 10'], 'Alla terza serie ho sentito tirare la spalla sinistra, nell’ultima ho scalato a 55 kg come da tua nota.'],
+      ['Panca inclinata manubri', 3, 3, '22 × 10', '660 kg', '+1 rip', 'up', false, ['22 × 10', '22 × 10', '22 × 10'], ''],
+      ['Rematore manubrio', 3, 3, '32 × 10', '960 kg', '+2 kg', 'up', false, ['32 × 10', '32 × 10', '32 × 10'], ''],
+      ['Croci ai cavi', 3, 3, '15 × 12', '510 kg', '=', 'same', false, ['15 × 12', '15 × 12', '15 × 10'], ''],
+      ['Pulley basso', 2, 3, '50 × 12', '1.200 kg', '−1 serie', 'warn', false, ['50 × 12', '50 × 12', null], 'Ultima serie saltata, ero senza energie.']
+    ];
+    var colors = { up: '#4cc9e6', same: '#a9a6b5', warn: '#f2c94c' };
+    var exs = data.map(function (d, i) {
+      var full = d[1] === d[2], open = st.open === i;
+      return {
+        name: d[0], count: d[1] + '/' + d[2], best: d[3], volume: d[4], delta: d[5], pr: d[7], note: d[9], hasNote: !!d[9], open: open,
+        toggle: function () { self.setState({ open: open ? -1 : i }); },
+        badgeStyle: 'width: 40px; height: 40px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 13px; ' +
+          (full ? 'background-color: #f0559f; color: #12141a;' : 'background: linear-gradient(90deg, #f0559f 66%, #5a2a45 66%); color: #12141a;'),
+        deltaStyle: 'flex-shrink: 0; font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 12px; color: ' + colors[d[6]] + ';',
+        chevStyle: 'flex-shrink: 0; display: flex; color: #a9a6b5; transition: transform .25s ease; transform: rotate(' + (open ? '180' : '0') + 'deg);',
+        sets: d[8].map(function (s, k) {
+          return {
+            n: k + 1, text: s || 'saltata', mark: s ? '✓' : '—',
+            textStyle: s ? 'color: #ece8df;' : 'color: #f2c94c;',
+            markStyle: s ? 'color: #f0559f; font-weight: 700;' : 'color: #f2c94c;'
+          };
+        })
+      };
+    });
+    var rpe = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(function (n) {
+      var on = st.rpe === n;
+      return {
+        n: n, on: on, aria: 'Sforzo ' + n + ' su 10',
+        pick: function () { self.setState({ rpe: n }); },
+        style: 'height: 44px; padding: 0; font-family: \'JetBrains Mono\', monospace; font-weight: 700; font-size: 14px; cursor: pointer; ' +
+          (on ? 'background-color: #f0559f; color: #12141a; border: none; box-shadow: 0 0 12px rgba(240,85,159,0.5);' : 'background-color: #12141a; color: #ece8df; border: 1px solid #2c3040;')
+      };
+    });
+    return { stats: stats, ready: ready, exs: exs, rpe: rpe };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+dev-dist/
+.DS_Store
+*.log
+# dati personali (dieta reale, PDF del nutrizionista, backup): mai nel repo pubblico
+private/
+*.backup.json
+# Playwright
+test-results/
+playwright-report/
