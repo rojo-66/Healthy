@@ -2,14 +2,22 @@
 import { defineConfig } from 'vite';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
 import { VitePWA } from 'vite-plugin-pwa';
+import { readFileSync } from 'node:fs';
 
 // GitHub Pages serve l'app in https://rojo-66.github.io/Healthy/
 // La stessa origine ospita MyDiet: scope e cache restano confinati a questa cartella.
 const BASE = '/Healthy/';
 const THEME = '#12141a';
+const pkg = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string };
 
 export default defineConfig({
   base: BASE,
+  // Versione e build mostrate nel Profilo (Informazioni). In GitHub Actions ci sono numero di esecuzione e commit.
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_BUILD__: JSON.stringify(process.env['GITHUB_RUN_NUMBER'] ?? 'locale'),
+    __APP_COMMIT__: JSON.stringify((process.env['GITHUB_SHA'] ?? '').slice(0, 7)),
+  },
   plugins: [
     svelte(),
     VitePWA({

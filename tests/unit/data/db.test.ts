@@ -5,6 +5,7 @@ import { TABLE_NAMES } from '../../../src/lib/data/schemas';
 import type { Measurement } from '../../../src/lib/data/schemas/measurements';
 import { DB_VERSIONS, latestVersion, type DbVersion } from '../../../src/lib/data/versions';
 import { validate } from '../../../src/lib/data/errors';
+import { profileSchema } from '../../../src/lib/data/schemas/profile';
 import { sessionSchema } from '../../../src/lib/data/schemas/sessions';
 import { workoutSchema } from '../../../src/lib/data/schemas/workouts';
 import measurementsFixture from '../../fixtures/measurements.json';
@@ -109,12 +110,26 @@ describe('migrazioni', () => {
     await old.table('workouts').add(stored);
     old.close();
 
-    const next = open('migration-workouts', DB_VERSIONS);
+    const next = open('migration-workouts', DB_VERSIONS.slice(0, 3));
     await next.open();
     expect(next.verno).toBe(3);
     const [row] = await next.workouts.toArray();
     expect(row).toEqual({ ...stored, time: null });
     expect(validate(workoutSchema, row).ok).toBe(true);
+  });
+
+  it('v4 vera (M7): il profilo già salvato riceve il livello di attività sedentario, valido per lo schema', async () => {
+    const old = open('migration-profile', DB_VERSIONS.slice(0, 3));
+    const stored = { id: 'me', name: 'Prova', birthYear: 1990, sex: 'F', heightCm: 165, goal: 'lose' };
+    await old.table('profile').add(structuredClone(stored));
+    old.close();
+
+    const next = open('migration-profile', DB_VERSIONS);
+    await next.open();
+    expect(next.verno).toBe(4);
+    const [row] = await next.profile.toArray();
+    expect(row).toEqual({ ...stored, activityLevel: 'sedentary' });
+    expect(validate(profileSchema, row).ok).toBe(true);
   });
 
   it('se la migrazione fallisce il database resta alla versione precedente, dati intatti', async () => {

@@ -40,9 +40,10 @@ export async function saveWorkout(draft: WorkoutDraft, now: Date = new Date()): 
     const kind = saveKind(original, author);
     const workout = parseOrThrow(workoutSchema, prepareSave(candidate, original, author, now));
     await db.workouts.put(workout);
-    if (kind === 'new') {
-      // L'origine scelta diventa quella predefinita; per il PT si ricorda anche il nome.
-      await setWorkoutAuthor({ name: draft.source === 'pt' ? draft.author : author.name, lastSource: draft.source });
+    if (kind === 'new' && draft.source === 'pt' && author.name.trim() === '') {
+      // L'origine predefinita si sceglie nel Profilo (M7). Il nome come PT, se manca, si ricorda
+      // dalla prima scheda PT: serve a riconoscere le mie schede (stesso id, nuova versione).
+      await setWorkoutAuthor({ name: draft.author, lastSource: author.lastSource });
     }
     await db.settings.delete('workoutDraft');
     return { workout, kind, from: kind === 'update' && original ? original.version : null };

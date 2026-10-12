@@ -14,6 +14,9 @@
   import type { Profile } from '../lib/data/schemas/profile';
   import { planCompleteness, usedProductKeys } from '../lib/diet/calc/completeness';
   import { estimateInputFrom, estimateKcal } from '../lib/diet/calc/estimate';
+  import { activityLabel } from '../lib/profile/goals';
+  import { latestWeight } from '../lib/profile/metrics';
+  import { routeHref } from '../lib/routes';
   import { hasCompleteValues } from '../lib/diet/calc/nutrients';
   import { atPercent } from '../lib/diet/format';
   import { DAY_TYPE_PRESETS, setDayType, setProductValues, setSupplements, setTargets } from '../lib/diet/edit';
@@ -69,17 +72,29 @@
   const usedTypes = $derived(
     plan ? [...new Set(plan.payload.days.flatMap((d) => (d.type === null ? [] : [d.type])))] : [],
   );
-  const lastWeight = $derived(measurements.current.at(-1)?.weightKg ?? null);
+  // Ultimo peso inserito: una misura senza peso (solo circonferenze) non lo cancella.
+  const lastWeight = $derived(latestWeight(measurements.current));
   const estimateInput = $derived(estimateInputFrom(profile.current, lastWeight, new Date()));
 
   function estimateFor(key: string) {
     if (!estimateInput.ok) {
-      return { ok: false as const, reason: 'Stima non disponibile: servono età, altezza e peso, che arrivano con il Profilo.' };
+      return {
+        ok: false as const,
+        reason: `Stima non disponibile: ${estimateInput.missing.length > 1 ? 'mancano' : 'manca'} ${listItalian(estimateInput.missing)}.`,
+        link: { href: routeHref('/profilo'), label: 'Completa il Profilo' },
+      };
     }
     const value = estimateKcal(estimateInput.value, key);
-    return value
-      ? { ok: true as const, value }
-      : { ok: false as const, reason: 'Stima non disponibile per questo tipo di giornata.' };
+    if (!value) return { ok: false as const, reason: 'Stima non disponibile per questo tipo di giornata.' };
+    const day = (plan && lookup(plan.payload.dayTypes, key)?.label) || key;
+    const level = activityLabel(estimateInput.value.activityLevel ?? 'sedentary');
+    return { ok: true as const, value, factorNote: `${day.toLowerCase()}, ${level.toLowerCase()}` };
+  }
+
+  /** "altezza", "altezza e peso", "età, altezza e peso". */
+  function listItalian(items: readonly string[]): string {
+    if (items.length <= 1) return items[0] ?? '';
+    return `${items.slice(0, -1).join(', ')} e ${items.at(-1)}`;
   }
 
   // --- Alimenti ---

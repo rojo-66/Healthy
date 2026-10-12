@@ -192,9 +192,16 @@ describe('salvataggio nel database', () => {
     expect(await db.workouts.count()).toBe(0);
   });
 
-  it('scheda nuova del PT: l\'origine e il nome diventano quelli predefiniti', async () => {
+  it('scheda nuova del PT: si ricorda il nome se manca, l\'origine predefinita resta quella del Profilo', async () => {
     expect(await getWorkoutAuthor()).toEqual(ME_OWN);
     await saveWorkout({ ...newDraft(), source: 'pt', author: 'Coach Finto' }, MONDAY);
+    expect(await getWorkoutAuthor()).toEqual({ name: 'Coach Finto', lastSource: 'own' });
+    expect(emptyDraft(await getWorkoutAuthor())).toMatchObject({ source: 'own', author: '' });
+
+    // Un nome già scelto (nel Profilo) non viene cambiato dall'editor.
+    await setWorkoutAuthor(ME_PT);
+    await saveWorkout({ ...newDraft('Tirata'), source: 'pt', author: 'Altro Coach' }, MONDAY);
+    await saveWorkout({ ...newDraft('Gambe'), source: 'own' }, MONDAY);
     expect(await getWorkoutAuthor()).toEqual(ME_PT);
     expect(emptyDraft(await getWorkoutAuthor())).toMatchObject({ source: 'pt', author: 'Coach Finto' });
   });

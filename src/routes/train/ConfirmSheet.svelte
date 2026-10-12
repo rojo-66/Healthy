@@ -1,7 +1,7 @@
 <script lang="ts" module>
   export interface ConfirmAction {
     label: string;
-    /** `primary` = azione principale (magenta); `danger` = distruttiva (gialla, colore degli avvisi). */
+    /** `primary` = azione principale (colore della sezione); `danger` = distruttiva (gialla, colore degli avvisi). */
     kind?: 'primary' | 'secondary' | 'danger';
     run: () => void;
   }
@@ -10,6 +10,7 @@
 <script lang="ts">
   import BottomSheet from '../../lib/components/BottomSheet.svelte';
   import Button from '../../lib/components/Button.svelte';
+  import type { Tone } from '../../lib/components/types';
 
   interface Props {
     open: boolean;
@@ -18,9 +19,10 @@
     actions: readonly ConfirmAction[];
     /** Chiuso senza scegliere (tocco fuori, ✕, Esc). */
     oncancel?: () => void;
+    tone?: Tone;
   }
 
-  let { open = $bindable(false), title, text, actions, oncancel }: Props = $props();
+  let { open = $bindable(false), title, text, actions, oncancel, tone = 'training' }: Props = $props();
   let chosen = false;
 
   function pick(action: ConfirmAction) {
@@ -35,14 +37,14 @@
   }
 </script>
 
-<BottomSheet bind:open {title} tone="training" onclose={closed}>
+<BottomSheet bind:open {title} {tone} onclose={closed}>
   <p class="text">{text}</p>
   <div class="actions">
     {#each actions as action (action.label)}
       <Button
         block
         variant={action.kind === 'primary' ? 'primary' : 'secondary'}
-        tone={action.kind === 'danger' ? 'tip' : action.kind === 'primary' ? 'training' : 'neutral'}
+        tone={action.kind === 'danger' ? 'tip' : action.kind === 'primary' ? tone : 'neutral'}
         onclick={() => pick(action)}>{action.label}</Button
       >
     {/each}

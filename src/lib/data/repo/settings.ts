@@ -16,11 +16,24 @@ export async function setSetting<K extends SettingKey>(key: K, value: SettingVal
   await settingsRepo.put({ key, value } as Parameters<typeof settingsRepo.put>[0]);
 }
 
-// --- Editor schede (M4) ---
+// --- Profilo (M7) ---
+
+export type NextMeasurement = SettingValue<'nextMeasurement'>;
+
+/** Condizioni per la prossima bioimpedenza (testo scritto dall'utente) e data facoltativa. */
+export async function getNextMeasurement(): Promise<NextMeasurement> {
+  return (await getSetting('nextMeasurement')) ?? { text: '', date: null };
+}
+
+export function setNextMeasurement(value: NextMeasurement): Promise<void> {
+  return setSetting('nextMeasurement', { text: value.text.trim(), date: value.date });
+}
+
+// --- Schede: autore e origine predefinita (M4, si scelgono nel Profilo dal M7) ---
 
 export const DEFAULT_WORKOUT_AUTHOR: WorkoutAuthor = { name: '', lastSource: 'own' };
 
-/** Chi crea le schede (nome del PT, origine predefinita). */
+/** Chi crea le schede: il mio nome come PT e l'origine predefinita delle nuove schede (`lastSource`). */
 export async function getWorkoutAuthor(): Promise<WorkoutAuthor> {
   return (await getSetting('workoutAuthor')) ?? DEFAULT_WORKOUT_AUTHOR;
 }

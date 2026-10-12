@@ -38,6 +38,7 @@
     ['--progress', '#4cc9e6', 'progressi, navigazione'],
     ['--tip', '#f2c94c', 'consigli, note'],
     ['--partial', '#5a2a45', 'parte non fatta'],
+    ['--data-alt', '#8a7fa8', 'seconda serie di un dato (FM)'],
   ] as const;
 
   // Tabs

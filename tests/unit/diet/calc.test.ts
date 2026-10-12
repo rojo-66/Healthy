@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { Profile } from '../../../src/lib/data/schemas/profile';
-import { estimateInputFrom, estimateKcal, mifflinStJeor } from '../../../src/lib/diet/calc/estimate';
+import { activityFactor, estimateInputFrom, estimateKcal, mifflinStJeor } from '../../../src/lib/diet/calc/estimate';
 import {
   dayTotals,
   emptyTotals,
@@ -144,13 +144,36 @@ describe('stima Mifflin-St Jeor', () => {
 
   it('senza età, altezza, peso o sesso non si stima', () => {
     const today = new Date(2026, 9, 12);
-    const profile: Profile = { id: 'me', name: '', birthYear: 1990, sex: 'M', heightCm: 178, goal: null };
+    const profile: Profile = { id: 'me', name: '', birthYear: 1990, sex: 'M', heightCm: 178, goal: null, activityLevel: 'active' };
     expect(estimateInputFrom(profile, 80, today)).toEqual({
       ok: true,
-      value: { sex: 'M', age: 36, heightCm: 178, weightKg: 80, goal: null },
+      value: { sex: 'M', age: 36, heightCm: 178, weightKg: 80, goal: null, activityLevel: 'active' },
     });
     expect(estimateInputFrom(undefined, null, today)).toEqual({ ok: false, missing: ['età', 'altezza', 'peso', 'sesso'] });
     expect(estimateInputFrom({ ...profile, heightCm: null }, 80, today)).toEqual({ ok: false, missing: ['altezza'] });
+    // Anno di nascita dopo oggi: l'età non si sa.
+    expect(estimateInputFrom({ ...profile, birthYear: 2030 }, 80, today)).toEqual({ ok: false, missing: ['età'] });
+  });
+
+  it('livello di attività: sedentario = fattori M3, attivo +0,15 su ogni tipo di giornata', () => {
+    expect(activityFactor('rest')).toBe(1.2);
+    expect(activityFactor('run', 'sedentary')).toBe(1.45);
+    expect(activityFactor('gym', 'sedentary')).toBe(1.55);
+    expect(activityFactor('rest', 'active')).toBe(1.35);
+    expect(activityFactor('run', 'active')).toBe(1.6);
+    expect(activityFactor('gym', 'active')).toBe(1.7);
+    expect(activityFactor('altro', 'active')).toBeNull();
+    // 1780 × 1,7 = 3026 → 3030
+    expect(estimateKcal({ ...man, activityLevel: 'active' }, 'gym')).toEqual({ kcal: 3030, bmr: 1780, factor: 1.7, warnings: [] });
+  });
+
+  it('avvisi: formula per adulti e dati fuori dai valori abituali', () => {
+    expect(estimateKcal({ ...man, age: 16 }, 'gym')?.warnings).toEqual([
+      'La formula è pensata per gli adulti: sotto i 18 anni la stima è poco affidabile.',
+    ]);
+    expect(estimateKcal({ ...man, heightCm: 230 }, 'gym')?.warnings).toEqual([
+      'Età, altezza o peso sono fuori dai valori abituali: controlla il Profilo, la stima è poco affidabile.',
+    ]);
   });
 });
 

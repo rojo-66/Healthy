@@ -36,3 +36,19 @@ describe('contrasto dei token (≥ 4.5:1)', () => {
     expect(contrastRatio('#ffffff', '#000000')).toBeCloseTo(21, 5);
   });
 });
+
+describe('Profilo (M7): variazioni colorate e suggerimenti nei campi (≥ 4.5:1)', () => {
+  // Ciano = direzione giusta, giallo = da tenere d'occhio, grigio = neutra; card su --surface, campi su --bg.
+  const pairs: [string, string][] = [
+    ['progress', 'surface'],
+    ['tip', 'surface'],
+    ['muted', 'surface'],
+    ['progress', 'bg'],
+    ['tip', 'bg'],
+    ['muted', 'bg'],
+  ];
+
+  it.each(pairs)('--%s su --%s', (fg, bg) => {
+    expect(contrastRatio(token(fg), token(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+});

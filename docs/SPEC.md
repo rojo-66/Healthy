@@ -168,6 +168,7 @@ Avvio da Home ("Avvia allenamento") o da Allena ("Avvia"). Ordine fisso:
 - Variazioni colorate: ciano = direzione giusta, giallo = da tenere d'occhio, grigio = neutra (la direzione "giusta" dipende dal parametro e dall'obiettivo).
 - Lettura del nutrizionista, condizioni per la prossima bioimpedenza.
 - **+ Nuova misura**, **Grafici**.
+- Sezioni di servizio (M7): **Backup e dati** (esporta, importa, promemoria, memoria del telefono), **Impostazioni** delle schede, **Installazione**, **Informazioni** (versione e build).
 
 ### 5.7 Progressi
 **Da progettare** (grafici nel tempo di peso, composizione, circonferenze, forza per esercizio, aderenza alla dieta).
@@ -177,7 +178,7 @@ Avvio da Home ("Avvia allenamento") o da Allena ("Avvia"). Ordine fisso:
 ### 6.1 Target nutrizionali (priorità)
 1. **Target del nutrizionista** presenti nel piano (per tipo di giornata) → usati così come sono, mai modificati.
 2. **Calcolati dal piano**: somma degli alimenti (valori per 100 g o per pezzo).
-3. **Stimati**: BMR con Mifflin-St Jeor × fattore attività, solo se mancano 1 e 2.
+3. **Stimati**: BMR con Mifflin-St Jeor × fattore attività (tipo di giornata + livello di vita quotidiana scelto nel Profilo), solo se mancano 1 e 2.
 
 Ogni numero mostra la sua origine (nutrizionista / calcolato / stimato).
 **Completamento guidato** dopo l'import: checklist dei dati mancanti (alimenti senza valori, target assenti), compilabili a mano o accettando la stima.
@@ -188,8 +189,12 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 - Su piani propri o stimati: suggerimenti (proteine per kg, distribuzione nei pasti, idratazione).
 
 ### 6.3 Profilo
-- BMI = peso / altezza²; BCMI = BCM / altezza².
-- FM%, FFM%, BCM% calcolati sul peso se non forniti. **Da confermare** se BCM% va riferito alla massa magra.
+- BMI = peso / altezza²; BCMI = BCM / altezza² (altezza in metri, dal Profilo).
+- FM% e FFM% calcolati **sul peso** se non forniti; FFM = peso − FM e FM = peso − FFM (o peso × FM%) quando manca uno dei due.
+- **BCM% = BCM / FFM × 100**: riferito alla **massa magra**, non al peso (deciso in M7).
+- ECW/TBW in %.
+- Ogni valore dichiara l'origine: **misurato** (inserito), **calcolato** (dagli altri valori della stessa misura) o **stimato** (solo il BMR con Mifflin-St Jeor, se la bioimpedenza non lo dà). Un valore misurato non viene mai sostituito; il BMR stimato non si confronta con quello misurato.
+- Età = anno corrente (o della misura) − anno di nascita.
 
 ### 6.4 Allenamento
 - Volume = Σ kg × ripetizioni delle serie fatte.
@@ -201,7 +206,7 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 
 | Tabella | Campi principali |
 |---|---|
-| `profile` | id, name, birthYear, sex, heightCm, goal |
+| `profile` | id, name, birthYear, sex, heightCm, goal, activityLevel (M7) |
 | `measurements` | id, date, weightKg, fmKg, fmPct, ffmKg, bcmKg, tbwL, ecwL, phaDeg, bmrKcal, chestCm, waistCm, abdomenCm, hipsCm, thighCm, armCm, calfCm, notes |
 | `exercises` | id, name, muscles[], equipment, videoUrl, custom |
 | `workouts` (schede) | id (uuid), version, author, source ('pt' \| 'own'), name, weekdays[], time (HH:MM \| null, M6), intro, warmup[], items[{exerciseId, name, sets, reps, kg, restSec, note, videoUrl, setsDetail?}], cardio, updatedAt |
@@ -209,7 +214,7 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 | `dietPlans` | id, version, title, author, validFrom, active, archived, importedAt, origin (`file` \| `mydiet`), payload (formato § 8.2) |
 | `dietLog` | date, planId, mealKey, eaten, swappedFromWeekday |
 | `shopping` | weekStart, checked{productKey: bool} |
-| `settings` | key, value (es. ultimo backup) |
+| `settings` | key, value (es. ultimo backup, autore delle schede, prossima bioimpedenza) |
 
 ## 8. Formati di file
 
@@ -291,14 +296,12 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 | M9 | Progressi (dopo il suo design) | — |
 
 ## 13. Punti aperti
-- Età e altezza (per BMI/BCMI).
-- BCM%: sul peso o sulla massa magra?
 - Readiness: confermare con il PT la scala "5 = meglio" per stress e affaticamento.
 - Schermata Progressi da progettare.
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [ ] M7 · [ ] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M7 · [ ] M8 · [ ] M9
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -495,3 +498,43 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
   - **Vitest** `tests/unit/today/` (pasto del momento con orari limite, scambio, calorie e origine, tipo di giornata e conflitti, timeline e stati, allenamento in corso/fatto/fuori programma, tip deterministico, `syncStatus`/`isSyncOk`, mezzanotte, settimana, fixture validate), più `clock.test.ts`, `workouts/time.test.ts`, migrazione v3 in `data/db.test.ts`, `keepEaten` e link ricetta in `diet/view.test.ts`;
   - **Playwright** `tests/e2e/home.spec.ts` (390×844, `page.clock` su lun 12/10/2026 13:00): primo avvio, SYNC OFFLINE ✓ da app installata emulata (stessa riga della data a 390 e 320 px), NON SALVATO, pasto e allenamento, segna/annulla con anello e timeline, ricarica, ricetta, striscia e swipe senza doppioni, conflitto, Avvia → Readiness → Live → "Riprendi allenamento", mezzanotte, stati vuoti, offline, 44 px a 390 e 375 px. Aggiornati `pwa.spec.ts`, `showcase.spec.ts` e `session.spec.ts` (la Home dopo "Fine" mostra "Fatto ✓").
 - **Da verificare su iPhone dopo il deploy**: app installata → Home con "SYNC OFFLINE ✓" (in Safari deve dire "SOLO BROWSER"); swipe tra i giorni con il pollice mentre si scorre in verticale; swipe dal bordo sinistro in Safari (non deve cambiare giorno); "Segna come fatto" e Dieta allineate; lasciare l'app aperta oltre la mezzanotte (o riaprirla dal multitasking il giorno dopo); modalità aereo.
+
+### Note M7 · Profilo e misurazioni
+- **Codice**:
+  - **logica pura** in `src/lib/profile/`: `number` (numeri all'italiana), `age`, `metrics` (valori misurati/calcolati/stimati), `consistency` (errori e avvisi), `goals`, `direction` (colori delle variazioni), `compare`, `selection` (date a confronto), `format`, `form` (modulo misura), `profile-form`, `view` (testi pronti per la schermata); `src/lib/app-info.ts` (versione e build);
+  - **schermate**: `src/routes/Profile.svelte` (`#/profilo`), `src/routes/Measurement.svelte` (`#/profilo/misura`, `?id=` per modificare); componenti in `src/routes/profile/`;
+  - **riusati senza copie**: `mifflinStJeor`/`estimateKcal` (M3), `formatDecimal`/`formatInt`, `dayMonthYear`, backup e `isBackupStale` (M2), `getStorageStatus`, `InstallBanner` (M0), `keyboardState`/`keepFocusedVisible` (M4), `InfoSheet`, `ConfirmSheet`, `ActionBar` (M4, ora con `tone`), `Card`, `NoteBox`, `ProgressBar`, `BottomSheet`.
+- **Schema** (DB v4, indici invariati):
+  - `profile.activityLevel` (`sedentary` | `active`, predefinito `sedentary`): l'`upgrade` lo aggiunge alle righe esistenti (testato v3 → v4), i backup v1 senza il campo restano validi; formato di backup invariato;
+  - `settings.nextMeasurement { text, date | null }` (entra nel backup);
+  - `measurements` invariata: `notes` è la **lettura del nutrizionista** di quella misura;
+  - `settings.workoutAuthor` resta con la stessa chiave e forma (nessuna migrazione): nome come PT e origine predefinita delle nuove schede (`lastSource`) si scelgono nel Profilo. L'editor non cambia più l'origine predefinita; il nome lo ricorda solo se è vuoto (serve a riconoscere le schede "mie").
+- **Regole decise**:
+  - **obiettivi**: Dimagrimento, Ricomposizione, Massa, Mantenimento (badge ciano pieno); senza obiettivo badge giallo "Scegli obiettivo";
+  - **colori delle variazioni** (`direction.ts`, tabella confermata): ↑ / ↓ / = (banda) / — per parametro e obiettivo, con soglia neutra (es. peso 0,5 kg, FM 0,3 kg, PhA 0,1°, BMR 10 kcal, circonferenze 0,3–0,5 cm). Senza obiettivo restano colorati solo i parametri uguali per tutti (FFM, BCM, BCM%, BCMI, PhA, BMR, ECW, ECW/TBW). Si confrontano i valori arrotondati come a video. Non è una valutazione medica;
+  - **coerenza**: avviso giallo (non blocca) se FM + FFM differisce dal peso più di max(1 kg; 1,5 % del peso), o se FM % misurata e FM / peso differiscono più di 1 punto. **Errori** (bloccano): FM o FFM > peso, BCM > FFM (anche calcolata), ECW > TBW, TBW > peso, data nel futuro o già usata, nessun valore;
+  - **una misura per data**; solo la data è obbligatoria (oggi di default) più almeno un valore; i vuoti restano `null`, mai zero;
+  - **numeri**: "76,4" e "76.4" valgono uguale, al massimo 2 decimali, niente negativi né testo; nei soli campi interi (kcal) "1.720" = 1720; a video sempre la virgola;
+  - **età** = anno − anno di nascita (per il BMR di una misura, l'anno della misura): prima del compleanno risulta 1 anno in più, al massimo 5 kcal di differenza nel BMR. Anno nel futuro = errore; età < 14 o > 100 e altezza < 120 o > 220 cm = avviso che non blocca; altezza scritta in metri ("1,78") = errore con spiegazione;
+  - **confronto**: variazione assoluta e in % del valore precedente (in "pt" per le percentuali), solo per i parametri presenti in entrambe le misure; il BMR stimato non si confronta con quello misurato e la sua variazione è sempre grigia;
+  - **date a confronto**: predefinito ultima e precedente; la scelta resta dal lato toccato e l'altra si sposta sulla misura vicina (la precedente è sempre la più vecchia); se una misura scelta viene eliminata si torna al predefinito; con una misura sola niente confronto;
+  - **stima nella Dieta**: fattore = tipo di giornata + livello (Sedentario: riposo 1,2 · corsa 1,45 · palestra 1,55, come M3; Attivo: +0,15 → 1,35 · 1,6 · 1,7). Peso = ultima misura che ha un peso. Avvisi in più: "formula pensata per gli adulti" (< 18 anni) e dati fuori dai valori abituali. Senza dati: "mancano …" con il link "Completa il Profilo". Sempre un'opzione: si applica solo con "Usa la stima" e non tocca i target del nutrizionista.
+- **Sezioni di servizio**: `BackupPanel`, `RestoreConfirmSheet` e `StorageFacts` estratti da `DevData.svelte` e usati nel Profilo; promemoria giallo oltre 14 giorni o se il backup non è mai stato fatto. **`#/dev-data` ridotta** a strumenti di sviluppo (conteggi, "Carica dati di prova", "Svuota tutto"), raggiungibile solo dall'indirizzo e da `#/showcase`. Installazione: `InstallBanner` riusato (in standalone "App installata ✓"). Informazioni: "Versione 0.7.0 · build N (commit)" dal `define` di Vite (`GITHUB_RUN_NUMBER`, `GITHUB_SHA`; in locale "build locale"); `package.json` passa a `0.7.0`.
+- **Anti-doppioni**: card e righe montate una volta con chiavi stabili, cambiano solo i testi; nessun `{#key}` sulle date. Barre con `translateX` (`ProgressBar`, barra FFM/FM). Testato cambiando date più di dieci volte, anche con "Riduci movimento".
+- **Correzioni e aggiunte al design system**:
+  - `BottomSheet`: (1) con la tastiera di iPhone il pannello si appoggia sopra la tastiera (`visualViewport`, posizione senza animazione) e il campo in focus va in vista; (2) **bug preesistente**: l'evento `close` del dialog nativo arriva in ritardo e chiudeva un pannello riaperto subito dopo (es. "Duplica" e poi il menu della copia; rendeva instabile `train.spec.ts` anche su M6). Ora l'evento si ignora se il dialog è di nuovo aperto, e una riapertura durante l'uscita riparte dal dialog ancora aperto;
+  - `InfoSheet`, `ConfirmSheet`, `ActionBar` accettano `tone` (predefinito allenamento); `Card` accetta il tono neutro;
+  - nuovo token `--data-alt` (`#8a7fa8`, dal mockup) per la parte FM della barra: mai testo.
+- **Scostamenti dal mockup**:
+  - nessuna frase di interpretazione (PESO senza "quasi tutta acqua"); nessuna riga "media kcal/giorno";
+  - legenda con anche il grigio "neutra"; variazioni con freccia anche nelle circonferenze;
+  - barre delle circonferenze in scala sulla circonferenza più grande della misura (non su 110 cm);
+  - etichette "calc." e "STIMATO" sui valori non misurati;
+  - "PROSSIMA BIOIMPEDENZA · ~6 NOV" solo con una data inserita; lettura e condizioni partono vuote con un invito a scriverle;
+  - "Grafici" dichiarato "in arrivo" (foglio che rimanda a Progressi, M9);
+  - sotto il confronto: storico misure e sezioni di servizio, che il mockup non prevedeva.
+- **Test**:
+  - **fixture finte** `tests/fixtures/profile/backup-profile.json` (profilo, 3 misure di cui l'ultima solo con vita e addome, impostazioni);
+  - **Vitest** `tests/unit/profile/` (formule con numeri noti: BMI 24,7, BCM% 50 %, BCMI 9,3; FM/FFM mancanti; origine; coerenza e impossibilità; numeri; età e caso limite; confronto con parametri mancanti; tabella delle direzioni, soglie e dati del mockup; date a confronto; moduli), più stima con livello e avvisi in `diet/calc.test.ts`, migrazione v4 in `data/db.test.ts`, misure e prossima bioimpedenza in `data/repo.test.ts`, autore in `workouts/editor.test.ts`, contrasto delle variazioni, versione;
+  - **Playwright** `tests/e2e/profile.spec.ts` (390×844): profilo con errore e correzione, due misure con virgola e punto, confronto e colori, date cambiate più volte senza doppioni, modifica ed eliminazione con conferma, lettura come testo (`<b>`, `<img>` non interpretati), condizioni con data tolta, esporta → svuota → reimporta, file non valido, offline (anche una nuova misura), stima nel completamento guidato, 44 px e niente scroll orizzontale a 390 e 375 px, "Riduci movimento". Aggiornati `dev-data.spec.ts`, `home.spec.ts` (fixture importate dal Profilo) e `diet.spec.ts`.
+- **Da verificare su iPhone dopo il deploy**: app installata → Profilo → modifica del profilo e "+ Nuova misura" con la tastiera decimale (virgola, campo visibile, Salva non coperto); foglio "Lettura del nutrizionista" con la tastiera aperta; Esporta backup verso File e Importa dallo stesso file; in Safari l'avviso di installazione nel Profilo; modalità aereo.

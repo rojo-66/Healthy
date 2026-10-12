@@ -10,9 +10,9 @@ test.beforeEach(async ({ page }) => {
   await page.clock.install({ time: NOW });
 });
 
-/** Dati finti caricati dalla pagina Dati (percorso vero: validazione e ripristino), poi la Home. */
+/** Dati finti caricati con "Importa backup" del Profilo (percorso vero: validazione e ripristino), poi la Home. */
 async function loadBackup(page: Page, file = BACKUP) {
-  await page.goto('./#/dev-data');
+  await page.goto('./#/profilo');
   await page.getByTestId('backup-input').setInputFiles(file);
   const sheet = page.getByRole('dialog', { name: 'Sostituire i dati?' });
   await sheet.getByRole('button', { name: 'Sostituisci i dati' }).click();

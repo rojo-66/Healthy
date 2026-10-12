@@ -1,17 +1,19 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
+  import type { Tone } from '../../lib/components/types';
 
-  // Banner inferiore fisso dell'editor e dell'anteprima (mockup Editor: 1fr 2fr, bordo magenta).
+  // Banner inferiore fisso dell'editor e dell'anteprima (mockup Editor: 1fr 2fr, bordo nel colore della sezione).
   interface Props {
     /** Nascosto (con la tastiera aperta): scivola giù, solo transform/opacity. */
     hidden?: boolean;
+    tone?: Tone;
     children: Snippet;
   }
 
-  let { hidden = false, children }: Props = $props();
+  let { hidden = false, tone = 'training', children }: Props = $props();
 </script>
 
-<footer class="bar tone-training" class:hidden aria-hidden={hidden || undefined} inert={hidden}>
+<footer class="bar tone-{tone}" class:hidden aria-hidden={hidden || undefined} inert={hidden}>
   {@render children()}
 </footer>
 

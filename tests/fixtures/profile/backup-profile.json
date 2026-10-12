@@ -1,0 +1,118 @@
+{
+  "app": "healthy-app",
+  "kind": "backup",
+  "schemaVersion": 1,
+  "createdAt": "2026-10-01T08:00:00.000Z",
+  "dbVersion": 4,
+  "counts": {
+    "profile": 1,
+    "measurements": 3,
+    "exercises": 0,
+    "workouts": 0,
+    "sessions": 0,
+    "dietPlans": 0,
+    "dietLog": 0,
+    "shopping": 0,
+    "settings": 2
+  },
+  "tables": {
+    "profile": [
+      {
+        "id": "me",
+        "name": "Persona Finta",
+        "birthYear": 1988,
+        "sex": "F",
+        "heightCm": 168,
+        "goal": "lose",
+        "activityLevel": "active"
+      }
+    ],
+    "measurements": [
+      {
+        "id": "pf000001-0000-4000-8000-000000000001",
+        "date": "2026-07-03",
+        "weightKg": 81.4,
+        "fmKg": 17.9,
+        "fmPct": 22,
+        "ffmKg": 63.5,
+        "bcmKg": 34.1,
+        "tbwL": 46.2,
+        "ecwL": 19.4,
+        "phaDeg": 6.1,
+        "bmrKcal": 1740,
+        "chestCm": 100,
+        "waistCm": 90,
+        "abdomenCm": 94,
+        "hipsCm": 100,
+        "thighCm": 57,
+        "armCm": 32.5,
+        "calfCm": 38,
+        "notes": "Lettura di prova della prima misura."
+      },
+      {
+        "id": "pf000002-0000-4000-8000-000000000002",
+        "date": "2026-08-14",
+        "weightKg": 80.2,
+        "fmKg": 16.6,
+        "fmPct": null,
+        "ffmKg": 63.6,
+        "bcmKg": 34.5,
+        "tbwL": 46.5,
+        "ecwL": 19.6,
+        "phaDeg": 6.3,
+        "bmrKcal": null,
+        "chestCm": 100.5,
+        "waistCm": 88.5,
+        "abdomenCm": 92.5,
+        "hipsCm": 99,
+        "thighCm": 57.5,
+        "armCm": 33,
+        "calfCm": 38,
+        "notes": ""
+      },
+      {
+        "id": "pf000003-0000-4000-8000-000000000003",
+        "date": "2026-09-25",
+        "weightKg": null,
+        "fmKg": null,
+        "fmPct": null,
+        "ffmKg": null,
+        "bcmKg": null,
+        "tbwL": null,
+        "ecwL": null,
+        "phaDeg": null,
+        "bmrKcal": null,
+        "chestCm": null,
+        "waistCm": 87,
+        "abdomenCm": 91,
+        "hipsCm": null,
+        "thighCm": null,
+        "armCm": null,
+        "calfCm": null,
+        "notes": ""
+      }
+    ],
+    "exercises": [],
+    "workouts": [],
+    "sessions": [],
+    "dietPlans": [],
+    "dietLog": [],
+    "shopping": [],
+    "settings": [
+      {
+        "key": "nextMeasurement",
+        "value": {
+          "text": "Mattina, a digiuno, senza allenamento il giorno prima.",
+          "date": "2026-11-06"
+        }
+      },
+      {
+        "key": "workoutAuthor",
+        "value": {
+          "name": "Coach Finto",
+          "lastSource": "pt"
+        }
+      }
+    ]
+  }
+}

@@ -14,7 +14,9 @@ export type RoutePath =
   | '/sessione/readiness'
   | '/sessione/intro'
   | '/sessione/live'
-  | '/sessione/riepilogo';
+  | '/sessione/riepilogo'
+  | '/profilo'
+  | '/profilo/misura';
 
 const KNOWN: readonly string[] = [
   '/',
@@ -29,6 +31,8 @@ const KNOWN: readonly string[] = [
   '/sessione/intro',
   '/sessione/live',
   '/sessione/riepilogo',
+  '/profilo',
+  '/profilo/misura',
 ];
 
 /** Rotta corrispondente a un hash; `null` se l'hash non è una rotta (es. `#import=…`). Sconosciuta → Home. */

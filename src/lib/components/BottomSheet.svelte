@@ -30,12 +30,49 @@
     else if (!open && shown) shown = false;
   });
 
+  /**
+   * Tastiera di iPhone: non ridimensiona la pagina, restringe solo `visualViewport`. Il pannello
+   * (fisso in basso) si appoggia sopra la tastiera, così i campi e i pulsanti restano visibili.
+   * È una posizione, non un'animazione: nessuna transizione su `bottom`.
+   */
+  let keyboardInset = $state(0);
+  $effect(() => {
+    const vv = window.visualViewport;
+    if (!shown || !vv) return;
+    const update = () => {
+      const inset = window.innerHeight - vv.height - vv.offsetTop;
+      keyboardInset = inset > 120 ? Math.round(inset) : 0;
+    };
+    vv.addEventListener('resize', update);
+    vv.addEventListener('scroll', update);
+    update();
+    return () => {
+      vv.removeEventListener('resize', update);
+      vv.removeEventListener('scroll', update);
+      keyboardInset = 0;
+    };
+  });
+
+  /** Il campo in focus va in vista dentro il pannello, dopo che la tastiera è salita. */
+  function onfocusin(e: FocusEvent) {
+    const target = e.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement)) return;
+    window.setTimeout(() => {
+      if (document.activeElement !== target) return;
+      target.scrollIntoView({ block: 'nearest', behavior: prefersReducedMotion() ? 'auto' : 'smooth' });
+    }, 320);
+  }
+
   async function show() {
-    opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    previousOverflow = document.documentElement.style.overflow;
-    document.documentElement.style.overflow = 'hidden';
+    // Riaperto mentre scendeva (es. Duplica e subito un'altra scheda): il dialog nativo è ancora aperto,
+    // si riparte da lì senza un secondo showModal e senza perdere lo stato dello scroll da ripristinare.
+    if (!dialog.open) {
+      opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+      previousOverflow = document.documentElement.style.overflow;
+      document.documentElement.style.overflow = 'hidden';
+      dialog.showModal();
+    }
     instantOut = false;
-    dialog.showModal();
     shown = true;
     await tick();
     panel?.focus();
@@ -47,7 +84,8 @@
 
   /** Fine dell'uscita: chiude il dialog nativo e restituisce il focus. */
   function finish() {
-    if (!dialog.open) return;
+    // Riaperto durante l'uscita: chiudere il dialog adesso (evento `close` → open = false) lo farebbe sparire.
+    if (!dialog.open || open) return;
     dialog.close();
     document.documentElement.style.overflow = previousOverflow;
     onclose?.();
@@ -59,6 +97,15 @@
     // Smontato mentre era aperto: sblocca lo scroll.
     if (shown) document.documentElement.style.overflow = previousOverflow;
   });
+
+  /**
+   * L'evento `close` del dialog nativo arriva dopo, in un task a parte: se nel frattempo il pannello è stato
+   * riaperto (es. "Duplica" e subito il menu della copia) il dialog è di nuovo aperto e l'evento va ignorato,
+   * altrimenti chiuderebbe il pannello appena aperto.
+   */
+  function onnativeclose() {
+    if (!dialog.open) open = false;
+  }
 
   // Esc: il browser chiuderebbe subito il dialog; lo chiudo io con l'animazione.
   function oncancel(e: Event) {
@@ -117,7 +164,7 @@
   }
 </script>
 
-<dialog bind:this={dialog} class="dialog tone-{tone}" aria-labelledby="{id}-title" {oncancel} onclose={() => (open = false)}>
+<dialog bind:this={dialog} class="dialog tone-{tone}" aria-labelledby="{id}-title" {oncancel} onclose={onnativeclose}>
   {#if shown}
     <button
       type="button"
@@ -130,6 +177,9 @@
     <div
       class="panel"
       bind:this={panel}
+      style:--kb="{keyboardInset}px"
+      class:keyboard={keyboardInset > 0}
+      {onfocusin}
       tabindex="-1"
       in:sheet
       out:sheet={{ duration: instantOut ? 0 : 280 }}
@@ -185,10 +235,10 @@
     position: absolute;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: var(--kb, 0px);
     display: flex;
     flex-direction: column;
-    max-height: calc(100dvh - var(--safe-top) - 24px);
+    max-height: calc(100dvh - var(--safe-top) - 24px - var(--kb, 0px));
     padding: 0 var(--space-5) calc(var(--space-6) + var(--safe-bottom));
     padding-left: calc(var(--space-5) + var(--safe-left));
     padding-right: calc(var(--space-5) + var(--safe-right));
@@ -203,6 +253,11 @@
     );
     box-shadow: inset 0 1px 0 var(--tone-edge);
     outline: none;
+  }
+
+  /* Sopra la tastiera la zona della barra Home è coperta: basta un margine normale. */
+  .panel.keyboard {
+    padding-bottom: var(--space-4);
   }
 
   .grip {

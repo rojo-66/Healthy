@@ -59,6 +59,18 @@ export const DB_VERSIONS: readonly DbVersion[] = [
           if (!('time' in w)) w.time = null;
         }),
   },
+  {
+    // M7: il profilo ha il livello di attività (stima delle kcal). Indici invariati.
+    version: 4,
+    stores: {},
+    upgrade: (tx) =>
+      tx
+        .table('profile')
+        .toCollection()
+        .modify((p: Record<string, unknown>) => {
+          if (!('activityLevel' in p)) p.activityLevel = 'sedentary';
+        }),
+  },
 ];
 
 export function applyVersions(db: Dexie, versions: readonly DbVersion[]): void {

@@ -7,10 +7,15 @@ import { activateDietPlan, getActiveDietPlan, dietPlansRepo } from '../../../src
 import { dietLogBetween, setMealEaten } from '../../../src/lib/data/repo/diet-log';
 import { exercisesForMuscle, listExercisesByName } from '../../../src/lib/data/repo/exercises';
 import { clearAll, countAll } from '../../../src/lib/data/repo/maintenance';
-import { measurementsBetween, listMeasurementsByDate } from '../../../src/lib/data/repo/measurements';
+import {
+  deleteMeasurement,
+  listMeasurementsByDate,
+  measurementsBetween,
+  saveMeasurement,
+} from '../../../src/lib/data/repo/measurements';
 import { getProfile, saveProfile } from '../../../src/lib/data/repo/profile';
 import { lastSessionForWorkout, sessionsBetween, sessionsForWorkout } from '../../../src/lib/data/repo/sessions';
-import { getSetting, setSetting } from '../../../src/lib/data/repo/settings';
+import { getNextMeasurement, getSetting, setNextMeasurement, setSetting } from '../../../src/lib/data/repo/settings';
 import { listWorkoutsRecent, workoutsForWeekday, workoutsRepo } from '../../../src/lib/data/repo/workouts';
 import { parseBackup } from '../../../src/lib/data/backup';
 import type { Backup } from '../../../src/lib/data/schemas/backup';
@@ -156,7 +161,16 @@ describe('profilo e impostazioni', () => {
     expect(await getProfile()).toBeUndefined();
     await saveProfile({ name: 'Prova', birthYear: 1990, sex: null, heightCm: 180, goal: 'maintain' });
     await saveProfile({ name: 'Prova 2', birthYear: 1990, sex: null, heightCm: 180, goal: 'lose' });
-    expect(await getProfile()).toEqual({ id: 'me', name: 'Prova 2', birthYear: 1990, sex: null, heightCm: 180, goal: 'lose' });
+    // Il livello di attività (M7) ha un valore predefinito: chi salva senza sceglierlo è sedentario.
+    expect(await getProfile()).toEqual({
+      id: 'me',
+      name: 'Prova 2',
+      birthYear: 1990,
+      sex: null,
+      heightCm: 180,
+      goal: 'lose',
+      activityLevel: 'sedentary',
+    });
     expect(await db.profile.count()).toBe(1);
   });
 
@@ -165,6 +179,60 @@ describe('profilo e impostazioni', () => {
     await setSetting('lastBackupAt', '2026-10-01T10:00:00.000Z');
     expect(await getSetting('lastBackupAt')).toBe('2026-10-01T10:00:00.000Z');
     await expect(setSetting('lastBackupAt', 'ieri')).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it('prossima bioimpedenza: testo e data facoltativa, vuota se mai scritta', async () => {
+    expect(await getNextMeasurement()).toEqual({ text: '', date: null });
+    await setNextMeasurement({ text: '  Mattina, a digiuno.  ', date: '2026-11-06' });
+    expect(await getNextMeasurement()).toEqual({ text: 'Mattina, a digiuno.', date: '2026-11-06' });
+    await expect(setNextMeasurement({ text: '', date: '6 novembre' })).rejects.toBeInstanceOf(ValidationError);
+  });
+});
+
+describe('misure', () => {
+  const base = {
+    date: '2026-09-25',
+    weightKg: 78.9,
+    fmKg: null,
+    fmPct: null,
+    ffmKg: null,
+    bcmKg: null,
+    tbwL: null,
+    ecwL: null,
+    phaDeg: null,
+    bmrKcal: null,
+    chestCm: null,
+    waistCm: null,
+    abdomenCm: null,
+    hipsCm: null,
+    thighCm: null,
+    armCm: null,
+    calfCm: null,
+    notes: '',
+  };
+
+  it('nuova misura con id, modifica con lo stesso id, eliminazione', async () => {
+    const saved = await saveMeasurement(base);
+    expect(saved.id).toMatch(/^[0-9a-f-]{36}$/);
+    await saveMeasurement({ ...saved, weightKg: 79.1 });
+    expect(await listMeasurementsByDate()).toEqual([{ ...saved, weightKg: 79.1 }]);
+    await deleteMeasurement(saved.id);
+    expect(await db.measurements.count()).toBe(0);
+  });
+
+  it('una sola misura per data: errore leggibile e nessuna scrittura', async () => {
+    const first = await saveMeasurement(base);
+    const error = await saveMeasurement({ ...base, weightKg: 70 }).catch((e: unknown) => e);
+    expect(error).toBeInstanceOf(ValidationError);
+    expect((error as ValidationError).errors).toEqual(['Esiste già una misura del 25/09/2026: modificala dallo storico.']);
+    // Spostare la stessa misura su un'altra data va bene.
+    await saveMeasurement({ ...first, date: '2026-09-26' });
+    expect((await listMeasurementsByDate()).map((m) => m.date)).toEqual(['2026-09-26']);
+  });
+
+  it('valori fuori dallo schema: nessuna scrittura', async () => {
+    await expect(saveMeasurement({ ...base, weightKg: -1 })).rejects.toBeInstanceOf(ValidationError);
+    expect(await db.measurements.count()).toBe(0);
   });
 });
 

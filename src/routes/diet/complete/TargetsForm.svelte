@@ -9,8 +9,13 @@
 
   interface Props {
     dayType: DietDayType;
-    /** Stima per questo tipo di giornata, o il motivo per cui non c'è. */
-    estimate: { ok: true; value: KcalEstimate } | { ok: false; reason: string };
+    /**
+     * Stima per questo tipo di giornata (con il dettaglio del fattore, es. "palestra, sedentario"),
+     * o il motivo per cui non c'è (con il link dove completare i dati).
+     */
+    estimate:
+      | { ok: true; value: KcalEstimate; factorNote?: string }
+      | { ok: false; reason: string; link?: { href: string; label: string } };
     busy: boolean;
     onsave: (targets: DietTargets, source: Exclude<TargetsSource, 'plan'>) => Promise<readonly string[]>;
   }
@@ -90,12 +95,17 @@
         Usa la stima: {formatInt(estimate.value.kcal)} kcal
       </Button>
       <p class="hint">
-        Stima Mifflin-St Jeor (BMR {formatInt(estimate.value.bmr)} × {String(estimate.value.factor).replace('.', ',')}), solo
-        kcal: i macro restano da inserire.
+        Stima Mifflin-St Jeor (BMR {formatInt(estimate.value.bmr)} × {String(estimate.value.factor).replace('.', ',')}{estimate
+          .factorNote
+          ? ` · ${estimate.factorNote}`
+          : ''}), solo indicativa e solo kcal: i macro restano da inserire. Non cambia nulla finché non la usi.
       </p>
       {#each estimate.value.warnings as w, i (i)}<p class="warn">{w}</p>{/each}
     {:else}
-      <p class="hint">{estimate.reason}</p>
+      <p class="hint">
+        {estimate.reason}{#if estimate.link}
+          <a href={estimate.link.href}>{estimate.link.label}</a>{/if}
+      </p>
     {/if}
     {#if errors.length > 0}
       <ul class="errors" role="alert">

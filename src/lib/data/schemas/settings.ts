@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { isoDateTime } from './common';
+import { MAX_TEXT } from '../limits';
+import { isoDate, isoDateTime, text } from './common';
 import { savedDraftSchema, workoutAuthorSchema } from './workout-draft';
 
 /** Impostazioni: una riga per chiave, ogni chiave ha il suo tipo di valore. */
@@ -11,10 +12,15 @@ export const settingSchema = z.discriminatedUnion('key', [
     key: z.literal('storagePersist'),
     value: z.object({ granted: z.boolean(), checkedAt: isoDateTime }),
   }),
-  /** Chi crea le schede: nome del PT e origine predefinita (M4; nel Profilo dal M7). */
+  /** Chi crea le schede: il mio nome come PT e l'origine predefinita delle nuove schede (nel Profilo, M7). */
   z.object({ key: z.literal('workoutAuthor'), value: workoutAuthorSchema }),
   /** Bozza dell'editor schede non ancora salvata (una sola). */
   z.object({ key: z.literal('workoutDraft'), value: savedDraftSchema }),
+  /** Condizioni per la prossima bioimpedenza, scritte dall'utente, con una data facoltativa (M7). */
+  z.object({
+    key: z.literal('nextMeasurement'),
+    value: z.object({ text: text(MAX_TEXT.note), date: isoDate.nullable() }),
+  }),
 ]);
 
 export type Setting = z.infer<typeof settingSchema>;

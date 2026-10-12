@@ -1,9 +1,9 @@
 <script lang="ts">
   import type { Snippet } from 'svelte';
-  import type { Tone } from './types';
+  import type { ToneOrNeutral } from './types';
 
   interface Props {
-    tone: Tone;
+    tone: ToneOrNeutral;
     /** Dimensione dell'angolo tagliato: 8 / 12 / 18 px. */
     cut?: 's' | 'm' | 'l';
     /** Diagonale dei tagli: 'a' = alto-sinistra e basso-destra, 'b' = alto-destra e basso-sinistra. */

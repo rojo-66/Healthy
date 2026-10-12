@@ -16,6 +16,8 @@
   const loadIntro = () => import('./routes/session/Intro.svelte');
   const loadLive = () => import('./routes/session/Live.svelte');
   const loadSummary = () => import('./routes/session/Summary.svelte');
+  const loadProfile = () => import('./routes/Profile.svelte');
+  const loadMeasurement = () => import('./routes/Measurement.svelte');
 </script>
 
 {#if route.path === '/showcase'}
@@ -73,6 +75,16 @@
   {#await loadSummary() then { default: Summary }}
     {#key route.nav}
       <Summary id={route.query['id'] ?? ''} fromHistory={route.query['da'] === 'storico'} />
+    {/key}
+  {/await}
+{:else if route.path === '/profilo'}
+  {#await loadProfile() then { default: Profile }}
+    <Profile />
+  {/await}
+{:else if route.path === '/profilo/misura'}
+  {#await loadMeasurement() then { default: Measurement }}
+    {#key route.nav}
+      <Measurement id={route.query['id'] ?? null} />
     {/key}
   {/await}
 {:else}

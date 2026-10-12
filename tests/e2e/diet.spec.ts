@@ -232,7 +232,8 @@ test('MyDiet: import, archivio e ripristino, doppione, completamento guidato', a
   await expect(pct).toHaveText('al 9%');
 
   const targets = page.locator('[data-day-type="Palestra"]');
-  await expect(targets).toContainText('Stima non disponibile: servono età, altezza e peso');
+  await expect(targets).toContainText('Stima non disponibile: mancano età, altezza, peso e sesso.');
+  await expect(targets.getByRole('link', { name: 'Completa il Profilo' })).toHaveAttribute('href', '#/profilo');
   await targets.getByLabel('Kcal').fill('abc');
   await targets.getByRole('button', { name: 'Salva i target di Palestra' }).click();
   await expect(targets.getByRole('alert')).toContainText('«abc» non è un numero');
