@@ -17,9 +17,14 @@ type History = Map<string, PastSet[]>;
 
 type Recordable = Pick<Session, 'id' | 'startedAt' | 'endedAt' | 'sets' | 'snapshot'>;
 
+/** Chiave dell'esercizio di ogni voce della sessione (le sessioni senza copia della scheda usano solo l'id). */
+export function sessionItemKeys(session: Pick<Session, 'snapshot' | 'sets'>): (string | null)[] {
+  return sessionItems(session).map((item) => (session.snapshot ? exerciseKey(item) : exerciseKey({ exerciseId: item.exerciseId, name: '' })));
+}
+
 /** Chiave dell'esercizio di ogni serie fatta con carico, nella sessione. */
 function loadedSets(session: Recordable): { key: string; itemIndex: number; setIndex: number; kg: number; reps: number }[] {
-  const keys = sessionItems(session).map((item) => (session.snapshot ? exerciseKey(item) : exerciseKey({ exerciseId: item.exerciseId, name: '' })));
+  const keys = sessionItemKeys(session);
   return session.sets
     .filter((s) => s.done && s.kg > 0)
     .flatMap((s) => {
@@ -36,15 +41,33 @@ function addToHistory(history: History, session: Recordable): void {
   }
 }
 
-/** Serie PR di una sessione rispetto a uno storico: `itemIndex` → numeri di serie da record. */
-function prsAgainst(history: History, session: Recordable): Map<number, number[]> {
-  const out = new Map<number, number[]>();
+/** Serie da record di una sessione, con il valore precedente confrontabile. */
+export interface RecordSet {
+  /** Chiave dell'esercizio (`exerciseKey`). */
+  key: string;
+  itemIndex: number;
+  setIndex: number;
+  kg: number;
+  reps: number;
+  /** Massimo storico dei kg tra le serie con ripetizioni ≥ (quello superato). */
+  previousKg: number;
+}
+
+function prSetsAgainst(history: History, session: Recordable): RecordSet[] {
+  const out: RecordSet[] = [];
   for (const s of loadedSets(session)) {
     const comparable = (history.get(s.key) ?? []).filter((p) => p.reps >= s.reps);
     if (comparable.length === 0) continue;
     const max = Math.max(...comparable.map((p) => p.kg));
-    if (s.kg > max) out.set(s.itemIndex, [...(out.get(s.itemIndex) ?? []), s.setIndex]);
+    if (s.kg > max) out.push({ ...s, previousKg: max });
   }
+  return out;
+}
+
+/** Serie PR di una sessione rispetto a uno storico: `itemIndex` → numeri di serie da record. */
+function prsAgainst(history: History, session: Recordable): Map<number, number[]> {
+  const out = new Map<number, number[]>();
+  for (const s of prSetsAgainst(history, session)) out.set(s.itemIndex, [...(out.get(s.itemIndex) ?? []), s.setIndex]);
   return out;
 }
 
@@ -66,6 +89,20 @@ export function recordCountsBySession(all: readonly Recordable[]): Map<string, n
   const out = new Map<string, number>();
   for (const session of [...all].filter((s) => s.endedAt !== null).sort(chronological)) {
     out.set(session.id, prsAgainst(history, session).size);
+    addToHistory(history, session);
+  }
+  return out;
+}
+
+/**
+ * Record di tutto lo storico in un solo passaggio (Progressi, M9): per ogni sessione conclusa le serie PR
+ * con il valore precedente. Stessa regola e stesso storico di `sessionRecords`.
+ */
+export function recordTimeline(all: readonly Recordable[]): Map<string, RecordSet[]> {
+  const history: History = new Map();
+  const out = new Map<string, RecordSet[]>();
+  for (const session of [...all].filter((s) => s.endedAt !== null).sort(chronological)) {
+    out.set(session.id, prSetsAgainst(history, session));
     addToHistory(history, session);
   }
   return out;

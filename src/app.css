@@ -84,6 +84,13 @@ button:not(:disabled),
   --tone-edge: var(--tip-edge);
   --tone-glow: var(--tip-glow);
 }
+/* Solo per i grafici di Progressi (M9): la massa grassa ha il suo colore, non è una sezione. */
+.tone-fat {
+  --tone: var(--fat);
+  --tone-tint: var(--fat-tint);
+  --tone-edge: var(--fat-edge);
+  --tone-glow: var(--fat-glow);
+}
 .tone-neutral {
   --tone: var(--text);
   --tone-tint: transparent;

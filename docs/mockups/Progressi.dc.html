@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Progressi – corpo, forza, dieta</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Permanent+Marker&amp;family=Space+Grotesk:wght@400;500;700&amp;family=JetBrains+Mono:wght@500;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#12141a}
+a{color:#4cc9e6}a:hover{color:#8fe0f2}
+.tap{transition:transform .18s cubic-bezier(.2,.9,.3,1.4),box-shadow .2s ease,background-color .25s ease,color .25s ease,border-color .25s ease,opacity .25s ease}
+.tap:active{transform:scale(.94)}
+.ind{transition:transform .32s cubic-bezier(.2,.9,.3,1.1),background-color .3s ease}
+.ring{transition:stroke-dasharray .6s cubic-bezier(.2,.9,.3,1)}
+.mk{transition:transform .25s cubic-bezier(.2,.9,.3,1.4)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.rise{animation:rise .3s cubic-bezier(.2,.9,.3,1.05)}
+.scroll{overflow-x:auto;scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+@media (prefers-reduced-motion: reduce){.tap,.ind,.ring,.mk{transition:none}.rise{animation:none}}
+</style>
+</helmet>
+<div style="{{ rootStyle }}">
+
+  <header style="display: flex; flex-direction: column; gap: 10px">
+    <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #a9a6b5; white-space: nowrap">DAL 21 AGO 2026 · 7 SETTIMANE DI DATI</span>
+    <h1 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 54px; line-height: 1; color: #4cc9e6; text-shadow: 0 0 18px rgba(76,201,230,0.4); transform: rotate(-3deg); transform-origin: left bottom">Progressi</h1>
+  </header>
+
+  <div role="group" aria-label="Periodo" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+    <sc-for list="{{periods}}" as="p" hint-placeholder-count="3">
+      <button class="tap" aria-pressed="{{ p.on }}" onClick="{{ p.pick }}" style="{{ p.style }}">{{ p.label }}</button>
+    </sc-for>
+  </div>
+
+  <div role="tablist" aria-label="Sezioni" style="position: relative; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); background-color: #1b1e27; padding: 4px">
+    <span class="ind" aria-hidden="true" style="{{ indStyle }}"></span>
+    <sc-for list="{{tabs}}" as="t" hint-placeholder-count="3">
+      <button role="tab" aria-selected="{{ t.on }}" onClick="{{ t.pick }}" style="{{ t.style }}">{{ t.label }}</button>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ isCorpo }}" hint-placeholder-val="{{ true }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 18px">
+
+      <section aria-label="Peso" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(76,201,230,0.4)">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #4cc9e6">Peso</h2>
+          <div role="group" aria-label="Vista" style="display: flex">
+            <button class="tap" aria-pressed="{{ w.chartOn }}" onClick="{{ showChart }}" style="{{ w.btnChart }}">Grafico</button>
+            <button class="tap" aria-pressed="{{ w.tableOn }}" onClick="{{ showTable }}" style="{{ w.btnTable }}">Tabella</button>
+          </div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 30px; line-height: 1.1">{{ w.now }}<span style="font-size: 14px; color: #a9a6b5"> kg</span></span>
+          <span style="{{ w.deltaStyle }}">{{ w.delta }}</span>
+        </div>
+
+        <sc-if value="{{ w.chartOn }}" hint-placeholder-val="{{ true }}">
+          <div style="position: relative; width: 318px; height: 176px">
+            <sc-for list="{{w.ticks}}" as="t" hint-placeholder-count="5">
+              <div style="display: contents"><div style="{{ t.line }}"></div>
+              <span style="{{ t.lbl }}">{{ t.text }}</span></div>
+            </sc-for>
+            <div style="{{ w.cross }}"></div>
+            <svg width="318" height="176" viewBox="0 0 318 176" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible">
+              <path d="{{ w.area }}" fill="rgba(76,201,230,0.10)"></path>
+              <path d="{{ w.line }}" fill="none" stroke="#4cc9e6" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="filter: drop-shadow(0 0 5px rgba(76,201,230,0.5))"></path>
+            </svg>
+            <sc-for list="{{w.xl}}" as="x" hint-placeholder-count="7">
+              <span style="{{ x.style }}">{{ x.text }}</span>
+            </sc-for>
+            <sc-for list="{{w.marks}}" as="m" hint-placeholder-count="7">
+              <span class="mk" style="{{ m.style }}"></span>
+            </sc-for>
+            <div style="{{ w.tipStyle }}">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">{{ w.tipDate }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700">{{ w.tipVal }}</span>
+              <span style="{{ w.tipDeltaStyle }}">{{ w.tipDelta }}</span>
+            </div>
+            <sc-for list="{{w.hits}}" as="h" hint-placeholder-count="7">
+              <button aria-label="{{ h.label }}" onClick="{{ h.pick }}" style="{{ h.style }}"></button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ w.tableOn }}" hint-placeholder-val="{{ false }}">
+          <div style="display: flex; flex-direction: column">
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; padding-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; color: #a9a6b5">
+              <span>DATA</span><span style="text-align: right">PESO</span><span style="text-align: right">VS PRIMA</span>
+            </div>
+            <sc-for list="{{w.rows}}" as="r" hint-placeholder-count="7">
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; padding: 10px 0; border-top: 1px solid #2c3040; font-size: 14px">
+                <span>{{ r.date }}</span>
+                <span style="text-align: right; font-family: 'JetBrains Mono', monospace; font-weight: 700">{{ r.valTxt }}</span>
+                <span style="{{ r.deltaStyle }}">{{ r.delta }}</span>
+              </div>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <span style="font-size: 12px; color: #a9a6b5; line-height: 1.4">Il peso da solo non dice se cambia acqua, grasso o muscolo: guarda la composizione qui sotto.</span>
+      </section>
+
+      <section aria-label="Composizione corporea" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #4cc9e6">Composizione</h2>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">bioimpedenza</span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+          <sc-for list="{{multi}}" as="m" hint-placeholder-count="6">
+            <div style="border: 1px solid #2c3040; padding: 10px; display: flex; flex-direction: column; gap: 4px; min-width: 0">
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 1px; color: #a9a6b5; white-space: nowrap">{{ m.label }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px; line-height: 1.1; white-space: nowrap">{{ m.now }}<span style="font-size: 12px; color: #a9a6b5"> {{ m.unit }}</span></span>
+              <span style="{{ m.deltaStyle }}">{{ m.delta }}</span>
+              <svg width="132" height="52" viewBox="0 0 132 52" aria-hidden="true" style="display: block">
+                <path d="{{ m.ghostPath }}" fill="none" stroke="#3a3f52" stroke-width="2" stroke-dasharray="3 4" stroke-linecap="round"></path>
+                <path d="{{ m.path }}" fill="none" stroke="{{ m.color }}" stroke-width="2" stroke-linecap="round"></path>
+                <circle cx="{{ m.x1 }}" cy="{{ m.y1 }}" r="4" fill="#1b1e27" stroke="{{ m.color }}" stroke-width="2"></circle>
+                <circle cx="{{ m.x2 }}" cy="{{ m.y2 }}" r="5" fill="{{ m.color }}" stroke="#1b1e27" stroke-width="2"></circle>
+                <circle cx="{{ m.x3 }}" cy="{{ m.y3 }}" r="4" fill="#1b1e27" stroke="#3a3f52" stroke-width="2" stroke-dasharray="2 2"></circle>
+              </svg>
+              <div style="position: relative; height: 14px">
+                <span style="{{ m.l1 }}">21/08</span>
+                <span style="{{ m.l2 }}">02/10</span>
+                <span style="{{ m.l3 }}">13/11</span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #a9a6b5; line-height: 1.4">
+          <span><b style="color: #4cc9e6">●</b> massa magra, cellule, acqua</span>
+          <span><b style="color: #9d7bf0">●</b> massa grassa</span>
+          <span>○ tratteggiato = prossima misura · ogni grafico ha la sua scala</span>
+        </div>
+      </section>
+
+      <section aria-label="Circonferenze" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 10px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #4cc9e6">Circonferenze</h2>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">cm · dal 21/08</span>
+        </div>
+        <sc-for list="{{circ}}" as="c" hint-placeholder-count="7">
+          <div style="display: grid; grid-template-columns: 82px minmax(0, 1fr) 54px 52px; gap: 10px; align-items: center; font-size: 14px">
+            <span>{{ c.label }}</span>
+            <svg width="100" height="28" viewBox="0 0 100 28" aria-hidden="true" style="display: block">
+              <path d="{{ c.path }}" fill="none" stroke="#4cc9e6" stroke-width="2" stroke-linecap="round"></path>
+              <circle cx="{{ c.x1 }}" cy="{{ c.y1 }}" r="3.5" fill="#1b1e27" stroke="#4cc9e6" stroke-width="2"></circle>
+              <circle cx="{{ c.x2 }}" cy="{{ c.y2 }}" r="4.5" fill="#4cc9e6" stroke="#1b1e27" stroke-width="2"></circle>
+            </svg>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; text-align: right">{{ c.now }}</span>
+            <span style="{{ c.deltaStyle }}">{{ c.delta }}</span>
+          </div>
+        </sc-for>
+        <div style="display: flex; gap: 14px; font-size: 12px; color: #a9a6b5; flex-wrap: wrap; padding-top: 4px">
+          <span><b style="color: #4cc9e6">▲▼</b> nella direzione giusta</span>
+          <span><b style="color: #f2c94c">▲▼</b> da tenere d'occhio</span>
+          <span>■ nessun cambio</span>
+        </div>
+      </section>
+
+      <a class="tap" href="Profilo.dc.html" style="display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 48px; border: 1px solid #3a3f52; color: #ece8df; text-decoration: none; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase">+ Aggiungi una misura nel Profilo</a>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isForza }}" hint-placeholder-val="{{ false }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 18px">
+
+      <div class="scroll" role="group" aria-label="Esercizio" style="display: flex; gap: 8px; margin: 0 -18px; padding: 0 18px 4px 18px">
+        <sc-for list="{{exs}}" as="e" hint-placeholder-count="5">
+          <button class="tap" aria-pressed="{{ e.on }}" onClick="{{ e.pick }}" style="{{ e.style }}">{{ e.name }}</button>
+        </sc-for>
+      </div>
+
+      <section aria-label="Andamento dell'esercizio" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(240,85,159,0.45)">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #f0559f; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ f.title }}</h2>
+          <div role="group" aria-label="Misura" style="display: flex; flex-shrink: 0">
+            <button class="tap" aria-pressed="{{ f.carOn }}" onClick="{{ f.pickCar }}" style="{{ f.btnCar }}">Carico</button>
+            <button class="tap" aria-pressed="{{ f.volOn }}" onClick="{{ f.pickVol }}" style="{{ f.btnVol }}">Volume</button>
+          </div>
+        </div>
+        <div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap">
+          <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 30px; line-height: 1.1">{{ f.now }}<span style="font-size: 14px; color: #a9a6b5"> {{ f.nowUnit }}</span></span>
+          <span style="{{ f.deltaStyle }}">{{ f.delta }}</span>
+        </div>
+        <div style="position: relative; width: 318px; height: 176px">
+          <sc-for list="{{f.ticks}}" as="t" hint-placeholder-count="5">
+            <div style="display: contents"><div style="{{ t.line }}"></div>
+            <span style="{{ t.lbl }}">{{ t.text }}</span></div>
+          </sc-for>
+          <div style="{{ f.cross }}"></div>
+          <svg width="318" height="176" viewBox="0 0 318 176" aria-hidden="true" style="position: absolute; left: 0; top: 0; overflow: visible">
+            <path d="{{ f.area }}" fill="rgba(240,85,159,0.10)"></path>
+            <path d="{{ f.line }}" fill="none" stroke="#f0559f" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" style="filter: drop-shadow(0 0 5px rgba(240,85,159,0.5))"></path>
+          </svg>
+          <sc-for list="{{f.xl}}" as="x" hint-placeholder-count="8">
+            <span style="{{ x.style }}">{{ x.text }}</span>
+          </sc-for>
+          <sc-for list="{{f.marks}}" as="m" hint-placeholder-count="8">
+            <span class="mk" style="{{ m.style }}"></span>
+          </sc-for>
+          <div style="{{ f.tipStyle }}">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">{{ f.tipDate }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 700">{{ f.tipVal }}</span>
+            <span style="{{ f.tipDeltaStyle }}">{{ f.tipDelta }}</span>
+            <sc-if value="{{ f.tipPr }}" hint-placeholder-val="{{ true }}">
+              <span style="align-self: flex-start; margin-top: 2px; padding: 2px 6px; background-color: #f2c94c; color: #12141a; font-weight: 700; font-size: 11px; letter-spacing: 1px; transform: rotate(-4deg)">PR</span>
+            </sc-if>
+          </div>
+          <sc-for list="{{f.hits}}" as="h" hint-placeholder-count="8">
+            <button aria-label="{{ h.label }}" onClick="{{ h.pick }}" style="{{ h.style }}"></button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #a9a6b5">
+          <span><b style="color: #f0559f">◆</b> record personale</span>
+          <span><b style="color: #f0559f">●</b> sessione normale</span>
+        </div>
+      </section>
+
+      <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+        <sc-for list="{{fstats}}" as="s" hint-placeholder-count="3">
+          <div style="background-color: #1b1e27; padding: 12px; display: flex; flex-direction: column; gap: 4px; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px)">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; color: #a9a6b5">{{ s.label }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 20px; line-height: 1.1">{{ s.value }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <section aria-label="Allenamenti a settimana" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #f0559f">Allenamenti a settimana</h2>
+        </div>
+        <div style="position: relative; width: 318px; height: 150px">
+          <sc-for list="{{b.ticks}}" as="t" hint-placeholder-count="5">
+            <div style="display: contents"><div style="{{ t.line }}"></div>
+            <span style="{{ t.lbl }}">{{ t.text }}</span></div>
+          </sc-for>
+          <div style="{{ b.targetLine }}"></div>
+          <span style="{{ b.targetLbl }}">{{ b.targetText }}</span>
+          <sc-for list="{{b.bars}}" as="r" hint-placeholder-count="8">
+            <span class="mk" style="{{ r.style }}"></span>
+          </sc-for>
+          <sc-for list="{{b.xl}}" as="x" hint-placeholder-count="8">
+            <span style="{{ x.style }}">{{ x.text }}</span>
+          </sc-for>
+          <div style="{{ b.tipStyle }}">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">{{ b.tipDate }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700">{{ b.tipVal }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c9c5d3">{{ b.tipVol }}</span>
+          </div>
+          <sc-for list="{{b.hits}}" as="h" hint-placeholder-count="8">
+            <button aria-label="{{ h.label }}" onClick="{{ h.pick }}" style="{{ h.style }}"></button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #a9a6b5; line-height: 1.4">
+          <span><b style="color: #f0559f">■</b> sessioni fatte</span>
+          <span>- - giorni assegnati nelle schede</span>
+          <span>▭ tratteggiata = settimana in corso</span>
+        </div>
+      </section>
+
+      <section aria-label="Record recenti" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 10px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)">
+        <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #f0559f">Record recenti</h2>
+        <sc-for list="{{records}}" as="r" hint-placeholder-count="3">
+          <div style="display: flex; align-items: center; gap: 12px; padding-top: 10px; border-top: 1px solid #2c3040">
+            <span style="flex-shrink: 0; padding: 3px 7px; background-color: #f2c94c; color: #12141a; font-weight: 700; font-size: 12px; letter-spacing: 1px; transform: rotate(-4deg)">PR</span>
+            <div style="display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1 1 auto">
+              <span style="font-size: 14px">{{ r.name }}</span>
+              <span style="font-size: 12px; color: #a9a6b5">{{ r.sub }}</span>
+            </div>
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; white-space: nowrap">{{ r.now }}</span>
+          </div>
+        </sc-for>
+      </section>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isDieta }}" hint-placeholder-val="{{ false }}">
+    <div class="rise" style="display: flex; flex-direction: column; gap: 18px">
+
+      <section aria-label="Aderenza al piano" style="background-color: #1b1e27; padding: 18px; display: flex; align-items: center; gap: 18px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px); box-shadow: inset 0 0 0 1px rgba(169,227,75,0.4)">
+        <div style="position: relative; width: 112px; height: 112px; flex-shrink: 0">
+          <svg width="112" height="112" viewBox="0 0 112 112" role="img" aria-label="{{ d.ringAria }}">
+            <circle cx="56" cy="56" r="46" fill="none" stroke="#2c3040" stroke-width="11"></circle>
+            <circle class="ring" cx="56" cy="56" r="46" fill="none" stroke="#a9e34b" stroke-width="11" stroke-linecap="round" stroke-dasharray="{{ d.ringDash }}" transform="rotate(-90 56 56)" style="filter: drop-shadow(0 0 6px rgba(169,227,75,0.55))"></circle>
+          </svg>
+          <div style="position: absolute; inset: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center">
+            <span style="font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 24px; line-height: 1; white-space: nowrap">{{ d.avg }}<span style="font-size: 13px">%</span></span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; color: #a9a6b5; white-space: nowrap">ADERENZA</span>
+          </div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 22px; color: #a9e34b">Piano Ottobre</h2>
+          <span style="font-size: 13px; line-height: 1.4; color: #c9c5d3">{{ d.perfectText }}</span>
+          <span style="font-size: 13px; line-height: 1.4; color: #c9c5d3">{{ d.missedText }}</span>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">dal 1 ottobre · oggi escluso</span>
+        </div>
+      </section>
+
+      <section aria-label="Calendario dell'aderenza" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #a9e34b">Pasti segnati</h2>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">% per giorno</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 36px repeat(7, minmax(0, 1fr)); gap: 3px">
+          <sc-for list="{{cells}}" as="c" hint-placeholder-count="32">
+            <span style="{{ c.style }}">{{ c.text }}</span>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 12px; height: 12px; background-color: #2c3a20"></span>meno di 60</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 12px; height: 12px; background-color: #6b9a33"></span>60</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 12px; height: 12px; background-color: #86b83c"></span>80</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 12px; height: 12px; background-color: #a9e34b"></span>100</span>
+          <span style="display: inline-flex; align-items: center; gap: 5px"><span style="width: 12px; height: 12px; border: 1px dashed #3a3f52"></span>senza dati</span>
+        </div>
+      </section>
+
+      <section aria-label="Scarto dal target" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px)">
+        <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #a9e34b">Scarto dal target</h2>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">kcal · %</span>
+        </div>
+        <span style="font-size: 13px; line-height: 1.4; color: #c9c5d3">{{ v.summary }}</span>
+        <div style="position: relative; width: 318px; height: 170px">
+          <div style="{{ v.band }}"></div>
+          <sc-for list="{{v.ticks}}" as="t" hint-placeholder-count="3">
+            <div style="display: contents"><div style="{{ t.line }}"></div>
+            <span style="{{ t.lbl }}">{{ t.text }}</span></div>
+          </sc-for>
+          <sc-for list="{{v.bars}}" as="r" hint-placeholder-count="11">
+            <div style="display: contents"><span class="mk" style="{{ r.style }}"></span>
+            <span style="{{ r.glyphStyle }}">{{ r.glyph }}</span></div>
+          </sc-for>
+          <sc-for list="{{v.xl}}" as="x" hint-placeholder-count="11">
+            <span style="{{ x.style }}">{{ x.text }}</span>
+          </sc-for>
+          <div style="{{ v.tipStyle }}">
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #a9a6b5">{{ v.tipDate }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 14px; font-weight: 700">{{ v.tipVal }}</span>
+            <span style="font-family: 'JetBrains Mono', monospace; font-size: 11px; color: #c9c5d3">{{ v.tipKcal }}</span>
+          </div>
+          <sc-for list="{{v.hits}}" as="h" hint-placeholder-count="11">
+            <button aria-label="{{ h.label }}" onClick="{{ h.pick }}" style="{{ h.style }}"></button>
+          </sc-for>
+        </div>
+        <div style="display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #a9a6b5; line-height: 1.4">
+          <span><b style="color: #a9e34b">■</b> entro ±5 %</span>
+          <span><b style="color: #f2c94c">▨</b> oltre ±5 % (▲ sopra, ▼ sotto)</span>
+        </div>
+      </section>
+
+      <section aria-label="Macro medi" style="background-color: #1b1e27; padding: 18px; display: flex; flex-direction: column; gap: 12px; clip-path: polygon(0 0, calc(100% - 18px) 0, 100% 18px, 100% 100%, 18px 100%, 0 calc(100% - 18px))">
+        <div style="display: flex; justify-content: space-between; align-items: baseline">
+          <h2 style="margin: 0; font-family: 'Permanent Marker', cursive; font-weight: 400; font-size: 24px; color: #a9e34b">Macro medi</h2>
+          <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #a9a6b5">g/giorno · tacca = target</span>
+        </div>
+        <sc-for list="{{macros}}" as="m" hint-placeholder-count="3">
+          <div style="display: flex; flex-direction: column; gap: 6px">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 14px">
+              <span>{{ m.name }}</span>
+              <span style="font-family: 'JetBrains Mono', monospace; font-size: 13px; display: inline-flex; gap: 6px; align-items: baseline"><b>{{ m.valTxt }}</b><span style="{{ m.deltaStyle }}">{{ m.delta }}</span></span>
+            </div>
+            <div style="position: relative; height: 10px; background-color: #2c3040">
+              <div style="{{ m.fill }}"></div>
+              <div style="{{ m.tick }}"></div>
+            </div>
+          </div>
+        </sc-for>
+      </section>
+
+      <section aria-label="Osservazione dell'app" style="background-color: rgba(242,201,76,0.1); border: 1px dashed rgba(242,201,76,0.6); padding: 14px 16px; display: flex; flex-direction: column; gap: 6px">
+        <span style="font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 2px; color: #f2c94c">✦ OSSERVAZIONE DELL'APP</span>
+        <span style="font-size: 14px; line-height: 1.5">{{ obs }}</span>
+        <span style="font-size: 12px; color: #a9a6b5">L'app non modifica il piano: segnala soltanto.</span>
+      </section>
+    </div>
+  </sc-if>
+
+  <nav aria-label="Navigazione principale" style="margin: 4px -18px 0 -18px; padding: 10px 12px 28px 12px; background-color: rgba(18,20,26,0.94); border-top: 1px solid #2c3040; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 4px">
+    <a href="Main.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"></path></svg>Oggi</a>
+    <a href="Allena.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12"></path></svg>Allena</a>
+    <a href="Dieta.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18M17 3c-2 2-2 6 0 8v10"></path></svg>Dieta</a>
+    <a href="#" aria-current="page" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #4cc9e6; font-size: 11px; font-weight: 700"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 20h18M6 16l4-5 3 3 5-7"></path></svg>Progressi</a>
+    <a href="Profilo.dc.html" style="display: flex; flex-direction: column; align-items: center; gap: 4px; min-height: 44px; text-decoration: none; color: #a9a6b5; font-size: 11px"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>Profilo</a>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":2000}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { tab: 'corpo', period: 'tutto', wSel: -1, table: false, ex: 'panca', met: 'carico', fSel: -1, bSel: -1, vSel: -1 };
+  }
+
+  renderVals() {
+    var self = this, st = this.state;
+    var INK = '#ece8df', MUTED = '#a9a6b5', LINE = '#2c3040', LINE2 = '#3a3f52', SURF = '#1b1e27';
+    var CY = '#4cc9e6', MG = '#f0559f', GR = '#a9e34b', YE = '#f2c94c', VI = '#9d7bf0';
+
+    function fmt(n, d) { return n.toFixed(d).replace('.', ','); }
+    function sgn(n, d) { return (n > 0 ? '+' : n < 0 ? '−' : '') + fmt(Math.abs(n), d); }
+    function arrow(n) { return n > 0 ? '▲' : n < 0 ? '▼' : '■'; }
+    function th(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+    function mono(sz, w, col, extra) { return "font-family: 'JetBrains Mono', monospace; font-size: " + sz + 'px; font-weight: ' + w + '; color: ' + col + ';' + (extra || ''); }
+    var DCOL = { good: CY, warn: YE, none: MUTED };
+    function ds(k, extra) { return mono(12, 700, DCOL[k], extra || ''); }
+    function cut(arr, k) { return st.period === '4s' ? arr.slice(-k) : arr; }
+    function pickIdx(sel, n) { return (sel < 0 || sel >= n) ? n - 1 : sel; }
+    function btnSeg(on, col, first) {
+      return 'height: 44px; padding: 0 12px; font-family: inherit; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; background-color: ' + (on ? col : 'transparent') + '; color: ' + (on ? '#12141a' : MUTED) + '; border: 1px solid ' + (on ? col : LINE2) + ';' + (first ? '' : ' border-left: none;');
+    }
+
+    // ---------- scala "bella": step e tacche
+    function nice(min, max) {
+      var r = Math.max(max - min, 0.0001);
+      var steps = [0.5, 1, 2, 2.5, 5, 10, 20, 25, 50, 100, 200, 250, 500, 1000, 2500, 5000];
+      var s = steps[steps.length - 1];
+      for (var i = 0; i < steps.length; i++) { if ((r * 1.5) / steps[i] <= 5) { s = steps[i]; break; } }
+      var lo = Math.floor((min - r * 0.12) / s) * s, hi = Math.ceil((max + r * 0.12) / s) * s;
+      var ticks = [];
+      for (var t = lo; t <= hi + 1e-9; t += s) ticks.push(Math.round(t * 100) / 100);
+      return { lo: lo, hi: hi, ticks: ticks };
+    }
+
+    // ---------- grafico a linea (peso, carico/volume)
+    var CW = 318, CH = 176, PL = 40, PR = 10, PT = 14, PB = 26, PW = CW - PL - PR, PH = CH - PT - PB;
+    function lineChart(c) {
+      var vals = c.vals, n = vals.length;
+      var dm = nice(Math.min.apply(null, vals), Math.max.apply(null, vals));
+      function X(i) { return n === 1 ? PL + PW / 2 : PL + i * PW / (n - 1); }
+      function Y(v) { return PT + (dm.hi - v) / (dm.hi - dm.lo) * PH; }
+      var si = pickIdx(c.sel, n), d = '';
+      vals.forEach(function (v, i) { d += (i ? ' L ' : 'M ') + X(i).toFixed(1) + ' ' + Y(v).toFixed(1); });
+      var area = d + ' L ' + X(n - 1).toFixed(1) + ' ' + (PT + PH) + ' L ' + X(0).toFixed(1) + ' ' + (PT + PH) + ' Z';
+      var ticks = dm.ticks.map(function (t) {
+        return {
+          line: 'position: absolute; left: ' + PL + 'px; width: ' + PW + 'px; top: ' + (Y(t) - 0.5).toFixed(1) + 'px; height: 1px; background-color: ' + LINE + ';',
+          lbl: 'position: absolute; left: 0; width: ' + (PL - 8) + 'px; text-align: right; top: ' + (Y(t) - 7).toFixed(1) + 'px; line-height: 14px; ' + mono(10, 500, MUTED),
+          text: c.tickFmt(t)
+        };
+      });
+      var xl = c.labels.map(function (l, i) {
+        return { text: l, style: 'position: absolute; width: 40px; text-align: center; left: ' + (X(i) - 20).toFixed(1) + 'px; top: ' + (PT + PH + 8) + 'px; ' + mono(10, i === si ? 700 : 500, i === si ? INK : MUTED) };
+      });
+      var marks = vals.map(function (v, i) {
+        var sel = i === si, pr = c.pr && c.pr[i], s = sel ? 16 : (pr ? 12 : 10);
+        var base = 'position: absolute; box-sizing: border-box; pointer-events: none; left: ' + (X(i) - s / 2).toFixed(1) + 'px; top: ' + (Y(v) - s / 2).toFixed(1) + 'px; width: ' + s + 'px; height: ' + s + 'px;';
+        if (pr) base += ' border-radius: 2px; transform: rotate(45deg); background-color: ' + c.color + '; border: 2px solid ' + SURF + ';' + (sel ? ' box-shadow: 0 0 0 2px ' + c.color + ', 0 0 14px ' + c.color + ';' : '');
+        else if (sel) base += ' border-radius: 50%; background-color: ' + c.color + '; border: 3px solid ' + SURF + '; box-shadow: 0 0 0 2px ' + c.color + ', 0 0 14px ' + c.color + ';';
+        else base += ' border-radius: 50%; background-color: ' + SURF + '; border: 2px solid ' + c.color + ';';
+        return { style: base };
+      });
+      var hits = vals.map(function (v, i) {
+        return { label: c.labels[i] + ': ' + c.tipFmt(v, i), pick: function () { c.setSel(i); },
+          style: 'position: absolute; left: ' + (X(i) - 22).toFixed(1) + 'px; top: ' + (PT - 6) + 'px; width: 44px; height: ' + (PH + 12) + 'px; padding: 0; border: none; background: transparent; cursor: pointer;' };
+      });
+      var tx = Math.max(2, Math.min(CW - 114, X(si) - 57)), ty = Y(vals[si]) - 66;
+      if (ty < 0) ty = Y(vals[si]) + 16;
+      var prevD = si > 0 ? vals[si] - vals[si - 1] : null;
+      return {
+        ticks: ticks, xl: xl, marks: marks, hits: hits, line: d, area: area,
+        cross: 'position: absolute; left: ' + X(si).toFixed(1) + 'px; top: ' + PT + 'px; width: 0; height: ' + PH + 'px; border-left: 1px dashed ' + LINE2 + ';',
+        tipStyle: 'position: absolute; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 2px; width: 108px; box-sizing: border-box; padding: 6px 8px; background-color: #12141a; border: 1px solid ' + LINE2 + '; left: ' + tx.toFixed(1) + 'px; top: ' + ty.toFixed(1) + 'px;',
+        tipDate: c.labels[si], tipVal: c.tipFmt(vals[si], si),
+        tipDelta: prevD === null ? 'prima misura' : arrow(prevD) + ' ' + c.deltaFmt(prevD) + ' vs prima',
+        tipDeltaStyle: mono(11, 500, MUTED),
+        si: si
+      };
+    }
+
+    // ---------- tab, periodo
+    var tabNames = [['corpo', 'Corpo', CY], ['forza', 'Forza', MG], ['dieta', 'Dieta', GR]];
+    var tabIdx = tabNames.map(function (t) { return t[0]; }).indexOf(st.tab);
+    var tabCol = tabNames[tabIdx][2];
+    var tabs = tabNames.map(function (t) {
+      var on = st.tab === t[0];
+      return { label: t[1], on: on, pick: function () { self.setState({ tab: t[0] }); },
+        style: 'position: relative; z-index: 1; height: 44px; border: none; background-color: transparent; font-family: inherit; font-weight: 700; font-size: 14px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; transition: color .25s ease; color: ' + (on ? '#12141a' : MUTED) + ';' };
+    });
+    var indStyle = 'position: absolute; top: 4px; left: 4px; width: calc((100% - 8px) / 3); height: 44px; background-color: ' + tabCol + '; transform: translateX(' + (tabIdx * 100) + '%); clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);';
+    var periods = [['4s', '4 sett'], ['3m', '3 mesi'], ['tutto', 'Tutto']].map(function (p) {
+      var on = st.period === p[0];
+      return { label: p[1], on: on, pick: function () { self.setState({ period: p[0], wSel: -1, fSel: -1, bSel: -1 }); },
+        style: 'height: 44px; font-family: inherit; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; background-color: ' + (on ? 'rgba(76,201,230,0.1)' : 'transparent') + '; border: 1px solid ' + (on ? CY : LINE) + '; color: ' + (on ? CY : MUTED) + ';' };
+    });
+    var rootStyle = 'width: 390px; min-height: 2000px; box-sizing: border-box; background-color: #12141a; background-image: radial-gradient(circle at 90% 4%, ' + (st.tab === 'corpo' ? 'rgba(76,201,230,0.16)' : st.tab === 'forza' ? 'rgba(240,85,159,0.14)' : 'rgba(169,227,75,0.14)') + ', transparent 38%); color: #ece8df; font-family: \'Space Grotesk\', system-ui, sans-serif; display: flex; flex-direction: column; gap: 18px; padding: 54px 18px 0 18px;';
+
+    // =================== CORPO ===================
+    var wDates = ['21/08', '28/08', '04/09', '11/09', '18/09', '25/09', '02/10'];
+    var wVals = [87.5, 87.9, 87.6, 88.3, 88.0, 88.6, 88.9];
+    var wd = cut(wDates, 5), wv = cut(wVals, 5);
+    var wc = lineChart({
+      vals: wv, labels: wd, sel: st.wSel, color: CY,
+      tickFmt: function (t) { return t % 1 === 0 ? String(t) : fmt(t, 1); },
+      tipFmt: function (v) { return fmt(v, 1) + ' kg'; },
+      deltaFmt: function (d) { return sgn(d, 1) + ' kg'; },
+      setSel: function (i) { self.setState({ wSel: i }); }
+    });
+    var wTot = wv[wv.length - 1] - wv[0];
+    var w = Object.assign(wc, {
+      now: fmt(wv[wv.length - 1], 1),
+      delta: arrow(wTot) + ' ' + sgn(wTot, 1) + ' kg dal ' + wd[0],
+      deltaStyle: ds('none'),
+      chartOn: !st.table, tableOn: st.table,
+      btnChart: btnSeg(!st.table, CY, true), btnTable: btnSeg(st.table, CY, false),
+      rows: wv.map(function (v, i) {
+        var dd = i > 0 ? v - wv[i - 1] : null;
+        return { date: wd[i], valTxt: fmt(v, 1) + ' kg', delta: dd === null ? 'prima' : arrow(dd) + ' ' + sgn(dd, 1), deltaStyle: mono(12, 700, MUTED, 'text-align: right;') };
+      }).reverse()
+    });
+
+    // piccoli grafici (una scala per grafico, due misure + prossima)
+    function miniSpec(label, unit, v1, v2, dec, color, kind, thr) {
+      var dd = v2 - v1, dlt = Math.abs(dd) < thr ? 'none' : kind;
+      var span = Math.max(Math.abs(dd), 0.0001), lo = Math.min(v1, v2) - span * 0.9, hi = Math.max(v1, v2) + span * 0.9;
+      function Y(v) { return 8 + (hi - v) / (hi - lo) * 34; }
+      var x1 = 10, x2 = 86, x3 = 122, y1 = Y(v1), y2 = Y(v2), y3 = y2;
+      function lab(x, strong) { return 'position: absolute; top: 0; width: 36px; text-align: center; left: ' + (x - 18) + 'px; ' + mono(10, strong ? 700 : 500, strong ? INK : MUTED, 'white-space: nowrap;'); }
+      return {
+        label: label, unit: unit, now: fmt(v2, dec), delta: arrow(dd) + ' ' + sgn(dd, dec) + ' ' + unit, deltaStyle: ds(dlt), color: color,
+        x1: x1, y1: y1.toFixed(1), x2: x2, y2: y2.toFixed(1), x3: x3, y3: y3.toFixed(1),
+        path: 'M ' + x1 + ' ' + y1.toFixed(1) + ' L ' + x2 + ' ' + y2.toFixed(1),
+        ghostPath: 'M ' + x2 + ' ' + y2.toFixed(1) + ' L ' + x3 + ' ' + y3.toFixed(1),
+        l1: lab(x1, false), l2: lab(x2, true), l3: lab(x3, false)
+      };
+    }
+    var multi = [
+      miniSpec('MASSA MAGRA FFM', 'kg', 67.6, 70.4, 1, CY, 'good', 0.1),
+      miniSpec('MASSA GRASSA FM', 'kg', 19.9, 18.5, 1, VI, 'good', 0.1),
+      miniSpec('CELLULARE BCM', 'kg', 39.7, 40.2, 1, CY, 'good', 0.1),
+      miniSpec('ANGOLO DI FASE', '°', 7.1, 6.7, 1, CY, 'warn', 0.05),
+      miniSpec('ACQUA TOTALE TBW', 'L', 49.5, 51.8, 1, CY, 'none', 99),
+      miniSpec('ECW / TBW', '%', 41.2, 42.7, 1, CY, 'warn', 0.05)
+    ];
+
+    function spark(v1, v2) {
+      var dd = v2 - v1, span = Math.max(Math.abs(dd), 0.3), lo = Math.min(v1, v2) - span * 0.8, hi = Math.max(v1, v2) + span * 0.8;
+      function Y(v) { return 5 + (hi - v) / (hi - lo) * 18; }
+      return { x1: 8, y1: Y(v1).toFixed(1), x2: 90, y2: Y(v2).toFixed(1), path: 'M 8 ' + Y(v1).toFixed(1) + ' L 90 ' + Y(v2).toFixed(1) };
+    }
+    var circData = [['Torace', 105.5, 107.5, 'good'], ['Vita', 90.4, 90.4, 'none'], ['Addome', 97.2, 96.2, 'good'], ['Fianchi', 102.8, 101.5, 'good'], ['Coscia', 62.0, 62.8, 'good'], ['Braccio', 37.5, 37.9, 'good'], ['Polpaccio', 42.0, 42.4, 'good']];
+    var circ = circData.map(function (x) {
+      var s = spark(x[1], x[2]), dd = x[2] - x[1];
+      return { label: x[0], x1: s.x1, y1: s.y1, x2: s.x2, y2: s.y2, path: s.path, now: fmt(x[2], 1),
+        delta: Math.abs(dd) < 0.05 ? '0' : sgn(dd, 1), deltaStyle: ds(x[3], ' text-align: right;') };
+    });
+
+    // =================== FORZA ===================
+    var sDates = ['24/08', '31/08', '07/09', '14/09', '21/09', '28/09', '05/10', '12/10'];
+    var EX = {
+      panca: { name: 'Panca piana', kg: [60, 60, 62.5, 62.5, 65, 65, 67.5, 70], reps: [8, 8, 8, 8, 8, 8, 8, 6], sets: 4 },
+      lat: { name: 'Lat machine', kg: [50, 50, 52.5, 52.5, 55, 55, 57.5, 57.5], reps: [10, 10, 10, 10, 10, 10, 10, 10], sets: 4 },
+      leg: { name: 'Leg press', kg: [140, 140, 150, 150, 160, 160, 170, 170], reps: [12, 12, 12, 12, 12, 12, 12, 12], sets: 4 },
+      mil: { name: 'Military press', kg: [30, 32.5, 32.5, 35, 35, 35, 37.5, 37.5], reps: [8, 8, 8, 8, 8, 8, 8, 8], sets: 3 },
+      curl: { name: 'Curl manubri', kg: [14, 14, 16, 16, 16, 18, 18, 18], reps: [10, 10, 10, 10, 10, 10, 10, 10], sets: 3 }
+    };
+    var exKeys = ['panca', 'lat', 'leg', 'mil', 'curl'];
+    var exs = exKeys.map(function (k) {
+      var on = st.ex === k;
+      return { name: EX[k].name, on: on, pick: function () { self.setState({ ex: k, fSel: -1 }); },
+        style: 'flex-shrink: 0; height: 44px; padding: 0 14px; font-family: inherit; font-size: 13px; font-weight: 700; white-space: nowrap; cursor: pointer; background-color: ' + (on ? MG : 'transparent') + '; color: ' + (on ? '#12141a' : '#c9c5d3') + '; border: 1px solid ' + (on ? MG : LINE2) + ';' };
+    });
+    var E = EX[st.ex];
+    var vol = E.kg.map(function (k, i) { return k * E.reps[i] * E.sets; });
+    var isCar = st.met === 'carico';
+    var seriesAll = isCar ? E.kg : vol;
+    var prAll = E.kg.map(function (k, i) { return i > 0 && k > Math.max.apply(null, E.kg.slice(0, i)); });
+    var fd = cut(sDates, 4), fv = cut(seriesAll, 4), fk = cut(E.kg, 4), fr = cut(E.reps, 4), fp = cut(prAll, 4);
+    var fc = lineChart({
+      vals: fv, labels: fd, sel: st.fSel, color: MG, pr: isCar ? fp : null,
+      tickFmt: function (t) { return t % 1 === 0 ? th(t) : fmt(t, 1); },
+      tipFmt: function (v, i) { return isCar ? fmt(v, v % 1 ? 1 : 0) + ' kg × ' + fr[i] : th(v) + ' kg'; },
+      deltaFmt: function (d) { return sgn(d, d % 1 ? 1 : 0) + ' kg'; },
+      setSel: function (i) { self.setState({ fSel: i }); }
+    });
+    var fLast = fv.length - 1, fTot = fv[fLast] - fv[0];
+    var f = Object.assign(fc, {
+      title: E.name,
+      now: isCar ? fmt(fk[fLast], fk[fLast] % 1 ? 1 : 0) + ' × ' + fr[fLast] : th(fv[fLast]),
+      nowUnit: isCar ? 'kg × rip' : 'kg',
+      delta: arrow(fTot) + ' ' + sgn(fTot, fTot % 1 ? 1 : 0) + ' kg dal ' + fd[0],
+      deltaStyle: ds(isCar ? (fTot > 0 ? 'good' : 'none') : 'none'),
+      tipPr: isCar && !!fp[fc.si],
+      carOn: isCar, volOn: !isCar,
+      btnCar: btnSeg(isCar, MG, true), btnVol: btnSeg(!isCar, MG, false),
+      pickCar: function () { self.setState({ met: 'carico', fSel: -1 }); },
+      pickVol: function () { self.setState({ met: 'volume', fSel: -1 }); }
+    });
+    var prCount = fp.filter(function (x) { return x; }).length;
+    var fstats = [
+      { label: 'SESSIONI', value: String(fv.length) },
+      { label: 'RECORD', value: String(prCount) },
+      { label: 'MIGLIORE', value: isCar ? fmt(Math.max.apply(null, fk), Math.max.apply(null, fk) % 1 ? 1 : 0) + ' kg' : th(Math.max.apply(null, fv)) }
+    ];
+
+    // allenamenti a settimana (barre)
+    var wkLbl = ['24/8', '31/8', '7/9', '14/9', '21/9', '28/9', '5/10', '12/10'];
+    var wkCnt = [2, 3, 3, 2, 3, 3, 3, 1];
+    var wkVol = [9.6, 14.0, 14.9, 10.2, 15.1, 15.6, 16.0, 5.4];
+    var bl = cut(wkLbl, 4), bc = cut(wkCnt, 4), bv = cut(wkVol, 4), bn = bl.length;
+    var BW = 318, BH = 150, BPL = 28, BPR = 6, BPT = 12, BPB = 24, BPW = BW - BPL - BPR, BPH = BH - BPT - BPB, BMAX = 4, TGT = 3;
+    function BY(v) { return BPT + (BMAX - v) / BMAX * BPH; }
+    var band = BPW / bn, bw = Math.min(30, Math.round(band * 0.55)), bs = pickIdx(st.bSel, bn);
+    var bticks = [0, 1, 2, 3, 4].map(function (t) {
+      return { line: 'position: absolute; left: ' + BPL + 'px; width: ' + BPW + 'px; top: ' + (BY(t) - 0.5).toFixed(1) + 'px; height: 1px; background-color: ' + LINE + ';',
+        lbl: 'position: absolute; left: 0; width: ' + (BPL - 8) + 'px; text-align: right; top: ' + (BY(t) - 7).toFixed(1) + 'px; line-height: 14px; ' + mono(10, 500, MUTED), text: String(t) };
+    });
+    var bars = bc.map(function (c, i) {
+      var cur = i === bn - 1 && st.period !== 'x', sel = i === bs, left = BPL + i * band + (band - bw) / 2;
+      var base = 'position: absolute; box-sizing: border-box; pointer-events: none; left: ' + left.toFixed(1) + 'px; width: ' + bw + 'px; top: ' + BY(c).toFixed(1) + 'px; height: ' + (BY(0) - BY(c)).toFixed(1) + 'px; border-radius: 4px 4px 0 0;';
+      if (cur) base += ' border: 2px dashed ' + MG + '; border-bottom: none; background-color: rgba(240,85,159,0.18);';
+      else base += ' background-color: ' + MG + ';';
+      if (sel) base += ' box-shadow: 0 0 0 2px ' + SURF + ', 0 0 0 4px ' + INK + ', 0 0 14px ' + MG + ';';
+      return { style: base };
+    });
+    var bxl = bl.map(function (l, i) {
+      return { text: l, style: 'position: absolute; width: ' + Math.max(36, Math.round(band)) + 'px; text-align: center; left: ' + (BPL + i * band + band / 2 - Math.max(36, Math.round(band)) / 2).toFixed(1) + 'px; top: ' + (BPT + BPH + 8) + 'px; ' + mono(10, i === bs ? 700 : 500, i === bs ? INK : MUTED) };
+    });
+    var bhits = bc.map(function (c, i) {
+      return { label: 'Settimana del ' + bl[i] + ': ' + c + ' allenamenti', pick: function () { self.setState({ bSel: i }); },
+        style: 'position: absolute; left: ' + (BPL + i * band).toFixed(1) + 'px; top: ' + (BPT - 4) + 'px; width: ' + band.toFixed(1) + 'px; height: ' + (BPH + 8) + 'px; padding: 0; border: none; background: transparent; cursor: pointer;' };
+    });
+    var btx = Math.max(2, Math.min(BW - 120, BPL + bs * band + band / 2 - 58)), bty = BY(bc[bs]) - 62;
+    if (bty < 0) bty = 0;
+    var b = {
+      ticks: bticks, bars: bars, xl: bxl, hits: bhits, target: String(TGT),
+      targetLine: 'position: absolute; left: ' + BPL + 'px; width: ' + BPW + 'px; top: ' + (BY(TGT) - 0.5).toFixed(1) + 'px; height: 0; border-top: 1px dashed ' + INK + '; opacity: .7; pointer-events: none;',
+      targetLbl: 'position: absolute; right: ' + BPR + 'px; top: ' + (BY(TGT) - 16).toFixed(1) + 'px; pointer-events: none; ' + mono(10, 500, MUTED),
+      tipStyle: 'position: absolute; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 2px; width: 116px; box-sizing: border-box; padding: 6px 8px; background-color: #12141a; border: 1px solid ' + LINE2 + '; left: ' + btx.toFixed(1) + 'px; top: ' + bty.toFixed(1) + 'px;',
+      targetText: 'obiettivo ' + TGT, tipDate: 'Sett. del ' + bl[bs], tipVal: bc[bs] + ' su ' + TGT + (bs === bn - 1 ? ' · in corso' : ''), tipVol: 'volume ' + fmt(bv[bs], 1) + ' t'
+    };
+
+    var records = [
+      { name: 'Panca piana', sub: '12 ott · prima 67,5 kg', now: '70 × 6' },
+      { name: 'Leg press', sub: '5 ott · prima 160 kg', now: '170 × 12' },
+      { name: 'Military press', sub: '5 ott · prima 35 kg', now: '37,5 × 8' }
+    ];
+
+    // =================== DIETA ===================
+    var weeks = [
+      { lbl: '28/9', v: [null, null, null, 100, 83, 67, 100] },
+      { lbl: '5/10', v: [100, 83, 100, 100, 83, 100, 100] },
+      { lbl: '12/10', v: [33, null, null, null, null, null, null], today: 0 }
+    ];
+    var cells = ['', 'L', 'M', 'M', 'G', 'V', 'S', 'D'].map(function (h) {
+      return { text: h, style: mono(11, 500, MUTED, 'text-align: center; line-height: 18px;') };
+    });
+    var sum = 0, cnt = 0, perfect = 0;
+    function bucket(p) {
+      if (p >= 100) return ['#a9e34b', '#12141a'];
+      if (p >= 80) return ['#86b83c', '#12141a'];
+      if (p >= 60) return ['#6b9a33', '#12141a'];
+      return ['#2c3a20', INK];
+    }
+    weeks.forEach(function (wk) {
+      cells.push({ text: wk.lbl, style: mono(10, 500, MUTED, 'display: flex; align-items: center; white-space: nowrap;') });
+      wk.v.forEach(function (p, i) {
+        var base = 'box-sizing: border-box; height: 40px; display: flex; align-items: center; justify-content: center; ' + mono(12, 700, INK);
+        if (p === null) { cells.push({ text: '·', style: base + ' border: 1px dashed ' + LINE2 + '; color: ' + MUTED + ';' }); return; }
+        var bk = bucket(p), isToday = wk.today === i;
+        if (!isToday) { sum += p; cnt += 1; if (p >= 100) perfect += 1; }
+        cells.push({ text: String(p), style: base + ' background-color: ' + bk[0] + '; color: ' + bk[1] + ';' + (isToday ? ' outline: 2px dashed ' + GR + '; outline-offset: -2px;' : '') });
+      });
+    });
+    var avg = Math.round(sum / cnt), circL = 2 * Math.PI * 46, dash = (avg / 100 * circL).toFixed(1);
+    var d = { avg: String(avg), perfectText: perfect + ' giorni su ' + cnt + ' con tutti i pasti segnati', missedText: 'Il più saltato: Spuntino 2 (3 volte)',
+      ringDash: dash + ' ' + (circL - dash).toFixed(1), ringAria: 'Aderenza al piano ' + avg + ' per cento' };
+
+    // scarto dal target (barre divergenti)
+    var vWd = ['gio', 'ven', 'sab', 'dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab', 'dom'];
+    var vTg = [1900, 2140, 2000, 1900, 2140, 2000, 2140, 1900, 2140, 2000, 1900];
+    var vPc = [-2, 3, -8, 1, -1, 9, -3, 2, 0, -6, 1];
+    var vn = vPc.length, VW = 318, VH = 170, VPL = 34, VPR = 8, VPT = 14, VPB = 26, VPW = VW - VPL - VPR, VPH = VH - VPT - VPB, VR = 12;
+    function VY(p) { return VPT + (VR - p) / (2 * VR) * VPH; }
+    var vband = VPW / vn, vbw = 14, vs = pickIdx(st.vSel, vn), out = 0;
+    var vbars = vPc.map(function (p, i) {
+      var left = VPL + i * vband + (vband - vbw) / 2, o = Math.abs(p) > 5, sel = i === vs;
+      if (o) out += 1;
+      var top = p >= 0 ? VY(p) : VY(0), h = Math.max(Math.abs(VY(p) - VY(0)), 3);
+      var base = 'position: absolute; box-sizing: border-box; pointer-events: none; left: ' + left.toFixed(1) + 'px; width: ' + vbw + 'px; top: ' + top.toFixed(1) + 'px; height: ' + h.toFixed(1) + 'px; border-radius: 3px;';
+      if (o) base += ' border: 2px solid ' + YE + '; background-image: repeating-linear-gradient(135deg, rgba(242,201,76,0.45) 0 2px, transparent 2px 6px);';
+      else base += ' background-color: ' + GR + ';';
+      if (sel) base += ' box-shadow: 0 0 0 2px ' + SURF + ', 0 0 0 4px ' + INK + ';';
+      var gTop = p >= 0 ? VY(p) - 16 : VY(p) + 3;
+      return { style: base,
+        glyph: o ? (p > 0 ? '▲' : '▼') : '',
+        glyphStyle: 'position: absolute; pointer-events: none; width: ' + vbw + 'px; text-align: center; left: ' + left.toFixed(1) + 'px; top: ' + gTop.toFixed(1) + 'px; font-size: 11px; line-height: 13px; color: ' + YE + ';' };
+    });
+    var vticks = [10, 0, -10].map(function (t) {
+      return { line: 'position: absolute; left: ' + VPL + 'px; width: ' + VPW + 'px; top: ' + (VY(t) - 0.5).toFixed(1) + 'px; height: 1px; background-color: ' + (t === 0 ? LINE2 : LINE) + ';',
+        lbl: 'position: absolute; left: 0; width: ' + (VPL - 6) + 'px; text-align: right; top: ' + (VY(t) - 7).toFixed(1) + 'px; line-height: 14px; ' + mono(10, 500, MUTED), text: (t > 0 ? '+' : t < 0 ? '−' : '') + Math.abs(t) };
+    });
+    var vxl = vPc.map(function (p, i) {
+      return { text: String(i + 1), style: 'position: absolute; width: 24px; text-align: center; left: ' + (VPL + i * vband + vband / 2 - 12).toFixed(1) + 'px; top: ' + (VPT + VPH + 8) + 'px; ' + mono(10, i === vs ? 700 : 500, i === vs ? INK : MUTED) };
+    });
+    var vhits = vPc.map(function (p, i) {
+      return { label: vWd[i] + ' ' + (i + 1) + ' ottobre: scarto ' + (p > 0 ? '+' : p < 0 ? '−' : '') + Math.abs(p) + ' per cento', pick: function () { self.setState({ vSel: i }); },
+        style: 'position: absolute; left: ' + (VPL + i * vband).toFixed(1) + 'px; top: ' + (VPT - 4) + 'px; width: ' + vband.toFixed(1) + 'px; height: ' + (VPH + 8) + 'px; padding: 0; border: none; background: transparent; cursor: pointer;' };
+    });
+    var vtx = Math.max(2, Math.min(VW - 124, VPL + vs * vband + vband / 2 - 60)), vty = vPc[vs] >= 0 ? VY(0) + 14 : VY(0) - 66;
+    var kcalEaten = Math.round(vTg[vs] * (1 + vPc[vs] / 100));
+    var v = {
+      summary: out + ' giorni su ' + vn + ' oltre il ±5 % dal target del nutrizionista. Un giorno fuori non è un problema: conta la media.',
+      band: 'position: absolute; left: ' + VPL + 'px; width: ' + VPW + 'px; top: ' + VY(5).toFixed(1) + 'px; height: ' + (VY(-5) - VY(5)).toFixed(1) + 'px; background-color: rgba(169,227,75,0.08); border-top: 1px dashed rgba(169,227,75,0.5); border-bottom: 1px dashed rgba(169,227,75,0.5); pointer-events: none;',
+      ticks: vticks, bars: vbars, xl: vxl, hits: vhits,
+      tipStyle: 'position: absolute; z-index: 2; pointer-events: none; display: flex; flex-direction: column; gap: 2px; width: 120px; box-sizing: border-box; padding: 6px 8px; background-color: #12141a; border: 1px solid ' + LINE2 + '; left: ' + vtx.toFixed(1) + 'px; top: ' + vty.toFixed(1) + 'px;',
+      tipDate: vWd[vs] + ' ' + (vs + 1) + ' ott',
+      tipVal: (vPc[vs] > 0 ? '▲ +' : vPc[vs] < 0 ? '▼ −' : '■ ') + Math.abs(vPc[vs]) + ' %',
+      tipKcal: th(kcalEaten) + ' / ' + th(vTg[vs]) + ' kcal'
+    };
+
+    var mac = [['Proteine', 157, 166], ['Carboidrati', 262, 267], ['Grassi', 47, 46]];
+    var macros = mac.map(function (m) {
+      var pc = m[1] / m[2] * 100, dev = pc - 100, warn = Math.abs(dev) >= 5;
+      return { name: m[0], valTxt: m[1] + ' / ' + m[2] + ' g',
+        delta: arrow(dev) + ' ' + (dev > 0 ? '+' : dev < 0 ? '−' : '') + Math.abs(Math.round(dev)) + '%',
+        deltaStyle: mono(12, 700, warn ? YE : MUTED),
+        fill: 'position: absolute; left: 0; top: 0; height: 100%; width: ' + (Math.min(pc, 120) / 120 * 100).toFixed(1) + '%; background-color: ' + GR + ';',
+        tick: 'position: absolute; top: -3px; bottom: -3px; width: 2px; left: ' + (100 / 120 * 100).toFixed(2) + '%; background-color: ' + INK + ';' };
+    });
+    var obs = 'Le proteine sono in media del 5% sotto il target (157 g su 166 g), calcolate sui pasti che hai segnato. Se ti sembra strano, chiedi conferma al nutrizionista.';
+
+    return {
+      rootStyle: rootStyle, indStyle: indStyle, tabs: tabs, periods: periods,
+      isCorpo: st.tab === 'corpo', isForza: st.tab === 'forza', isDieta: st.tab === 'dieta',
+      w: w, multi: multi, circ: circ,
+      showChart: function () { self.setState({ table: false }); },
+      showTable: function () { self.setState({ table: true }); },
+      exs: exs, f: f, fstats: fstats, b: b, records: records,
+      d: d, cells: cells, v: v, macros: macros, obs: obs
+    };
+  }
+}
+</script>
+</body>
+</html>

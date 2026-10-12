@@ -71,7 +71,7 @@ export function relationOf(date: string, todayIso: string): DayRelation {
 }
 
 /** Il diario vale solo se è del piano attivo (un piano nuovo riparte senza spunte). */
-function logFor(plan: DietPlan | null, log: DietLogDay | undefined): DietLogDay | undefined {
+export function logFor(plan: DietPlan | null, log: DietLogDay | undefined): DietLogDay | undefined {
   return plan && log && log.planId === plan.id ? log : undefined;
 }
 

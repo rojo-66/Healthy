@@ -52,3 +52,24 @@ describe('Profilo (M7): variazioni colorate e suggerimenti nei campi (≥ 4.5:1)
     expect(contrastRatio(token(fg), token(bg))).toBeGreaterThanOrEqual(4.5);
   });
 });
+
+describe('Progressi (M9): grafici e mappa di calore (≥ 4.5:1)', () => {
+  const pairs: [string, string][] = [
+    // Legenda e linee: viola della massa grassa su card
+    ['fat', 'surface'],
+    // Tooltip (fondo --bg) e tacche degli assi
+    ['text-2', 'bg'],
+    ['muted', 'surface'],
+    // Mappa di calore: testo chiaro sul livello basso, scuro sugli altri (100 = --food)
+    ['text', 'heat-low'],
+    ['bg', 'heat-60'],
+    ['bg', 'heat-80'],
+    ['bg', 'food'],
+    // Adesivo PR: testo scuro su giallo
+    ['bg', 'tip'],
+  ];
+
+  it.each(pairs)('--%s su --%s', (fg, bg) => {
+    expect(contrastRatio(token(fg), token(bg))).toBeGreaterThanOrEqual(4.5);
+  });
+});

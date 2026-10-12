@@ -34,6 +34,13 @@ describe('parseHash', () => {
     expect(routeHref('/allena')).toBe('#/allena');
   });
 
+  it('Progressi, anche con la tab scelta (dal pulsante Grafici del Profilo)', () => {
+    expect(parseHash('#/progressi')).toBe('/progressi');
+    expect(parseHash('#/progressi?tab=corpo')).toBe('/progressi');
+    expect(parseQuery('#/progressi?tab=corpo')).toEqual({ tab: 'corpo' });
+    expect(routeHref('/progressi', { tab: 'corpo' })).toBe('#/progressi?tab=corpo');
+  });
+
   it('rotta sconosciuta → Home', () => {
     expect(parseHash('#/nonesiste')).toBe('/');
   });

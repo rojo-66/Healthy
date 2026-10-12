@@ -1,6 +1,6 @@
 # Healthy App – Specifica
 
-Versione 1.0 · 11 ottobre 2026 · stato: progettazione completata, sviluppo da iniziare
+Versione 1.0 · 11 ottobre 2026 · stato: V1 sviluppata (M0–M9), da verificare sul telefono
 
 ## 1. Obiettivo e vincoli
 
@@ -54,6 +54,15 @@ Cyberpunk + graffiti, molti colori ma **mai più di un neon dominante per scherm
 | `--progress` | `#4cc9e6` | **progressi**, navigazione, link, corsa (ciano) |
 | `--tip` | `#f2c94c` | **consigli, note di PT/nutrizionista, avvisi** (giallo) |
 | `--partial` | `#5a2a45` | parte "non fatta" di un elemento iniziato |
+| `--data-alt` | `#8a7fa8` | seconda serie di un dato (parte FM della barra FFM/FM del Profilo), mai testo (M7) |
+| `--fat` | `#9d7bf0` | **massa grassa (FM)** nei grafici di Progressi (M9) |
+| `--heat-low` · `--heat-60` · `--heat-80` · `--heat-100` | `#2c3a20` · `#6b9a33` · `#86b83c` · `--food` | livelli del calendario "Pasti segnati" (meno di 60 · 60 · 80 · 100 %) |
+
+### Colori nei grafici (M9)
+- Ogni colore conserva il suo significato: **ciano** = corpo/progressi, **magenta** = allenamento, **verde** = alimentazione, **giallo** = da tenere d'occhio (oltre soglia, variazione nella direzione sbagliata) e adesivo **PR**, **viola** `--fat` = massa grassa (unica serie con un colore "di dato"), **grigio** = neutro, tracce, griglia, assi, "prossima misura".
+- Le variazioni usano la stessa regola del Profilo: ciano = direzione giusta, giallo = da tenere d'occhio, grigio = neutra, sempre con la freccia ▲/▼ (o ■ / = se non cambia).
+- **Verde e giallo non bastano mai da soli** (deuteranopia): lo stato "oltre soglia" ha sempre anche il **contorno giallo**, il **tratteggio** e il simbolo **▲/▼**; nel testo la percentuale è sempre scritta. La legenda è presente su ogni grafico con 2 o più serie o simboli.
+- Classe `.tone-fat` (solo per i grafici): imposta `--tone` sul viola come le classi di sezione.
 
 ### Tipografia
 - **Permanent Marker**: titoli graffiti (nome schermata, nome scheda, nome pasto), leggera rotazione −2°/−3°.
@@ -170,8 +179,40 @@ Avvio da Home ("Avvia allenamento") o da Allena ("Avvia"). Ordine fisso:
 - **+ Nuova misura**, **Grafici**.
 - Sezioni di servizio (M7): **Backup e dati** (esporta, importa, promemoria, memoria del telefono), **Impostazioni** delle schede, **Installazione**, **Informazioni** (versione e build).
 
-### 5.7 Progressi
-**Da progettare** (grafici nel tempo di peso, composizione, circonferenze, forza per esercizio, aderenza alla dieta).
+### 5.7 Progressi (`Progressi.dc.html`)
+Schermata in sola lettura: legge i dati di Profilo (misure), sessioni e dieta e li mostra nel tempo. Non crea dati.
+- Intestazione "Progressi" (ciano) e riga "DAL <prima data> · N SETTIMANE DI DATI". Niente SYNC OFFLINE.
+- Selettore **periodo** (4 sett · 3 mesi · Tutto) valido per Corpo e Forza. La tab Dieta parte sempre dal primo giorno del piano attivo.
+- Tab **Corpo · Forza · Dieta** con indicatore scorrevole che cambia colore (ciano, magenta, verde).
+- Ogni grafico: un solo asse (mai due scale), griglia e assi discreti, linee 2px, punti ≥ 8px, **punto selezionato** con tooltip (data, valore, variazione), toccando o trascinando sul grafico. Legenda sempre presente se ci sono 2 o più serie. Tutto rispetta `prefers-reduced-motion`.
+- Colori: ciano = corpo/progressi, magenta = allenamento, verde = alimentazione, giallo = da tenere d'occhio, viola `#9d7bf0` = massa grassa (FM). Verde e giallo NON bastano da soli a distinguere due stati (deuteranopia): lo stato "oltre soglia" usa sempre anche contorno, tratteggio e simbolo ▲/▼.
+- Ogni grafico ha una vista **Tabella** equivalente (nel mockup solo sul Peso; in M9 su ogni card: peso, composizione, circonferenze, esercizio, settimane, calendario, scarto).
+- Asse orizzontale dei grafici a linea **proporzionale al tempo** (le pause si vedono); le barre partono sempre da zero, le linee no.
+
+**Tab Corpo**
+- Card Peso: valore attuale, variazione dall'inizio del periodo colorata con la tabella delle direzioni per obiettivo del Profilo (grigia senza obiettivo o con obiettivo "ricomposizione"), grafico a linea con area leggera, vista Grafico/Tabella.
+- Card Composizione: 6 piccoli grafici (FFM, FM, BCM, angolo di fase, TBW, ECW/TBW), ciascuno con la sua scala, valore, variazione colorata come nel Profilo (ciano = direzione giusta, giallo = da tenere d'occhio, grigio = neutra) e un punto tratteggiato "prossima misura" (data prevista dal Profilo). Dalla bioimpedenza arrivano pochi punti: con 1 sola misura si mostra il punto senza linea, con 0 un invito a inserirla.
+- Card Circonferenze: 7 righe (torace, vita, addome, fianchi, coscia, braccio, polpaccio) con mini-grafico, valore e variazione.
+- Collegamento "+ Aggiungi una misura nel Profilo".
+
+**Tab Forza**
+- Scelta esercizio (chip scorrevoli, solo esercizi con almeno 2 sessioni) e interruttore **Carico / Volume**.
+- Grafico dell'esercizio: carico migliore per sessione (valore = serie col carico più alto, con le ripetizioni) oppure volume (Σ kg × ripetizioni delle serie fatte). I **record personali** sono rombi pieni e nel tooltip mostrano l'adesivo giallo "PR". Regola dei PR: quella decisa in M5.
+- Tre numeri: sessioni, record, valore migliore.
+- Allenamenti a settimana: barre (sessioni fatte) con linea tratteggiata "obiettivo" = somma dei giorni assegnati nelle schede attuali; la settimana in corso è tratteggiata; tooltip con volume della settimana in tonnellate.
+- Record recenti: elenco con adesivo PR, esercizio, data, valore precedente (record del periodo scelto, al massimo 5).
+
+**Tab Dieta**
+- Aderenza: anello verde (media % di pasti segnati sui giorni conclusi, oggi escluso), giorni al 100 %, pasto più saltato.
+- Calendario "Pasti segnati": righe per settimana (L–D), ogni cella mostra la percentuale; scala a 4 livelli (meno di 60 · 60 · 80 · 100) con numero sempre visibile; celle senza dati tratteggiate; oggi con contorno tratteggiato (giorno in corso).
+- Scarto dal target: barre divergenti (kcal mangiate rispetto al target del giorno, in %) con fascia ±5 %; fuori fascia = barra tratteggiata con contorno giallo e simbolo ▲/▼.
+- Macro medi (proteine, carboidrati, grassi) rispetto al target, con tacca al 100 %.
+- Osservazione dell'app (riquadro giallo): solo segnalazioni, mai modifiche al piano.
+
+**Stati particolari**
+- Meno di 2 misure/sessioni/giorni: il grafico mostra il punto singolo e un invito ("Con un'altra misura vedrai l'andamento") invece di una linea.
+- Nessun piano alimentare: la tab Dieta invita a importarlo. Nessuna scheda o sessione: la tab Forza invita a fare il primo allenamento.
+- I dati intermedi del mockup (peso settimanale, sessioni, aderenza) sono **di esempio**.
 
 ## 6. Logica
 
@@ -292,8 +333,8 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - Layout con `100dvh` e safe area.
 
 ## 11. Funzioni per versione
-- **V1**: Home, Allena, Editor schede, flusso sessione completo, Riepilogo, Dieta (piano del nutrizionista, spesa, ricette, import MyDiet/JSON), Profilo e misurazioni, condivisione schede/diete, backup, offline.
-- **V2**: Progressi con grafici, generatore schede a regole, completamento guidato avanzato, "note salvate" per il PT, sostituzioni alimenti, barcode, promemoria integratori e backup, diario alimentare completo (database alimenti).
+- **V1** (completata con M9): Home, Allena, Editor schede, flusso sessione completo, Riepilogo, Dieta (piano del nutrizionista, spesa, ricette, import MyDiet/JSON), Profilo e misurazioni, **Progressi** (corpo, forza, dieta nel tempo), condivisione schede/diete, backup, offline.
+- **V2**: generatore schede a regole, completamento guidato avanzato, "note salvate" per il PT, sostituzioni alimenti, barcode, promemoria integratori e backup, diario alimentare completo (database alimenti); in Progressi: readiness e RPE nel tempo, calorie bruciate, esportazione dei grafici (immagine o file).
 - **V3**: download video per scheda, import da PDF, calcolatore dischi/1RM, regista della cena e svuota-frigo.
 
 ## 12. Milestone di sviluppo
@@ -308,15 +349,16 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 | M6 | Home "Oggi" che collega dieta e allenamento | La Home mostra pasto e scheda del giorno |
 | M7 | Profilo e misurazioni | Inserisco due misure e vedo il confronto |
 | M8 | Condivisione link/QR/file + gestione versioni | Il PT mi manda una scheda e la importo |
-| M9 | Progressi (dopo il suo design) | — |
+| M9 | Progressi: corpo, forza, dieta nel tempo | Dai dati inseriti vedo gli andamenti, anche offline; schermate vuote o con pochi dati senza grafici rotti |
 
 ## 13. Punti aperti
 - Readiness: confermare con il PT la scala "5 = meglio" per stress e affaticamento.
-- Schermata Progressi da progettare.
+- Diete: con "Sostituisci" (stesso `id`, M8) il diario dei giorni passati punta al contenuto nuovo del piano; Progressi ricalcola quei giorni con il piano sostituito. Valutare se conservare il contenuto per data.
+- Progressi su iPhone: verificare che il trascinamento sul grafico e lo scroll verticale convivano bene col pollice (`touch-action: pan-y`).
 - Nome definitivo dell'app (provvisorio: **Healthy**; repository `rojo-66/Healthy`, URL `https://rojo-66.github.io/Healthy/`).
 
 ## Stato
-- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M7 · [x] M8 · [ ] M9
+- [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M7 · [x] M8 · [x] M9 → **V1 completa**
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -546,7 +588,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
   - barre delle circonferenze in scala sulla circonferenza più grande della misura (non su 110 cm);
   - etichette "calc." e "STIMATO" sui valori non misurati;
   - "PROSSIMA BIOIMPEDENZA · ~6 NOV" solo con una data inserita; lettura e condizioni partono vuote con un invito a scriverle;
-  - "Grafici" dichiarato "in arrivo" (foglio che rimanda a Progressi, M9);
+  - "Grafici" dichiarato "in arrivo" (foglio che rimanda a Progressi, M9); da M9 apre `#/progressi?tab=corpo`;
   - sotto il confronto: storico misure e sezioni di servizio, che il mockup non prevedeva.
 - **Test**:
   - **fixture finte** `tests/fixtures/profile/backup-profile.json` (profilo, 3 misure di cui l'ultima solo con vita e addome, impostazioni);
@@ -578,3 +620,38 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
   - **Playwright** `tests/e2e/share.spec.ts` (due contesti = due iPhone): il PT crea e condivide (link e file), il link aperto in Safari mostra solo l'anteprima, nell'app si importa ("MARCO · v1"), la ricarica non reimporta, `hashchange` con l'app aperta, v2 → Sostituisci, cronologia e Ripristina; v2 → Salva come copia, import da file, doppione, backup rifiutato, link tagliato, tutto **offline**; dieta solo file con avviso; QR mostrato dal PT e letto con una fotocamera simulata (canvas con lo screenshot del QR) e fotocamera spenta dopo; permesso negato; 44 px, niente scroll orizzontale, "Riduci movimento". Aggiornati `train`, `session`, `diet`, `home`, `profile` (pannello Condividi dopo "Salva e invia", import dalla schermata unica).
 - **Guida**: `docs/condivisione.md` ("Come mandare una scheda a un amico").
 - **Da verificare su iPhone dopo il deploy**: QR della scheda tipica letto da un altro iPhone con l'app (anche con luminosità bassa: se fatica, abbassare `QR_MAX_CHARS`); link mandato con Messaggi e con WhatsApp (non deve spezzarsi) e toccato con l'app installata (deve aprirsi Safari con l'avviso, poi Copia link → app → Importa → Incolla); permesso della fotocamera negato e poi concesso; fotocamera spenta (spia verde) dopo la lettura e passando in background; "Condividi file" verso AirDrop/File e import dallo stesso file; modalità aereo.
+
+### Note M9 · Progressi
+- **Codice**:
+  - **logica pura** in `src/lib/progress/`: `period` (periodi su date locali, settimane L–D, mesi di calendario), `scale` (scala "bella" e scala delle barre divergenti), `series` (punti, variazione, pallini delle serie lunghe, asse sul tempo), `body` (serie del Corpo, variazione colorata, prossima misura, righe delle tabelle), `strength` (indice per esercizio, scelte, vista Carico/Volume, settimane, record recenti), `diet` (giorni del piano, aderenza, calendario, scarto, macro medi, osservazione), `format` (testi italiani, riassunti per lo screen reader); `state.svelte.ts` è lo stato in memoria della vista (unico file con Svelte);
+  - **grafici** in `src/lib/charts/` (SVG fatto a mano, nessuna libreria): `ChartFrame` (tocco, trascinamento, tastiera, `aria-live`), `LineChart`, `MiniLine`, `BarChart`, `DivergingBars`, `Heatmap`, `ChartTable` (vista Tabella), `ViewToggle` (Grafico/Tabella, Carico/Volume), `Legend`; geometria pura in `geometry.ts`, trascinamento in `scrub.ts`;
+  - **schermata** `src/routes/Progress.svelte` (`#/progressi`, `?tab=corpo` dal Profilo) e componenti in `src/routes/progress/` (`ProgressScreen`, `BodyTab`, `StrengthTab`, `DietTab`, `BodyTables`, `Delta`); sezione "Grafici" nella pagina di prova `#/showcase`;
+  - **riusati senza copie**: `deriveMetrics`, `METRICS`, `CIRCUMFERENCES`, `roundFor`, `deltaTone`, `deltaText`, `deltaSpoken`, `metricText`, `dayMonth`, `daysBetween`, `getNextMeasurement` (M7); `bestSet`, `volume`, `sessionItems`, `exerciseKey`, `sessionDate`, regola dei record (M5); `buildDayView` con `keepEaten`, `effectiveWeekday`, `deviations`, `DEVIATION_THRESHOLD_PCT`, `OBSERVATION_DISCLAIMER` (M3); `logFor` (M6); `addDays`, `weekStartOf`, `fromIsoDate`, `toIsoDate`, `shortDate`, `MONTHS`, `formatInt`, `formatDecimal`; `Tabs`, `Card`, `ProgressRing`, `NoteBox`, `Button`, `Screen`, `liveState`, `nowClock`, transizioni `rise`/`fade`.
+- **Refactor minimi** (testati, comportamento invariato): `sessions/records.ts` esporta `recordTimeline` (record di tutto lo storico in un passaggio, con il valore precedente) e `sessionItemKeys`, costruiti con gli stessi pezzi di `sessionRecords` (test: stesse serie sessione per sessione, conteggi dello Storico invariati); `diet/calc/observations.ts` esporta `DEVIATION_FIELDS` e `signed`; `today/home.ts` esporta `logFor`.
+- **Dati**: nessuna tabella e nessuna chiave nuove, nessuna nuova versione del database, formato di backup invariato. Progressi non scrive mai. Versione `0.9.0`.
+- **Regole decise** (confermate prima dello sviluppo):
+  - **periodi**: "4 sett" = le 4 settimane L–D compresa quella in corso; "3 mesi" = dal lunedì della settimana di "oggi − 3 mesi di calendario"; "Tutto" = dal lunedì della settimana del primo dato. Mai prima della settimana del primo dato della tab (misure per Corpo, sessioni per Forza). Conti sulle date, mai sui millisecondi (testato col fuso `Europe/Rome` attorno al 25/10 e al 29/03, e a cavallo dell'anno). La tab Dieta non ha il periodo;
+  - **riga in alto**: prima data tra misure, sessioni concluse e diario; N = max(1, ⌊giorni / 7⌋) settimane; senza dati "NESSUN DATO ANCORA";
+  - **obiettivo settimanale** = somma dei giorni assegnati nelle schede attuali (due schede il lunedì = 2), linea costante "obiettivo N", assente se nessuna scheda ha giorni. Le schede non conservano la storia dei giorni;
+  - **prossima misura** = `settings.nextMeasurement.date` del Profilo, solo se è dopo l'ultima misura del grafico e non è passata;
+  - **serie lunghe**: nessuna aggregazione; oltre 120 punti i pallini restano solo su selezionato, minimo e massimo (i PR restano rombi); si sceglie trascinando, la Tabella resta completa. Testato con 600+ sessioni e 730 pesi giornalieri;
+  - **scelte della vista** (tab, periodo, esercizio, Carico/Volume, Grafico/Tabella) in memoria finché l'app è aperta; `?tab=corpo` dal pulsante "Grafici" del Profilo sceglie la tab all'apertura;
+  - **Corpo**: valori misurati o calcolati dalla stessa misura (M7); un valore mancante salta il punto; variazione = ultimo − primo del periodo arrotondati come a video, colorata con `deltaTone`; nella Tabella "calc." sui valori calcolati;
+  - **Forza**: identità dell'esercizio come i record M5 (id della libreria o nome); per sessione la serie migliore tra quelle fatte (kg più alti, a parità più ripetizioni) e il volume Σ kg × rip delle serie fatte; un esercizio ripetuto nella stessa sessione dà un punto solo. Nei chip solo esercizi con almeno 2 sessioni con una serie fatta con carico, ordinati per numero di sessioni, poi i più recenti, poi l'ordine nella scheda. Rombo PR = sessione con un record di quell'esercizio (regola M5), con il più pesante nel tooltip. Variazione del carico ciano se sale, altrimenti grigia (mai gialla: non è una valutazione);
+  - **Dieta**: primo giorno = il più tardo tra `validFrom` e il giorno di importazione del piano attivo (se mancano entrambi, la prima spunta). Ogni giorno usa il piano del suo diario (`dietLog.planId`, se esiste ancora) con lo scambio del giorno; senza riga il piano attivo e 0 pasti segnati. Pasti previsti = non vuoti (`isEmptyMeal`), "Pasto libero" senza alimenti compreso. Oggi è "in corso": nel calendario con contorno tratteggiato, fuori dalle medie. Pasto più saltato: a parità vince il primo nell'ordine dei pasti;
+  - **scarto e macro medi**: solo giorni conclusi con almeno un pasto segnato, alimenti segnati tutti con valori e un target (anche calcolato); gli esclusi sono contati e detti. "Oltre soglia" da **5 % compreso**, come le osservazioni M3. L'osservazione usa `deviations()` sui medi e dice sempre "L'app non modifica il piano: segnala soltanto.".
+- **Accessibilità e gesti**: ogni grafico è un gruppo con `aria-roledescription="grafico"` e il riassunto ("Peso: da 87,5 a 88,8 kg dal 17/07 al 09/10"), si usa con frecce/Home/Fine e annuncia il punto con `aria-live="polite"`; tutta l'area del grafico è toccabile (tocco e trascinamento con Pointer Events, `touch-action: pan-y`); tooltip misurato e tenuto dentro il grafico; i piccoli grafici sono immagini con etichetta; calendario e tabelle sono `<table>` vere; contrasto ≥ 4,5:1 testato anche per viola, livelli del calendario e tooltip.
+- **Animazioni**: entrata dei grafici con `rise` (opacity + transform), pallino selezionato con scala a molla (transform), riempimento dei macro con `translateX`, anello con `stroke-dashoffset` (eccezione già esistente). Anti-doppioni: contenuto delle tab in `{#key}` con sola transizione d'entrata (dal componente `Tabs`), grafici che non si ricreano cambiando periodo o esercizio, elementi con chiavi stabili (date, id delle sessioni). Testato cambiando periodo, tab ed esercizio più di dieci volte di fila, anche con "Riduci movimento".
+- **Prestazioni**: gli indici pesanti (serie del Corpo, indice della Forza con i record, giorni della dieta) si ricalcolano solo quando cambiano i dati letti con `liveQuery`; periodo, tab ed esercizio filtrano risultati pronti. Chunk della schermata ≈ 42 KB (nel precache).
+- **Scostamenti dal mockup**:
+  - variazione del peso colorata per obiettivo (il mockup la teneva grigia); vista Tabella su ogni card;
+  - interruttore Grafico/Tabella sulla riga del sottotitolo nelle card con titolo lungo (Allenamenti a settimana, Pasti segnati, Scarto dal target) e accanto al valore nella card dell'esercizio;
+  - asse orizzontale sul tempo; i piccoli grafici non sono interattivi (i valori esatti sono nella Tabella);
+  - legenda delle variazioni (▲▼ ciano/giallo, ■ neutra) sotto le circonferenze, come nel mockup;
+  - riga "dal 1 ottobre · oggi escluso" con la data vera del piano; scarto "dal target del giorno" (non sempre "del nutrizionista": il target può essere inserito o calcolato);
+  - selettore del periodo nascosto nella tab Dieta (che parte sempre dal piano attivo).
+- **Test**:
+  - **fixture finte** `tests/fixtures/progress/backup-progress.json`, generata da `make-backup.mjs` (deterministico): 3 mesi fino a lun 12/10/2026 con misure irregolari (una senza peso, settimana senza misure, 3 bioimpedenze), 36 sessioni di 2 schede (settimana di vacanza a zero, sessione parziale, esercizio fatto una volta, plank a 0 kg, record noti), piano attivo e archiviato, diario con scambio, giorno senza riga e un giorno del piano precedente;
+  - **Vitest** `tests/unit/progress/` (periodi e cambio d'ora, scala, serie, testi, Corpo, Forza con `recordTimeline` contro `sessionRecords`, Dieta con `buildDayView` come riferimento, fixture, prestazioni), `tests/unit/share/no-progress.test.ts` (nessun dato di Progressi in scheda, dieta, link decodificati, QR, "Invia al PT", lista della spesa; nessun modulo di condivisione importa, nemmeno indirettamente, `progress/` o `charts/`; tabelle del database invariate), contrasto, rotte;
+  - **Playwright** `tests/e2e/progress.spec.ts` (390×844, orologio simulato, backup importato dal Profilo): andamenti delle tre tab, periodo/tab/esercizio cambiati più volte senza doppioni, tocco + trascinamento + tastiera con tooltip dentro il grafico, vista Tabella di ogni card, "Grafici" del Profilo e scelte ricordate, stati vuoti senza NaN né "SYNC OFFLINE", una misura sola, tutto offline, 44 px e niente scroll orizzontale a 390 e 375 px, "Riduci movimento".
+- **Da verificare su iPhone dopo il deploy**: app installata → Progressi con dati veri: trascinare sul peso col pollice mentre si scorre la pagina (lo scroll verticale non deve bloccarsi), tooltip leggibile, chip degli esercizi che scorrono di lato, "Grafici" dal Profilo, modalità aereo, "Riduci movimento" da Impostazioni › Accessibilità.

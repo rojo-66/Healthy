@@ -15,6 +15,12 @@
   --tip: #f2c94c; /* consigli, note di PT/nutrizionista, avvisi */
   --partial: #5a2a45; /* parte "non fatta" di un elemento iniziato */
   --data-alt: #8a7fa8; /* seconda serie di un dato (FM nella barra FFM/FM): mai testo */
+  --fat: #9d7bf0; /* massa grassa (FM) nei grafici di Progressi (M9) */
+  /* Mappa di calore dei pasti segnati (M9): 4 livelli di verde, la percentuale è sempre scritta */
+  --heat-low: #2c3a20; /* meno di 60 %: testo chiaro */
+  --heat-60: #6b9a33; /* 60–79 %: testo scuro */
+  --heat-80: #86b83c; /* 80–99 %: testo scuro */
+  --heat-100: var(--food); /* 100 %: testo scuro */
   /* QR di condivisione (M8): massimo contrasto per la fotocamera, indipendente dal tema */
   --qr-dark: #000000;
   --qr-light: #ffffff;
@@ -36,6 +42,9 @@
   --food-glow: color-mix(in srgb, var(--food) 40%, transparent);
   --progress-glow: color-mix(in srgb, var(--progress) 40%, transparent);
   --tip-glow: color-mix(in srgb, var(--tip) 35%, transparent);
+  --fat-tint: color-mix(in srgb, var(--fat) 12%, transparent);
+  --fat-edge: color-mix(in srgb, var(--fat) 55%, transparent);
+  --fat-glow: color-mix(in srgb, var(--fat) 40%, transparent);
 
   /* Tipografia */
   --font-graffiti: 'Permanent Marker', 'Marker Felt', cursive;

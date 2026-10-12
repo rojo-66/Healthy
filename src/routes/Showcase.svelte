@@ -16,6 +16,12 @@
   import { formatClock } from '../lib/components/time';
   import type { Tone } from '../lib/components/types';
   import { drop, fade, pop, rise } from '../lib/design/transitions';
+  import BarChart from '../lib/charts/BarChart.svelte';
+  import DivergingBars from '../lib/charts/DivergingBars.svelte';
+  import Legend from '../lib/charts/Legend.svelte';
+  import LineChart from '../lib/charts/LineChart.svelte';
+  import MiniLine from '../lib/charts/MiniLine.svelte';
+  import { formatDecimal } from '../lib/diet/format';
 
   // Pagina di prova del design system (M1): dati finti, nessun salvataggio.
   const TONES: readonly { tone: Tone; name: string }[] = [
@@ -39,6 +45,10 @@
     ['--tip', '#f2c94c', 'consigli, note'],
     ['--partial', '#5a2a45', 'parte non fatta'],
     ['--data-alt', '#8a7fa8', 'seconda serie di un dato (FM)'],
+    ['--fat', '#9d7bf0', 'massa grassa nei grafici'],
+    ['--heat-low', '#2c3a20', 'pasti segnati: meno di 60 %'],
+    ['--heat-60', '#6b9a33', 'pasti segnati: 60 %'],
+    ['--heat-80', '#86b83c', 'pasti segnati: 80 %'],
   ] as const;
 
   // Tabs
@@ -53,6 +63,21 @@
   ] as const;
   let tabTraining = $state<'schede' | 'storico'>('schede');
   let tabFood = $state<'piano' | 'spesa' | 'ricette'>('piano');
+
+  // Grafici (M9): dati finti
+  const LINE_DATES = ['2026-08-21', '2026-08-28', '2026-09-04', '2026-09-11', '2026-09-18', '2026-09-25', '2026-10-02'];
+  const LINE = [87.5, 87.9, 87.6, 88.3, 88, 88.6, 88.9].map((value, i) => ({ date: LINE_DATES[i] ?? '', value }));
+  const kgText = (v: number) => formatDecimal(v, 1);
+  const kgDelta = (d: number) => `${d > 0 ? '▲ +' : d < 0 ? '▼ −' : '■ '}${formatDecimal(Math.abs(d), 1)} kg`;
+  const BARS = [2, 3, 3, 0, 3, 2].map((value, i) => ({ key: String(i), label: String(i + 1), value, partial: i === 5 }));
+  const barTip = (i: number) => ({ title: `settimana ${i + 1}`, value: `${BARS[i]?.value ?? 0} su 3` });
+  const DIV = [-2, 3, -8, 1, 9, -3].map((pct, i) => ({
+    key: String(i),
+    label: String(i + 1),
+    pct,
+    out: Math.abs(pct) >= 5,
+    tip: { title: `giorno ${i + 1}`, value: `${pct} %` },
+  }));
 
   // Stepper
   let sets = $state(4);
@@ -394,6 +419,21 @@
     <div class="nav-frame">
       <BottomNav active={navActive} onnavigate={(id) => (navActive = id)} />
     </div>
+  </section>
+
+  <!-- Grafici (M9) -->
+  <section class="demo" aria-labelledby="s-charts">
+    <h2 id="s-charts" class="mono-label">Grafici</h2>
+    <p class="hint">SVG fatto a mano: tocca o trascina sul grafico, frecce da tastiera.</p>
+    <LineChart points={LINE} tone="progress" name="Peso di prova" unit="kg" value={kgText} delta={kgDelta} firstText="prima misura" singleText="Con un'altra misura vedrai l'andamento." pr={[false, false, false, true, false, false, true]} />
+    <LineChart points={LINE.slice(0, 1)} tone="training" name="Un punto" unit="kg" value={kgText} delta={kgDelta} firstText="prima sessione" singleText="Con un'altra sessione vedrai l'andamento." />
+    <div class="grid2">
+      <MiniLine points={LINE.slice(0, 3)} tone="progress" label="Mini di prova" next="2026-11-13" />
+      <MiniLine points={LINE.slice(2, 5)} tone="fat" label="Mini viola" />
+    </div>
+    <BarChart bars={BARS} target={3} targetLabel="obiettivo 3" tone="training" summary="Barre di prova" tip={barTip} />
+    <DivergingBars items={DIV} band={5} summary="Scarto di prova" />
+    <Legend items={[{ mark: '■', tone: 'food', text: 'entro ±5 %' }, { mark: '▨', tone: 'tip', text: 'oltre ±5 % (▲ sopra, ▼ sotto)' }]} />
   </section>
 
   <!-- Animazioni -->

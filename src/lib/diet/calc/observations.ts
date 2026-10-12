@@ -26,7 +26,8 @@ export interface Deviation {
   pct: number;
 }
 
-const FIELDS = [
+/** Campi confrontati con il target, con nome e unità (usati anche da Progressi, M9). */
+export const DEVIATION_FIELDS = [
   { field: 'kcal', name: 'calorie', unit: 'kcal' },
   { field: 'protein', name: 'proteine', unit: 'g' },
   { field: 'carbs', name: 'carboidrati', unit: 'g' },
@@ -42,7 +43,7 @@ const TARGET_PHRASE: Readonly<Record<TargetOrigin, string>> = {
 
 /** Scarti piano/target dove il target c'è, dal maggiore (in valore assoluto della percentuale). */
 export function deviations(plan: Totals, resolved: ResolvedTargets): Deviation[] {
-  return FIELDS.flatMap(({ field }) => {
+  return DEVIATION_FIELDS.flatMap(({ field }) => {
     const target = resolved.targets[field];
     if (target === null || target <= 0) return [];
     const diff = plan.total[field] - target;
@@ -50,7 +51,8 @@ export function deviations(plan: Totals, resolved: ResolvedTargets): Deviation[]
   }).sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct));
 }
 
-function signed(text: string, value: number): string {
+/** Segno davanti a un numero già scritto: "+120", "−8". */
+export function signed(text: string, value: number): string {
   return `${value > 0 ? '+' : '−'}${text}`;
 }
 
@@ -74,7 +76,7 @@ export function dayObservations(
     } else {
       const top = deviations(plan, resolved)[0];
       if (top && Math.abs(top.pct) >= DEVIATION_THRESHOLD_PCT) {
-        const info = FIELDS.find((f) => f.field === top.field)!;
+        const info = DEVIATION_FIELDS.find((f) => f.field === top.field)!;
         const amount = top.field === 'kcal' ? formatInt(Math.abs(top.diff)) : formatDecimal(Math.abs(top.diff), 1, true);
         list.push({
           kind: 'deviation',

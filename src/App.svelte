@@ -19,6 +19,7 @@
   const loadProfile = () => import('./routes/Profile.svelte');
   const loadMeasurement = () => import('./routes/Measurement.svelte');
   const loadImport = () => import('./routes/Import.svelte');
+  const loadProgress = () => import('./routes/Progress.svelte');
 </script>
 
 {#if route.path === '/showcase'}
@@ -86,6 +87,12 @@
   {#await loadMeasurement() then { default: Measurement }}
     {#key route.nav}
       <Measurement id={route.query['id'] ?? null} />
+    {/key}
+  {/await}
+{:else if route.path === '/progressi'}
+  {#await loadProgress() then { default: Progress }}
+    {#key route.nav}
+      <Progress tab={route.query['tab'] ?? null} />
     {/key}
   {/await}
 {:else if route.path === '/importa'}

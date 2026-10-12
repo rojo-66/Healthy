@@ -17,6 +17,7 @@ export type RoutePath =
   | '/sessione/riepilogo'
   | '/profilo'
   | '/profilo/misura'
+  | '/progressi'
   | '/importa';
 
 const KNOWN: readonly string[] = [
@@ -34,6 +35,7 @@ const KNOWN: readonly string[] = [
   '/sessione/riepilogo',
   '/profilo',
   '/profilo/misura',
+  '/progressi',
   '/importa',
 ];
 

@@ -26,7 +26,6 @@
   import InstallBanner from '../../lib/pwa/InstallBanner.svelte';
   import { isStandalone } from '../../lib/pwa/standalone';
   import { routeHref } from '../../lib/routes';
-  import InfoSheet from '../train/InfoSheet.svelte';
   import Screen from '../Screen.svelte';
   import AppSettings from './AppSettings.svelte';
   import BackupPanel from './BackupPanel.svelte';
@@ -81,7 +80,6 @@
   let profileOpen = $state(false);
   let readingOpen = $state(false);
   let nextOpen = $state(false);
-  let chartsOpen = $state(false);
 
   async function saveReading(text: string): Promise<readonly string[]> {
     if (!after) return [];
@@ -204,9 +202,7 @@
 
     <div class="actions">
       <Button tone="progress" size="lg" href={routeHref('/profilo/misura')}>+ Nuova misura</Button>
-      <Button variant="secondary" onclick={() => (chartsOpen = true)}>
-        Grafici <span class="soon">in arrivo</span>
-      </Button>
+      <Button variant="secondary" href={routeHref('/progressi', { tab: 'corpo' })}>Grafici</Button>
     </div>
 
     {#if newestFirst.length > 0}
@@ -279,14 +275,6 @@
   initialDate={next.current.date}
   dateLabel="Data indicativa (facoltativa)"
   onsave={saveNext}
-/>
-
-<InfoSheet
-  bind:open={chartsOpen}
-  tone="progress"
-  title="Grafici"
-  text="I grafici nel tempo di peso, composizione e circonferenze arrivano con la schermata Progressi, che è ancora da progettare."
-  soon="Per ora confronta due misure qualsiasi scegliendo le date in alto."
 />
 
 <style>
@@ -391,13 +379,6 @@
     display: grid;
     grid-template-columns: 2fr 1fr;
     gap: 10px;
-  }
-
-  .soon {
-    display: block;
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--muted);
   }
 
   .block {

@@ -17,5 +17,6 @@ La logica di esempio è nel blocco `<script type="text/x-dc">` in fondo a ogni f
 | `Riepilogo.dc.html` | Riepilogo fine allenamento | § 5.4 |
 | `Dieta.dc.html` | Dieta (piano, spesa, ricette) | § 5.5 |
 | `Profilo.dc.html` | Profilo e misurazioni | § 5.6 |
+| `Progressi.dc.html` | Progressi (corpo, forza, dieta) | § 5.7 |
 
 Viewport di riferimento: **390 × 844** (iPhone).
