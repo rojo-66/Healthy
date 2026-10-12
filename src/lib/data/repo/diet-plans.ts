@@ -73,6 +73,7 @@ export function payloadOf(file: DietFile): DietPayload {
     products: file.products,
     days: file.days,
     recipes: file.recipes,
+    generalNotes: file.generalNotes,
   };
 }
 

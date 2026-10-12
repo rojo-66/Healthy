@@ -244,11 +244,17 @@ const FORMAT_MESSAGES: Readonly<Record<string, string>> = {
   regex: 'formato non valido',
 };
 
+const DECIMAL_COMMA = /^-?\d+,\d+$/;
+
 /** Mappa degli errori di zod in italiano semplice. I messaggi scritti negli schemi hanno la precedenza. */
 export const italianErrorMap: z.core.$ZodErrorMap = (issue) => {
   switch (issue.code) {
     case 'invalid_type':
       if (issue.input === undefined) return 'campo obbligatorio mancante';
+      // Errore tipico dei file scritti a mano o in chat: "1,5" invece di 1.5.
+      if (issue.expected === 'number' && typeof issue.input === 'string' && DECIMAL_COMMA.test(issue.input.trim())) {
+        return `numero scritto con la virgola («${issue.input.trim()}»): usa il punto (${issue.input.trim().replace(',', '.')}), senza virgolette`;
+      }
       return `atteso ${lookup(TYPE_NAMES, issue.expected) ?? issue.expected}, trovato ${describeValue(issue.input)}`;
     case 'too_big': {
       const max = Number(issue.maximum);

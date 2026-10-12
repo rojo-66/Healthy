@@ -85,6 +85,18 @@ export const DB_VERSIONS: readonly DbVersion[] = [
           if (!('previousVersions' in w)) w.previousVersions = [];
         }),
   },
+  {
+    // Modello per Claude: i piani alimentari hanno le indicazioni generali del nutrizionista. Indici invariati.
+    version: 6,
+    stores: {},
+    upgrade: (tx) =>
+      tx
+        .table('dietPlans')
+        .toCollection()
+        .modify((p: { payload?: Record<string, unknown> }) => {
+          if (p.payload && !('generalNotes' in p.payload)) p.payload.generalNotes = '';
+        }),
+  },
 ];
 
 export function applyVersions(db: Dexie, versions: readonly DbVersion[]): void {

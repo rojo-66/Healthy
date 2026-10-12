@@ -42,7 +42,8 @@ export const hhmm = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'orario non va
 export const httpsUrl = z.url({ protocol: /^https$/ }).max(MAX_TEXT.url);
 
 /** Giorno della settimana: 1 = lunedì … 7 = domenica (come § 8.1). */
-export const weekday = z.number().int().min(1).max(7);
+const WEEKDAY_RANGE = 'giorno non valido: usa 1 = lunedì … 7 = domenica';
+export const weekday = z.number().int().min(1, WEEKDAY_RANGE).max(7, WEEKDAY_RANGE);
 
 /** Numero finito tra `min` e `max`. */
 export const num = (min: number, max: number) => z.number().min(min).max(max);

@@ -5,6 +5,7 @@ import { TABLE_NAMES } from '../../../src/lib/data/schemas';
 import type { Measurement } from '../../../src/lib/data/schemas/measurements';
 import { DB_VERSIONS, latestVersion, type DbVersion } from '../../../src/lib/data/versions';
 import { validate } from '../../../src/lib/data/errors';
+import { dietPlanSchema } from '../../../src/lib/data/schemas/diet-plans';
 import { profileSchema } from '../../../src/lib/data/schemas/profile';
 import { sessionSchema } from '../../../src/lib/data/schemas/sessions';
 import { workoutSchema } from '../../../src/lib/data/schemas/workouts';
@@ -138,7 +139,7 @@ describe('migrazioni', () => {
     await old.table('workouts').add(stored);
     old.close();
 
-    const next = open('migration-received', DB_VERSIONS);
+    const next = open('migration-received', DB_VERSIONS.slice(0, 5));
     await next.open();
     expect(next.verno).toBe(5);
     const [row] = await next.workouts.toArray();
@@ -146,18 +147,31 @@ describe('migrazioni', () => {
     expect(validate(workoutSchema, row).ok).toBe(true);
   });
 
-  it('v5 vera (M8): le schede già salvate non risultano ricevute e non hanno cronologia, valide per lo schema', async () => {
-    const old = open('migration-received', DB_VERSIONS.slice(0, 4));
-    const { received: _r, previousVersions: _p, ...stored } = workoutSchema.parse(structuredClone(workoutFixture));
-    await old.table('workouts').add(stored);
+  it('v6 vera (modello per Claude): i piani già salvati hanno le indicazioni generali vuote, validi per lo schema', async () => {
+    const old = open('migration-general-notes', DB_VERSIONS.slice(0, 5));
+    const plan = dietPlanSchema.parse({
+      id: 'piano-vecchio',
+      version: 1,
+      title: 'Piano di prova',
+      author: '',
+      validFrom: null,
+      active: true,
+      archived: false,
+      importedAt: '2026-10-01T08:00:00.000Z',
+      origin: 'file',
+      payload: { products: {}, days: [{ weekday: 1, meals: [] }] },
+    });
+    const { generalNotes: _g, ...oldPayload } = plan.payload;
+    await old.table('dietPlans').add({ ...plan, payload: oldPayload });
     old.close();
 
-    const next = open('migration-received', DB_VERSIONS);
+    const next = open('migration-general-notes', DB_VERSIONS);
     await next.open();
-    expect(next.verno).toBe(5);
-    const [row] = await next.workouts.toArray();
-    expect(row).toEqual({ ...stored, received: null, previousVersions: [] });
-    expect(validate(workoutSchema, row).ok).toBe(true);
+    expect(next.verno).toBe(6);
+    const [row] = await next.dietPlans.toArray();
+    expect(row).toEqual(plan);
+    expect(row?.payload.generalNotes).toBe('');
+    expect(validate(dietPlanSchema, row).ok).toBe(true);
   });
 
   it('se la migrazione fallisce il database resta alla versione precedente, dati intatti', async () => {

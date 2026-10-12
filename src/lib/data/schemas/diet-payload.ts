@@ -112,6 +112,8 @@ export const dietPayloadShape = {
   products: keyedRecord(productSchema, MAX_ITEMS.products, 'prodotti'),
   days: z.array(daySchema).min(1).max(7),
   recipes: z.array(recipeSchema).max(MAX_ITEMS.recipes).default([]),
+  /** Indicazioni del nutrizionista valide per tutti i giorni (aggiunte con il modello per Claude). */
+  generalNotes: text(MAX_TEXT.long).default(''),
 };
 
 interface PayloadRefs {

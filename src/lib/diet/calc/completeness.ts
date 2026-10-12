@@ -1,5 +1,5 @@
 import { lookup } from '../../data/errors';
-import type { DietPayload } from '../../data/schemas/diet-payload';
+import { weekdayName, type DietPayload } from '../../data/schemas/diet-payload';
 import { hasCompleteValues, type MissingReason } from './nutrients';
 
 /**
@@ -50,6 +50,15 @@ function plural(n: number, one: string, many: string): string {
   return n === 1 ? one : `${n} ${many}`;
 }
 
+/** "Martedì: manca il tipo di giornata" / "Martedì, giovedì e sabato: manca il tipo di giornata". */
+function untypedDetail(days: readonly number[]): string {
+  if (days.length === 0) return '';
+  if (days.length === 7) return 'Nessun giorno ha il tipo di giornata';
+  const names = days.map((day, i) => (i === 0 ? weekdayName(day) : weekdayName(day).toLowerCase()));
+  const list = names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} e ${names.at(-1)}`;
+  return `${list}: manca il tipo di giornata`;
+}
+
 export function planCompleteness(payload: DietPayload): Completeness {
   const untypedDays = payload.days.filter((day) => day.type === null).map((day) => day.weekday);
   const usedTypes = [...new Set(payload.days.flatMap((day) => (day.type === null ? [] : [day.type])))];
@@ -73,7 +82,7 @@ export function planCompleteness(payload: DietPayload): Completeness {
       label: 'tipi di giornata',
       done: untypedDays.length === 0,
       counted: true,
-      detail: untypedDays.length === 0 ? '' : `${plural(untypedDays.length, 'Un giorno', 'giorni')} senza tipo di giornata`,
+      detail: untypedDetail(untypedDays),
     },
     {
       id: 'targets',

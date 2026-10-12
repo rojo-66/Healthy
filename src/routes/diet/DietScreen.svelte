@@ -23,6 +23,7 @@
   import { routeHref } from '../../lib/routes';
   import { prepareDietShare, type PreparedShare } from '../../lib/share/prepare';
   import Screen from '../Screen.svelte';
+  import ClaudeGuideSheet from './ClaudeGuideSheet.svelte';
   import PlanSheet from './PlanSheet.svelte';
   import PlanTab from './PlanTab.svelte';
   import RecipesTab from './RecipesTab.svelte';
@@ -87,6 +88,19 @@
   // Condividi (M8): link, QR o file, dopo l'avviso sui dati personali.
   let shared = $state.raw<PreparedShare | null>(null);
   let shareOpen = $state(false);
+  // "Prepara il piano con Claude": modello da scaricare e mini-guida.
+  let guideOpen = $state(false);
+
+  function openGuide() {
+    resetMessages();
+    planOpen = false;
+    guideOpen = true;
+  }
+
+  function importFromGuide() {
+    guideOpen = false;
+    location.hash = importHref;
+  }
 
   function resetMessages() {
     status = '';
@@ -214,6 +228,8 @@
           sul telefono e funziona anche senza rete.
         </p>
         <Button tone="food" size="lg" block href={importHref}>Importa il tuo piano</Button>
+        <p class="empty-text">Non hai un piano?</p>
+        <Button variant="secondary" tone="food" block onclick={openGuide}>Fallo preparare a Claude</Button>
         {#if archived.length > 0}
           <p class="empty-text">Oppure ripristina un piano precedente:</p>
           {#each archived as old (old.id)}
@@ -261,9 +277,12 @@
     onexport={exportPlan}
     onedit={edit}
     onshare={openShare}
+    onguide={openGuide}
     onrestore={restore}
   />
 {/if}
+
+<ClaudeGuideSheet bind:open={guideOpen} onimport={importFromGuide} />
 
 {#if shared}
   <ShareSheet bind:open={shareOpen} share={shared} tone="food" personalWarning />

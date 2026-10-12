@@ -19,10 +19,12 @@
     onexport: () => void;
     onedit: () => void;
     onshare: () => void;
+    /** "Prepara il piano con Claude": modello e mini-guida. */
+    onguide: () => void;
     onrestore: (plan: DietPlan) => void;
   }
 
-  let { open = $bindable(), plan, archived, busy, status, importHref, onexport, onedit, onshare, onrestore }: Props = $props();
+  let { open = $bindable(), plan, archived, busy, status, importHref, onexport, onedit, onshare, onguide, onrestore }: Props = $props();
 
   const completeness = $derived(planCompleteness(plan.payload));
 </script>
@@ -52,13 +54,16 @@
     <a class="action tap" href={importHref}>
       <span class="t">Importa</span><span class="s">nuovo piano (link, QR o file)</span>
     </a>
+    <button type="button" class="action tap" disabled={busy} onclick={onguide}>
+      <span class="t">Modello per Claude</span><span class="s">fai preparare il piano</span>
+    </button>
     <button type="button" class="action tap" disabled={busy} onclick={onexport}>
       <span class="t">Esporta</span><span class="s">salva il file JSON</span>
     </button>
     <button type="button" class="action tap" disabled={busy} onclick={onedit}>
       <span class="t">Modifica</span><span class="s">completa valori e target</span>
     </button>
-    <button type="button" class="action tap" disabled={busy} onclick={onshare}>
+    <button type="button" class="action wide tap" disabled={busy} onclick={onshare}>
       <span class="t">Condividi</span><span class="s">link, QR o file</span>
     </button>
   </div>
@@ -150,6 +155,11 @@
     color: var(--text);
     text-align: left;
     text-decoration: none;
+  }
+
+  /* Cinque azioni su due colonne: l'ultima prende tutta la riga. */
+  .action.wide {
+    grid-column: 1 / -1;
   }
 
   .action:disabled {

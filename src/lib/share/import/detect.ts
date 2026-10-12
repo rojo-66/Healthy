@@ -72,6 +72,6 @@ export function readSharedPayload(payload: string): Result<SharedContent> {
 
 /** File `.json` scelto dall'utente (dimensione controllata prima di leggerlo). */
 export async function readSharedFile(file: FileLike): Promise<Result<SharedContent>> {
-  const json = await readJsonFile(file, MAX_BYTES.share);
+  const json = await readJsonFile(file, MAX_BYTES.share, { unwrap: true });
   return json.ok ? detectShared(json.value) : json;
 }

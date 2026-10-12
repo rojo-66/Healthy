@@ -1,0 +1,860 @@
+{
+  "app": "healthy-app",
+  "kind": "diet",
+  "schemaVersion": 2,
+  "_modello": true,
+  "_generato": "2026-10-12",
+  "id": "",
+  "version": 1,
+  "title": "Piano di prova Claude",
+  "author": "Nutrizionista di prova",
+  "validFrom": null,
+  "dayTypes": {
+    "gym": {
+      "label": "Palestra",
+      "targets": {
+        "kcal": 2000,
+        "protein": 130,
+        "carbs": 230,
+        "fat": 60,
+        "fiber": 28
+      }
+    },
+    "run": {
+      "label": "Corsa",
+      "targets": {
+        "kcal": null,
+        "protein": null,
+        "carbs": null,
+        "fat": null,
+        "fiber": null
+      }
+    },
+    "rest": {
+      "label": "Riposo",
+      "targets": null
+    }
+  },
+  "categories": [
+    "Carne e pesce",
+    "Latticini e uova",
+    "Frutta e verdura",
+    "Pane, pasta e cereali",
+    "Scatolame",
+    "Surgelati",
+    "Condimenti",
+    "Bevande",
+    "Integratori",
+    "Altro"
+  ],
+  "products": {
+    "avena_esempio": {
+      "name": "Fiocchi di avena di prova",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 370,
+        "protein": 13,
+        "carbs": 60,
+        "fat": 7,
+        "fiber": 10
+      },
+      "pieceGrams": null
+    },
+    "latte_esempio": {
+      "name": "Latte di prova",
+      "cat": "Latticini e uova",
+      "unit": "ml",
+      "shop": true,
+      "per100": null,
+      "pieceGrams": null
+    },
+    "banana_esempio": {
+      "name": "Banana di prova",
+      "cat": "Frutta e verdura",
+      "unit": "pz",
+      "shop": true,
+      "per100": {
+        "kcal": null,
+        "protein": null,
+        "carbs": null,
+        "fat": null,
+        "fiber": null
+      },
+      "pieceGrams": 120
+    },
+    "pollo_esempio": {
+      "name": "Petto di pollo di prova",
+      "cat": "Carne e pesce",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 100,
+        "protein": 22,
+        "carbs": 0,
+        "fat": 1.5,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    },
+    "riso_esempio": {
+      "name": "Riso di prova",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 350,
+        "protein": 7,
+        "carbs": 79,
+        "fat": 0.6,
+        "fiber": 1.4
+      },
+      "pieceGrams": null
+    },
+    "zucchine_esempio": {
+      "name": "Zucchine di prova",
+      "cat": "Frutta e verdura",
+      "unit": "g",
+      "shop": true,
+      "per100": null,
+      "pieceGrams": null
+    },
+    "yogurt_esempio": {
+      "name": "Yogurt greco di prova",
+      "cat": "Latticini e uova",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 60,
+        "protein": 10,
+        "carbs": 4,
+        "fat": 0,
+        "fiber": null
+      },
+      "pieceGrams": null
+    },
+    "merluzzo_esempio": {
+      "name": "Merluzzo di prova",
+      "cat": "Surgelati",
+      "unit": "g",
+      "shop": true,
+      "per100": {
+        "kcal": 70,
+        "protein": 17,
+        "carbs": 0,
+        "fat": 0.5,
+        "fiber": 0
+      },
+      "pieceGrams": null
+    }
+  },
+  "generalNotes": "Indicazioni di prova: bevi almeno 2 litri d'acqua al giorno. Un cucchiaio d'olio a crudo per pasto.",
+  "days": [
+    {
+      "weekday": 1,
+      "type": "gym",
+      "note": "In alternativa al pollo: tacchino di prova 150 g.",
+      "supplements": [
+        {
+          "name": "Vitamina di prova",
+          "when": "colazione",
+          "dose": "1 compressa",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": "10:30",
+          "window": null,
+          "name": "Frutto",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana_esempio",
+              "q": 1
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": "17:00",
+          "window": null,
+          "name": "Yogurt",
+          "recipe": null,
+          "items": [
+            {
+              "p": "yogurt_esempio",
+              "q": 125
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:00",
+          "window": null,
+          "name": "Merluzzo e verdure",
+          "recipe": null,
+          "items": [
+            {
+              "p": "merluzzo_esempio",
+              "q": 200
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 2,
+      "type": "",
+      "note": "",
+      "supplements": [
+        {
+          "name": "Vitamina di prova",
+          "when": "colazione",
+          "dose": "1 compressa",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": "10:30",
+          "window": null,
+          "name": "Frutto",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana_esempio",
+              "q": 1
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "",
+            ""
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": "17:00",
+          "window": null,
+          "name": "Yogurt",
+          "recipe": null,
+          "items": [
+            {
+              "p": "yogurt_esempio",
+              "q": 125
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:00",
+          "window": null,
+          "name": "Merluzzo e verdure",
+          "recipe": null,
+          "items": [
+            {
+              "p": "merluzzo_esempio",
+              "q": 200
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 3,
+      "type": "gym",
+      "note": "In alternativa al merluzzo: platessa di prova 200 g.",
+      "supplements": [
+        {
+          "name": "Vitamina di prova",
+          "when": "colazione",
+          "dose": "1 compressa",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": "10:30",
+          "window": null,
+          "name": "Frutto",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana_esempio",
+              "q": 1
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": "17:00",
+          "window": null,
+          "name": "Yogurt",
+          "recipe": null,
+          "items": [
+            {
+              "p": "yogurt_esempio",
+              "q": 125
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:00",
+          "window": null,
+          "name": "Merluzzo e verdure",
+          "recipe": null,
+          "items": [
+            {
+              "p": "merluzzo_esempio",
+              "q": 200
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 4,
+      "type": "rest",
+      "note": "",
+      "supplements": [
+        {
+          "name": "Vitamina di prova",
+          "when": "colazione",
+          "dose": "1 compressa",
+          "skip": true
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": null,
+          "window": null,
+          "name": "",
+          "recipe": null,
+          "items": []
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": "17:00",
+          "window": null,
+          "name": "Yogurt",
+          "recipe": null,
+          "items": [
+            {
+              "p": "yogurt_esempio",
+              "q": 125
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:00",
+          "window": null,
+          "name": "Merluzzo e verdure",
+          "recipe": null,
+          "items": [
+            {
+              "p": "merluzzo_esempio",
+              "q": 200
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 5,
+      "type": "gym",
+      "note": "",
+      "supplements": [
+        {
+          "name": "Vitamina di prova",
+          "when": "colazione",
+          "dose": "1 compressa",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": "10:30",
+          "window": null,
+          "name": "Frutto",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana_esempio",
+              "q": 1
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": "17:00",
+          "window": null,
+          "name": "Yogurt",
+          "recipe": null,
+          "items": [
+            {
+              "p": "yogurt_esempio",
+              "q": 125
+            }
+          ]
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:00",
+          "window": null,
+          "name": "Merluzzo e verdure",
+          "recipe": null,
+          "items": [
+            {
+              "p": "merluzzo_esempio",
+              "q": 200
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 6,
+      "type": "rest",
+      "note": "",
+      "supplements": [
+        {
+          "name": "Vitamina di prova",
+          "when": "colazione",
+          "dose": "1 compressa",
+          "skip": false
+        }
+      ],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": "10:30",
+          "window": null,
+          "name": "Frutto",
+          "recipe": null,
+          "items": [
+            {
+              "p": "banana_esempio",
+              "q": 1
+            }
+          ]
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": null,
+          "window": null,
+          "name": "",
+          "recipe": null,
+          "items": []
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": "20:00",
+          "window": null,
+          "name": "Merluzzo e verdure",
+          "recipe": null,
+          "items": [
+            {
+              "p": "merluzzo_esempio",
+              "q": 200
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 7,
+      "type": "rest",
+      "note": "",
+      "supplements": [],
+      "meals": [
+        {
+          "key": "colazione",
+          "label": "Colazione",
+          "time": "07:30",
+          "window": null,
+          "name": "Latte e avena",
+          "recipe": null,
+          "items": [
+            {
+              "p": "latte_esempio",
+              "q": 200
+            },
+            {
+              "p": "avena_esempio",
+              "q": 40
+            }
+          ]
+        },
+        {
+          "key": "spuntino1",
+          "label": "Spuntino mattina",
+          "time": null,
+          "window": null,
+          "name": "",
+          "recipe": null,
+          "items": []
+        },
+        {
+          "key": "pranzo",
+          "label": "Pranzo",
+          "time": "13:00",
+          "window": [
+            "12:30",
+            "14:00"
+          ],
+          "name": "Pollo e riso",
+          "recipe": 1,
+          "items": [
+            {
+              "p": "pollo_esempio",
+              "q": 150
+            },
+            {
+              "p": "riso_esempio",
+              "q": 80
+            },
+            {
+              "p": "zucchine_esempio",
+              "q": 200
+            }
+          ]
+        },
+        {
+          "key": "spuntino2",
+          "label": "Spuntino pomeriggio",
+          "time": null,
+          "window": null,
+          "name": "",
+          "recipe": null,
+          "items": []
+        },
+        {
+          "key": "cena",
+          "label": "Cena",
+          "time": null,
+          "window": null,
+          "name": "Pasto libero",
+          "recipe": null,
+          "items": []
+        }
+      ]
+    }
+  ],
+  "recipes": [
+    {
+      "n": 1,
+      "name": "Pollo e riso di prova",
+      "meta": "25 min · padella",
+      "dose": "per 1 porzione",
+      "steps": [
+        "Cuoci il riso.",
+        "Cuoci il pollo in padella con le zucchine."
+      ],
+      "tip": "Consiglio di prova."
+    }
+  ]
+}

@@ -10,6 +10,7 @@
   import type { WorkoutFile } from '../../lib/data/schemas/workout-file';
   import type { DietImport } from '../../lib/diet/import/detect';
   import { previewDietImport, type DietImportPreview } from '../../lib/diet/import/preview';
+  import { EMPTY_TEMPLATE_MESSAGE } from '../../lib/diet/template/template';
   import { isStandalone } from '../../lib/pwa/standalone';
   import { routeHref } from '../../lib/routes';
   import { appBaseUrl, IMPORT_PREFIX } from '../../lib/share/codec';
@@ -17,6 +18,7 @@
   import { readSharedFile, readSharedPayload, readSharedText, type SharedContent } from '../../lib/share/import/detect';
   import { pendingImport, takePendingImport } from '../../lib/share/import/pending.svelte';
   import { decideWorkoutImport, type WorkoutImportDecision, type WorkoutImportMode } from '../../lib/share/import/workout';
+  import ClaudeGuideSheet from '../diet/ClaudeGuideSheet.svelte';
   import ActionBar from '../train/ActionBar.svelte';
   import DietImportPreviewView from './DietImportPreview.svelte';
   import QrScanner from './QrScanner.svelte';
@@ -50,6 +52,9 @@
   /** Codice arrivato da un link nell'indirizzo (per "Copia link" in Safari). */
   let linkPayload = $state<string | null>(null);
   let fileInput = $state<HTMLInputElement>();
+  /** Mini-guida "Prepara il piano con Claude" (dal messaggio sul modello vuoto). */
+  let guideOpen = $state(false);
+  const emptyTemplate = $derived(errors.includes(EMPTY_TEMPLATE_MESSAGE));
 
   const standalone = isStandalone(window);
   /** Link aperto nel browser (non nell'app installata): anteprima sì, salvataggio no. */
@@ -217,6 +222,9 @@
         <ul class="list" data-testid="import-errors">
           {#each errors as e, i (i)}<li>{e}</li>{/each}
         </ul>
+        {#if emptyTemplate}
+          <Button tone="food" variant="secondary" block onclick={() => (guideOpen = true)}>Apri la guida</Button>
+        {/if}
       </NoteBox>
     {/if}
 
@@ -261,6 +269,7 @@
   </main>
 
   <QrScanner bind:open={scanning} onresult={fromQr} />
+  <ClaudeGuideSheet bind:open={guideOpen} onimport={() => (guideOpen = false)} />
 
   {#if loaded && !browserLink}
     <ActionBar {tone} even={secondary !== null}>

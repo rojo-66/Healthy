@@ -213,7 +213,7 @@ describe('anteprima e conflitti', () => {
     expect(preview).toMatchObject({ title: 'Ottobre 2026', validFrom: '2026-10-08', days: 7, meals: 33, products: 14, recipes: 0 });
     expect(preview.conflict).toEqual({ kind: 'none' });
     expect(preview.warnings).toEqual([
-      '7 giorni senza tipo di giornata',
+      'Nessun giorno ha il tipo di giornata',
       'Servono i tipi di giornata per inserire i target',
       '14 alimenti senza valori nutrizionali',
       'Nessuna ricetta nel piano',

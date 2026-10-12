@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { lookup, validate, type Result } from './errors';
+import { diagnoseJsonSyntax, unwrapJson } from './json-text';
 import { MAX_BYTES } from './limits';
 import { APP_ID } from './schemas/common';
 import { DIET_FILE_KIND, DIET_FILE_VERSION, dietFileSchema, type DietFile } from './schemas/diet-file';
@@ -17,11 +18,16 @@ function formatMb(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toLocaleString('it-IT', { maximumFractionDigits: 1 })} MB`;
 }
 
+export interface ReadJsonOptions {
+  /** Toglie il testo attorno al JSON (blocchi ```json, frasi prima e dopo): file nati in una chat. */
+  unwrap?: boolean;
+}
+
 /**
  * Legge un file JSON scelto dall'utente. Controlla la dimensione **prima** di leggerlo,
  * così un file enorme non blocca il telefono. Non lancia mai.
  */
-export async function readJsonFile(file: FileLike, maxBytes: number): Promise<Result<unknown>> {
+export async function readJsonFile(file: FileLike, maxBytes: number, options: ReadJsonOptions = {}): Promise<Result<unknown>> {
   if (file.size === 0) return fail('Il file è vuoto.');
   if (file.size > maxBytes) {
     return fail(`Il file è troppo grande (${formatMb(file.size)}): il massimo è ${formatMb(maxBytes)}.`);
@@ -34,6 +40,7 @@ export async function readJsonFile(file: FileLike, maxBytes: number): Promise<Re
   }
   // La dimensione dichiarata potrebbe non corrispondere al contenuto.
   if (content.length > maxBytes) return fail(`Il file è troppo grande: il massimo è ${formatMb(maxBytes)}.`);
+  if (options.unwrap) content = unwrapJson(content).text;
   return parseJsonText(content, 'Il file non è un JSON valido: forse è danneggiato o non è un file di Healthy.', 'Il file');
 }
 
@@ -51,7 +58,8 @@ export function parseJsonText(content: string, invalidMessage: string, what = 'I
       return inner;
     });
   } catch {
-    return fail(invalidMessage);
+    // Errori tipici (virgole finali, decimali con la virgola, commenti) spiegati con la riga.
+    return { ok: false, errors: [invalidMessage, ...diagnoseJsonSyntax(content)] };
   }
   if (forbiddenKey) return fail(`${what} contiene una chiave non ammessa («__proto__»).`);
   return { ok: true, value };

@@ -21,6 +21,7 @@ export function planToDietFile(plan: DietPlan): DietFile {
     products: plan.payload.products,
     days: plan.payload.days,
     recipes: plan.payload.recipes,
+    generalNotes: plan.payload.generalNotes,
   });
 }
 

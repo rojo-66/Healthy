@@ -2,6 +2,7 @@
  * Riconoscimento di un link di condivisione. Modulo leggero (niente zod né lz-string):
  * lo usa anche l'intercettazione all'avvio, prima del router.
  */
+import { unwrapJson } from '../../data/json-text';
 
 /** Inizio dell'hash di un link di condivisione (SPEC § 8.4). Non è una rotta (`#/…`). */
 export const IMPORT_PREFIX = '#import=';
@@ -39,10 +40,12 @@ const CODE_ONLY = /^[A-Za-z0-9+\-$\s]+$/;
 export function extractImport(input: string): ExtractResult {
   const text = input.trim();
   if (text === '') return { ok: false, error: 'Incolla il link o il codice che hai ricevuto.' };
-  if (text.startsWith('{')) return { ok: true, value: { type: 'json', text } };
+  if (text.startsWith('{')) return { ok: true, value: { type: 'json', text: unwrapJson(text).text } };
   const at = text.indexOf(IMPORT_PREFIX);
   if (at !== -1) return { ok: true, value: { type: 'payload', payload: cleanPayload(text.slice(at + IMPORT_PREFIX.length)) } };
   if (CODE_ONLY.test(text) && !/^https?$/i.test(text)) return { ok: true, value: { type: 'payload', payload: cleanPayload(text) } };
+  // JSON copiato da una chat: blocco ```json o frasi prima e dopo (si toglie solo il contorno).
+  if (text.includes('{')) return { ok: true, value: { type: 'json', text: unwrapJson(text).text } };
   return {
     ok: false,
     error: 'Non riconosco un link o un codice di Healthy: incolla il link completo che hai ricevuto (contiene «#import=»).',

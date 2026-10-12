@@ -142,6 +142,11 @@
           {/if}
         </div>
       {/key}
+
+      <!-- Valida per tutti i giorni: fuori dal {#key}, non si ricrea cambiando giorno. -->
+      {#if plan.payload.generalNotes}
+        <NoteBox title="Indicazioni generali del nutrizionista" mark="✎" text={plan.payload.generalNotes} />
+      {/if}
     </div>
   {:else}
     <p class="empty">Questo giorno non è nel piano.</p>
