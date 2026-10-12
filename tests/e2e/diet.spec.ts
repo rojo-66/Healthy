@@ -23,14 +23,13 @@ const planButton = (page: Page) => page.getByRole('button', { name: /^Piano .*: 
 async function importExtended(page: Page) {
   await page.goto('./#/dieta');
   await expect(page.getByRole('heading', { name: 'Nessun piano' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Importa il tuo piano' })).toBeVisible();
-  await page.getByTestId('diet-input').setInputFiles(EXTENDED);
-  const sheet = page.getByRole('dialog', { name: 'Importa piano' });
-  await expect(sheet).toBeVisible();
-  await expect(sheet.getByTestId('import-preview')).toContainText('Giorni7');
-  await sheet.getByRole('button', { name: 'Importa', exact: true }).click();
-  await expect(sheet).toBeHidden();
+  // M8: "Importa il tuo piano" apre la schermata unica di import (link, QR o file).
+  await page.getByRole('link', { name: 'Importa il tuo piano' }).click();
+  await page.getByTestId('import-file').setInputFiles(EXTENDED);
+  await expect(page.getByTestId('import-preview')).toContainText('Giorni7');
+  await page.getByRole('button', { name: 'Importa', exact: true }).click();
   await expect(planButton(page)).toContainText('Piano di esempio');
+  await expect(page.getByRole('status').first()).toContainText('Piano «Piano di esempio» importato');
 }
 
 /** Un solo anello e un solo numero nel riepilogo, letti subito (anche durante le animazioni). */
@@ -189,11 +188,11 @@ test('MyDiet: import, archivio e ripristino, doppione, completamento guidato', a
   await planButton(page).click();
   const panel = page.getByRole('dialog', { name: 'Piano di esempio' });
   await expect(panel).toContainText('Completo al 100%');
-  await panel.getByTestId('diet-input-sheet').setInputFiles(MYDIET);
-  const sheet = page.getByRole('dialog', { name: 'Importa piano' });
-  await expect(sheet.getByLabel('Titolo')).toHaveValue('Ottobre 2026');
-  await expect(sheet).toContainText('14 alimenti senza valori nutrizionali');
-  await sheet.getByRole('button', { name: 'Importa', exact: true }).click();
+  await panel.getByRole('link', { name: /^Importa/ }).click();
+  await page.getByTestId('import-file').setInputFiles(MYDIET);
+  await expect(page.getByLabel('Titolo')).toHaveValue('Ottobre 2026');
+  await expect(page.getByRole('article', { name: 'Anteprima del piano' })).toContainText('14 alimenti senza valori nutrizionali');
+  await page.getByRole('button', { name: 'Importa', exact: true }).click();
   await expect(planButton(page)).toContainText('Ottobre 2026');
   await expect(summary(page)).toContainText('TARGET: MANCANTE');
   await expect(page.getByRole('complementary', { name: 'Piano da completare' })).toContainText('allo 0%');
@@ -208,11 +207,12 @@ test('MyDiet: import, archivio e ripristino, doppione, completamento guidato', a
   await expect(planButton(page)).toContainText('Piano di esempio');
 
   // Lo stesso file MyDiet di nuovo: stessa versione → solo "Salva come copia".
-  await page.getByTestId('diet-input').setInputFiles(MYDIET);
-  await expect(sheet).toContainText('nella stessa versione (v1)');
-  await expect(sheet.getByRole('button', { name: 'Importa', exact: true })).toHaveCount(0);
-  await expect(sheet.getByRole('button', { name: 'Sostituisci' })).toHaveCount(0);
-  await sheet.getByRole('button', { name: 'Salva come copia' }).click();
+  await page.goto('./#/importa?da=dieta');
+  await page.getByTestId('import-file').setInputFiles(MYDIET);
+  await expect(page.getByTestId('version-notice')).toContainText('nella stessa versione (v1)');
+  await expect(page.getByRole('button', { name: 'Importa', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Sostituisci' })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Salva come copia' }).click();
   await expect(planButton(page)).toContainText('Ottobre 2026 (copia)');
 
   // Completamento guidato.
@@ -256,17 +256,15 @@ test('esporta il piano come file .json; un file non valido non tocca i dati', as
   expect(download.suggestedFilename()).toBe('healthy-dieta-piano-di-esempio.json');
   await expect(panel.getByRole('status')).toContainText('File scaricato');
 
-  // Condividi: dichiarato "in arrivo", nessuna finta funzione.
-  // aria-disabled: Playwright lo considera disattivato, il tocco va forzato (come quello di un utente).
-  await expect(panel.getByRole('button', { name: /Condividi/ })).toHaveAttribute('aria-disabled', 'true');
-  await panel.getByRole('button', { name: /Condividi/ }).click({ force: true });
-  await expect(panel.getByRole('status')).toContainText('Link e QR arrivano');
   await panel.getByRole('button', { name: 'Chiudi' }).last().click();
 
-  await page.getByTestId('diet-input').setInputFiles('tests/fixtures/invalid/mydiet-bad.json');
-  const note = page.getByRole('complementary', { name: 'File non valido: nessun dato modificato' });
+  // Un file non valido: errori in italiano, nessuna anteprima, nessun dato toccato.
+  await page.goto('./#/importa?da=dieta');
+  await page.getByTestId('import-file').setInputFiles('tests/fixtures/invalid/mydiet-bad.json');
+  const note = page.getByRole('complementary', { name: 'Non importato' });
   await expect(note).toContainText('unità: valore non ammesso');
-  await expect(page.getByRole('dialog', { name: 'Importa piano' })).toBeHidden();
+  await expect(page.getByTestId('import-preview')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Indietro' }).click();
   await expect(planButton(page)).toContainText('Piano di esempio');
 });
 

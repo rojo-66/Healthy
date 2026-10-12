@@ -28,6 +28,8 @@ export const MAX_ITEMS = {
   warmup: 30,
   workoutItems: 60,
   setsPerItem: 20,
+  /** Versioni precedenti conservate per ogni scheda (M8, "Ripristina versione precedente"). */
+  previousVersions: 3,
   categories: 50,
   products: 1000,
   dayTypes: 10,

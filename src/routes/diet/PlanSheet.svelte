@@ -12,25 +12,19 @@
     plan: DietPlan;
     archived: readonly DietPlan[];
     busy: boolean;
-    /** Messaggio sotto le azioni (es. "Link e QR arrivano con la condivisione"). */
+    /** Messaggio sotto le azioni (es. esito dell'esportazione). */
     status: string;
-    onfile: (file: File) => void;
+    /** Schermata di import (link, QR o file), M8. */
+    importHref: string;
     onexport: () => void;
     onedit: () => void;
     onshare: () => void;
     onrestore: (plan: DietPlan) => void;
   }
 
-  let { open = $bindable(), plan, archived, busy, status, onfile, onexport, onedit, onshare, onrestore }: Props = $props();
+  let { open = $bindable(), plan, archived, busy, status, importHref, onexport, onedit, onshare, onrestore }: Props = $props();
 
   const completeness = $derived(planCompleteness(plan.payload));
-  let input: HTMLInputElement;
-
-  function chosen() {
-    const file = input.files?.[0];
-    input.value = '';
-    if (file) onfile(file);
-  }
 </script>
 
 <BottomSheet bind:open title={plan.title} tone="food">
@@ -55,30 +49,19 @@
   </section>
 
   <div class="actions">
-    <button type="button" class="action tap" disabled={busy} onclick={() => input.click()}>
-      <span class="t">Importa</span><span class="s">nuovo piano (file JSON)</span>
-    </button>
+    <a class="action tap" href={importHref}>
+      <span class="t">Importa</span><span class="s">nuovo piano (link, QR o file)</span>
+    </a>
     <button type="button" class="action tap" disabled={busy} onclick={onexport}>
       <span class="t">Esporta</span><span class="s">salva il file JSON</span>
     </button>
     <button type="button" class="action tap" disabled={busy} onclick={onedit}>
       <span class="t">Modifica</span><span class="s">completa valori e target</span>
     </button>
-    <!-- Link e QR arrivano in M8: visibile, ma dichiarato "in arrivo" (nessuna finta funzione). -->
-    <button type="button" class="action soon" aria-disabled="true" onclick={onshare}>
-      <span class="t">Condividi</span><span class="s">in arrivo: link e QR</span>
+    <button type="button" class="action tap" disabled={busy} onclick={onshare}>
+      <span class="t">Condividi</span><span class="s">link, QR o file</span>
     </button>
   </div>
-  <input
-    bind:this={input}
-    class="visually-hidden"
-    type="file"
-    accept=".json,application/json"
-    tabindex="-1"
-    aria-hidden="true"
-    data-testid="diet-input-sheet"
-    onchange={chosen}
-  />
   <p class="status" role="status" aria-live="polite">{status}</p>
 
   {#if archived.length > 0}
@@ -166,17 +149,13 @@
     border: 1px solid var(--line);
     color: var(--text);
     text-align: left;
+    text-decoration: none;
   }
 
   .action:disabled {
     opacity: 0.38;
   }
 
-  .action.soon {
-    border-style: dashed;
-    color: var(--muted);
-    cursor: default;
-  }
 
   .t {
     font-size: 15px;

@@ -284,11 +284,10 @@ test('un file di backup non valido mostra il motivo e non tocca i dati', async (
 
 test('con profilo e peso la stima diventa un\'opzione del completamento guidato della Dieta', async ({ page }) => {
   await importBackup(page, PROFILE_BACKUP);
-  await page.goto('./#/dieta');
-  await page.getByTestId('diet-input').setInputFiles(MYDIET);
-  const importSheet = page.getByRole('dialog', { name: 'Importa piano' });
-  await importSheet.getByRole('button', { name: 'Importa', exact: true }).click();
-  await expect(importSheet).toBeHidden();
+  await page.goto('./#/importa?da=dieta');
+  await page.getByTestId('import-file').setInputFiles(MYDIET);
+  await page.getByRole('button', { name: 'Importa', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Dieta', level: 1 })).toBeVisible();
 
   await page.goto('./#/dieta/completa');
   await page.getByRole('group', { name: 'Tipo di giornata di lunedì' }).getByRole('button', { name: 'Palestra' }).click();

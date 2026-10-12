@@ -58,8 +58,19 @@ export const workoutItemSchema = z
   })
   .superRefine(checkSetsDetail);
 
-/** Scheda (SPEC § 7, `workouts`). */
-export const workoutSchema = z.object({
+/**
+ * Scheda ricevuta da un altro (M8): versione e impronta del contenuto al momento dell'import.
+ * Servono a capire se la scheda è stata modificata qui dopo l'import (SPEC § 8.4).
+ */
+export const receivedSchema = z.object({
+  version: versionSchema,
+  /** `fnv1a` del contenuto condivisibile (lista bianca, JSON canonico), in esadecimale. */
+  hash: z.string().regex(/^[0-9a-f]{8}$/, 'impronta non valida'),
+  at: isoDateTime,
+});
+
+/** Una scheda senza la sua cronologia: è anche la forma delle versioni conservate (M8). */
+export const workoutVersionSchema = z.object({
   id: entityId,
   version: versionSchema,
   author: text(MAX_TEXT.name),
@@ -73,9 +84,19 @@ export const workoutSchema = z.object({
   items: z.array(workoutItemSchema).max(MAX_ITEMS.workoutItems),
   cardio: cardioSchema.nullable(),
   updatedAt: isoDateTime,
+  /** Ricevuta con link, QR o file (M8); `null` = creata su questo telefono. */
+  received: receivedSchema.nullable().default(null),
+});
+
+/** Scheda (SPEC § 7, `workouts`). */
+export const workoutSchema = workoutVersionSchema.extend({
+  /** Versioni sostituite da un import (M8), dalla più recente; al massimo `MAX_ITEMS.previousVersions`. */
+  previousVersions: z.array(workoutVersionSchema).max(MAX_ITEMS.previousVersions).default([]),
 });
 
 export type Workout = z.infer<typeof workoutSchema>;
+export type WorkoutVersion = z.infer<typeof workoutVersionSchema>;
+export type Received = z.infer<typeof receivedSchema>;
 export type WorkoutItem = z.infer<typeof workoutItemSchema>;
 export type WarmupItem = z.infer<typeof warmupItemSchema>;
 export type Cardio = z.infer<typeof cardioSchema>;

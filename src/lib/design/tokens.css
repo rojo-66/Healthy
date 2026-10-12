@@ -15,6 +15,9 @@
   --tip: #f2c94c; /* consigli, note di PT/nutrizionista, avvisi */
   --partial: #5a2a45; /* parte "non fatta" di un elemento iniziato */
   --data-alt: #8a7fa8; /* seconda serie di un dato (FM nella barra FFM/FM): mai testo */
+  /* QR di condivisione (M8): massimo contrasto per la fotocamera, indipendente dal tema */
+  --qr-dark: #000000;
+  --qr-light: #ffffff;
 
   /* Testo sopra un pieno di sezione (magenta, verde, ciano, giallo) */
   --on-tone: var(--bg);

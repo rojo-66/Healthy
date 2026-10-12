@@ -39,8 +39,11 @@ async function createWorkout(page: Page, name = 'Spinta finta') {
   await addFromLibrary(page, 'lat machine', 'Lat machine presa larga');
   await page.getByRole('button', { name: /Cardio finale/ }).click();
   await page.getByRole('button', { name: 'Salva e invia' }).click();
-  const saved = page.getByRole('dialog', { name: 'Scheda salvata' });
-  await saved.getByRole('button', { name: 'Torna alle schede' }).click();
+  // "Salva e invia" (M8) apre il pannello Condividi: si chiude e si torna alle schede.
+  const share = page.getByRole('dialog', { name: /^Condividi «/ });
+  await share.getByRole('button', { name: 'Chiudi' }).last().click();
+  await expect(share).toBeHidden();
+  await page.getByRole('button', { name: 'Torna alle schede' }).click();
   await expect(page.getByRole('heading', { name: 'Allena', level: 1 })).toBeVisible();
 }
 

@@ -7,13 +7,15 @@
     /** Nascosto (con la tastiera aperta): scivola giù, solo transform/opacity. */
     hidden?: boolean;
     tone?: Tone;
+    /** Due azioni di pari peso (es. Salva come copia / Sostituisci): colonne uguali invece di 1fr 2fr. */
+    even?: boolean;
     children: Snippet;
   }
 
-  let { hidden = false, tone = 'training', children }: Props = $props();
+  let { hidden = false, tone = 'training', even = false, children }: Props = $props();
 </script>
 
-<footer class="bar tone-{tone}" class:hidden aria-hidden={hidden || undefined} inert={hidden}>
+<footer class="bar tone-{tone}" class:hidden class:even aria-hidden={hidden || undefined} inert={hidden}>
   {@render children()}
 </footer>
 
@@ -34,6 +36,10 @@
     transition:
       transform var(--dur-sheet) var(--ease-out),
       opacity var(--dur-fade) ease;
+  }
+
+  .even {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hidden {

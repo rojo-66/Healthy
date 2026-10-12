@@ -1,3 +1,5 @@
+// Prima di tutto (anche del router): un link di condivisione `#import=…` non è una rotta (SPEC § 8.4).
+import './lib/share/import/boot';
 import { mount } from 'svelte';
 import './lib/design/fonts';
 import './lib/design/tokens.css';

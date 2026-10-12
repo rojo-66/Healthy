@@ -5,8 +5,8 @@ import { APP_ID } from '../data/schemas/common';
 import { SESSION_FILE_KIND, SESSION_FILE_VERSION, sessionFileSchema, type SessionFile } from '../data/schemas/session-file';
 import type { Session } from '../data/schemas/sessions';
 import { headerDate, toIsoDate } from '../diet/calc/calendar';
+import { safeSlug } from '../share/file-name';
 import { setLabel, timeRange, volumeLabel } from './format';
-import { normalizeName } from './items';
 import { READINESS_ITEMS } from './readiness';
 import type { SessionSummary } from './summary';
 
@@ -59,12 +59,7 @@ export function sessionToFile(session: Session, now: Date = new Date()): Session
 
 /** "healthy-sessione-petto-schiena-2026-10-12.json". */
 export function sessionFileName(session: Pick<Session, 'workoutName' | 'startedAt'>): string {
-  const slug = normalizeName(session.workoutName)
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40)
-    .replace(/-+$/, '');
-  return `healthy-sessione-${slug || 'allenamento'}-${toIsoDate(new Date(session.startedAt))}.json`;
+  return `healthy-sessione-${safeSlug(session.workoutName, 'allenamento')}-${toIsoDate(new Date(session.startedAt))}.json`;
 }
 
 export function sessionExportFile(session: Session, now: Date = new Date()): File {

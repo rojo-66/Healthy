@@ -9,25 +9,27 @@
   import { ValidationError } from '../../lib/data/errors';
   import { liveState } from '../../lib/data/live.svelte';
   import { activeSession, recentSessions } from '../../lib/data/repo/sessions';
-  import { getWorkoutDraft } from '../../lib/data/repo/settings';
-  import { deleteWorkout, duplicateWorkoutById, listWorkoutsRecent } from '../../lib/data/repo/workouts';
+  import { DEFAULT_WORKOUT_AUTHOR, getWorkoutAuthor, getWorkoutDraft } from '../../lib/data/repo/settings';
+  import { deleteWorkout, duplicateWorkoutById, listWorkoutsRecent, restorePreviousVersion } from '../../lib/data/repo/workouts';
   import type { Session } from '../../lib/data/schemas/sessions';
-  import type { SavedDraft } from '../../lib/data/schemas/workout-draft';
+  import type { SavedDraft, WorkoutAuthor } from '../../lib/data/schemas/workout-draft';
   import type { Workout } from '../../lib/data/schemas/workouts';
   import { weekdayName } from '../../lib/data/schemas/diet-payload';
-  import { headerDate, isoWeekday } from '../../lib/diet/calc/calendar';
+  import { headerDate, isoWeekday, shortDate } from '../../lib/diet/calc/calendar';
   import { routeHref } from '../../lib/routes';
   import { route } from '../../lib/router.svelte';
+  import { prepareWorkoutShare, type PreparedShare } from '../../lib/share/prepare';
   import { weekPlan } from '../../lib/workouts/calc/week';
+  import { originLabel } from '../../lib/workouts/format';
   import { syncLibrary } from '../../lib/workouts/library/sync';
   import Screen from '../Screen.svelte';
   import ConfirmSheet, { type ConfirmAction } from './ConfirmSheet.svelte';
   import { dayStateLabel } from './day-state';
   import HistoryTab from './HistoryTab.svelte';
-  import InfoSheet from './InfoSheet.svelte';
   import NextCard from './NextCard.svelte';
   import WeekStrip from './WeekStrip.svelte';
   import WorkoutRow from './WorkoutRow.svelte';
+  import ShareSheet from '../share/ShareSheet.svelte';
   import ResumeCard from '../session/ResumeCard.svelte';
   import StartGate from '../session/StartGate.svelte';
 
@@ -66,26 +68,21 @@
   // `#/allena?tab=storico` (dal Riepilogo) apre direttamente lo Storico.
   let tab = $state<TabId>(untrack(() => route.query['tab']) === 'storico' ? 'storico' : 'schede');
 
-  // --- Fogli: in arrivo, azioni della scheda, conferma ---
-  let info = $state<{ title: string; text: string; soon: string } | null>(null);
-  let infoOpen = $state(false);
-  function showInfo(title: string, text: string, soon: string) {
-    info = { title, text, soon };
-    infoOpen = true;
-  }
+  // --- Condividi (M8): link, QR, file; tutto preparato prima del tocco ---
+  const me = liveState<WorkoutAuthor>(getWorkoutAuthor, DEFAULT_WORKOUT_AUTHOR);
+  let shared = $state.raw<PreparedShare | null>(null);
+  let shareOpen = $state(false);
 
-  const importInfo = () =>
-    showInfo(
-      'Importa una scheda',
-      'Qui potrai ricevere le schede del tuo PT con un link, un QR o un file.',
-      'Link, QR e file arrivano con la condivisione, nel prossimo aggiornamento. Per ora crea le schede con «+ Nuova scheda».',
-    );
-  const shareInfo = (w: Workout) =>
-    showInfo(
-      `Condividi «${w.name}»`,
-      'Potrai mandare la scheda con un link, un QR o un file.',
-      'La condivisione arriva nel prossimo aggiornamento.',
-    );
+  function openShare(w: Workout) {
+    actionsOpen = false;
+    try {
+      shared = prepareWorkoutShare(w, me.current);
+      status = '';
+      shareOpen = true;
+    } catch (error) {
+      status = error instanceof ValidationError ? `Non posso condividere «${w.name}»: ${error.errors.join(' ')}` : 'Condivisione non riuscita.';
+    }
+  }
   // Avvio: una sola sessione in corso per volta (StartGate chiede Riprendi / Abbandona e inizia).
   let gate: StartGate;
   const active = liveState<Session | null>(activeSession, null);
@@ -93,6 +90,17 @@
   let current = $state<Workout | null>(null);
   let actionsOpen = $state(false);
   let status = $state('');
+
+  // Arrivo da Importa (`?importata=<id>`, M8): conferma con nome e origine.
+  const importedId = untrack(() => route.query['importata']) ?? null;
+  let importedShown = false;
+  $effect(() => {
+    if (!importedId || importedShown || !workouts.loaded) return;
+    const w = workouts.current.find((x) => x.id === importedId);
+    if (!w) return;
+    importedShown = true;
+    untrack(() => (status = `Scheda «${w.name}» importata (${originLabel(w)}).`));
+  });
 
   let confirmOpen = $state(false);
   let confirm = $state<{ title: string; text: string; actions: ConfirmAction[] }>({ title: '', text: '', actions: [] });
@@ -131,6 +139,33 @@
     confirmOpen = true;
   }
 
+  /** "Ripristina versione precedente" (M8): una conferma con le versioni conservate, la più recente prima. */
+  function askRestore(w: Workout) {
+    actionsOpen = false;
+    confirm = {
+      title: 'Ripristinare una versione precedente?',
+      text: `«${w.name}» ora è alla v${w.version}. La versione attuale non si perde: entra nella cronologia.`,
+      actions: [
+        ...w.previousVersions.map((p, index): ConfirmAction => ({
+          label: `Torna alla v${p.version} (del ${shortDate(new Date(p.updatedAt))})`,
+          kind: index === 0 ? 'primary' : 'secondary',
+          run: () => void restore(w, index),
+        })),
+        { label: 'Annulla', kind: 'secondary', run: () => {} },
+      ],
+    };
+    confirmOpen = true;
+  }
+
+  async function restore(w: Workout, index: number) {
+    try {
+      const restored = await restorePreviousVersion(w.id, index);
+      status = `«${restored.name}» è tornata alla v${restored.version}.`;
+    } catch (error) {
+      status = error instanceof ValidationError ? error.errors.join(' ') : 'Ripristino non riuscito.';
+    }
+  }
+
   async function remove(w: Workout) {
     try {
       await deleteWorkout(w.id);
@@ -161,9 +196,9 @@
       <span class="date mono-label">{headerDate(today)}</span>
       <div class="title-row">
         <h1 class="graffiti">Allena</h1>
-        <button type="button" class="import tap" aria-label="Importa una scheda da link, QR o file" onclick={importInfo}>
+        <a class="import tap" aria-label="Importa una scheda da link, QR o file" href={routeHref('/importa', { da: 'allena' })}>
           <Icon name="qr" size={18} />Importa
-        </button>
+        </a>
       </div>
     </header>
 
@@ -218,7 +253,7 @@
                 <span class="mono count">{workouts.current.length}</span>
               </div>
               {#each workouts.current as w (w.id)}
-                <WorkoutRow workout={w} lastRun={lastRun.get(w.id) ?? null} onopen={() => openActions(w)} onshare={() => shareInfo(w)} />
+                <WorkoutRow workout={w} lastRun={lastRun.get(w.id) ?? null} onopen={() => openActions(w)} onshare={() => openShare(w)} />
               {/each}
               <a class="new tap" href={routeHref('/allena/editor')}>+ Nuova scheda</a>
             {/if}
@@ -241,6 +276,15 @@
       <button type="button" class="action tap" onclick={() => go(routeHref('/allena/editor', { id: w.id }))}>
         <span class="t">Modifica</span><span class="s">esercizi, serie, carichi, giorni</span>
       </button>
+      <button type="button" class="action tap" onclick={() => openShare(w)}>
+        <span class="t">Condividi</span><span class="s">link, QR o file</span>
+      </button>
+      {#if w.previousVersions.length > 0}
+        <button type="button" class="action tap" onclick={() => askRestore(w)}>
+          <span class="t">Ripristina versione precedente</span>
+          <span class="s">{w.previousVersions.length === 1 ? '1 versione conservata' : `${w.previousVersions.length} versioni conservate`}</span>
+        </button>
+      {/if}
       <button type="button" class="action tap" onclick={() => void duplicate(w)}>
         <span class="t">Duplica</span><span class="s">nuova scheda da questa (v1)</span>
       </button>
@@ -255,8 +299,8 @@
 
 <ConfirmSheet bind:open={confirmOpen} title={confirm.title} text={confirm.text} actions={confirm.actions} />
 
-{#if info}
-  <InfoSheet bind:open={infoOpen} title={info.title} text={info.text} soon={info.soon} />
+{#if shared}
+  <ShareSheet bind:open={shareOpen} share={shared} tone="training" />
 {/if}
 
 <style>
@@ -300,6 +344,7 @@
 
   .import {
     min-height: var(--touch);
+    text-decoration: none;
     margin-bottom: var(--space-1);
     padding: 0 var(--space-3);
     display: flex;

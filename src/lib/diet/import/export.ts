@@ -2,7 +2,7 @@ import { parseOrThrow } from '../../data/errors';
 import { APP_ID } from '../../data/schemas/common';
 import { DIET_FILE_KIND, DIET_FILE_VERSION, dietFileSchema, type DietFile } from '../../data/schemas/diet-file';
 import type { DietPlan } from '../../data/schemas/diet-plans';
-import { normalizeName } from '../calc/vegetables';
+import { safeSlug } from '../../share/file-name';
 
 /** Piano salvato → file esteso (§ 8.2), validato: si esporta solo ciò che si saprebbe reimportare. */
 export function planToDietFile(plan: DietPlan): DietFile {
@@ -15,18 +15,18 @@ export function planToDietFile(plan: DietPlan): DietFile {
     title: plan.title,
     author: plan.author,
     validFrom: plan.validFrom,
-    ...plan.payload,
+    // Lista bianca (§ 8.2): solo il contenuto del piano. I campi annidati in più li scarta lo schema.
+    dayTypes: plan.payload.dayTypes,
+    categories: plan.payload.categories,
+    products: plan.payload.products,
+    days: plan.payload.days,
+    recipes: plan.payload.recipes,
   });
 }
 
 /** "healthy-dieta-ottobre-2026.json". */
 export function dietFileName(title: string): string {
-  const slug = normalizeName(title)
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 40)
-    .replace(/-+$/, '');
-  return `healthy-dieta-${slug || 'piano'}.json`;
+  return `healthy-dieta-${safeSlug(title, 'piano')}.json`;
 }
 
 /** File da consegnare con `deliverFile` (Web Share con file, altrimenti download). */

@@ -44,6 +44,8 @@
   import ExerciseRow from './ExerciseRow.svelte';
   import LibrarySheet from './LibrarySheet.svelte';
   import WarmupSheet from './WarmupSheet.svelte';
+  import ShareSheet from '../../share/ShareSheet.svelte';
+  import { prepareWorkoutShare, type PreparedShare } from '../../../lib/share/prepare';
 
   interface Props {
     initial: WorkoutDraft;
@@ -307,8 +309,6 @@
     return `«${w.name}» salvata · v${w.version}.`;
   }
 
-  const SHARE_SOON = 'L’invio al cliente (link, QR, file) arriva con la condivisione, nel prossimo aggiornamento.';
-
   // Foglio separato da quello delle conferme: "Salva" dall'uscita lo apre mentre l'altro si sta chiudendo.
   let savedOpen = $state(false);
   let savedMessage = $state('');
@@ -318,18 +318,35 @@
   ];
 
   function showSaved(text: string) {
-    savedMessage = `${text} ${SHARE_SOON}`;
+    savedMessage = text;
     savedOpen = true;
   }
 
-  async function save() {
+  // "Salva e invia" (M8): dopo il salvataggio si apre il pannello Condividi con la versione salvata.
+  let shared = $state.raw<PreparedShare | null>(null);
+  let shareOpen = $state(false);
+  let shareIntro = $state('');
+
+  function after(text: string, workout: Workout, share: boolean) {
+    if (!share) return showSaved(text);
+    try {
+      shared = prepareWorkoutShare(workout, author);
+      shareIntro = text;
+      shareOpen = true;
+    } catch (error) {
+      saveError = error instanceof ValidationError ? error.errors.join(' ') : 'Scheda salvata, ma non riesco a prepararla per l’invio.';
+    }
+  }
+
+  /** `share`: "Salva e invia" apre il pannello Condividi; "Salva" (dall'uscita) mostra solo la conferma. */
+  async function save(share = false) {
     if (busy) return;
     saveError = '';
     attempted = true;
     const check = validateDraft(draft);
     if (!check.ok) return revealFirstError(check.fields);
     if (!dirty && original && kind === 'update') {
-      return showSaved(`Nessuna modifica: «${original.name}» resta alla v${original.version}.`);
+      return after(`Nessuna modifica: «${original.name}» resta alla v${original.version}.`, original, share);
     }
     busy = true;
     try {
@@ -343,7 +360,7 @@
       attempted = false;
       // Scheda nuova o copia: da ora si modifica quella salvata (id nell'indirizzo, senza ricaricare).
       if (result.kind !== 'update') replaceRoute(routeHref('/allena/editor', { id: result.workout.id }));
-      showSaved(savedText(result));
+      after(savedText(result), result.workout, share);
     } catch (error) {
       saveError =
         error instanceof ValidationError ? error.errors.join(' ') : 'Salvataggio non riuscito: la bozza resta sul telefono.';
@@ -362,6 +379,8 @@
     intro: draft.intro,
     warmup: draft.warmup,
     cardio: draft.cardio,
+    // Dopo il salvataggio resta "ricevuta" solo una mia scheda ricevuta modificata sul posto (M8).
+    received: kind === 'update' ? (original?.received ?? null) : null,
     version: versionAfterSave(original, author),
     items: draft.items.map((it) => ({
       name: it.name,
@@ -526,7 +545,7 @@
 
   <ActionBar hidden={keyboard.open}>
     <Button variant="secondary" tone="neutral" onclick={() => (previewOpen = true)}>Anteprima</Button>
-    <Button tone="training" size="lg" disabled={busy} onclick={() => void save()}>
+    <Button tone="training" size="lg" disabled={busy} onclick={() => void save(true)}>
       {#snippet icon()}<Icon name="share" size={18} stroke={2.2} />{/snippet}
       Salva e invia
     </Button>
@@ -539,6 +558,9 @@
 <WarmupSheet bind:open={warmupOpen} warmup={draft.warmup} errors={fields} onchange={(warmup) => set({ warmup })} />
 <ConfirmSheet bind:open={confirmOpen} title={confirm.title} text={confirm.text} actions={confirm.actions} />
 <ConfirmSheet bind:open={savedOpen} title="Scheda salvata" text={savedMessage} actions={SAVED_ACTIONS} />
+{#if shared}
+  <ShareSheet bind:open={shareOpen} share={shared} tone="training" intro={shareIntro} />
+{/if}
 
 <BottomSheet bind:open={previewOpen} title="Anteprima" tone="training">
   <p class="muted small">Così la vede chi si allena. Sola lettura.</p>

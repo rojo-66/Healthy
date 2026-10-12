@@ -103,10 +103,13 @@ export async function saveImportedPlan(
 
   return db.transaction('rw', db.dietPlans, async () => {
     const plans = await db.dietPlans.toArray();
-    if (mode === 'new' && plans.some((p) => p.id === plan.id)) {
+    const existing = plans.find((p) => p.id === plan.id);
+    if (mode === 'new' && existing) {
       throw new ValidationError([`Esiste già un piano con lo stesso identificativo («${plan.title}»)`]);
     }
-    await db.dietPlans.bulkPut([...deactivateOthers(plans, plan.id), plan]);
+    // "Sostituisci" (M8): la versione vecchia non si perde, resta nell'archivio con un id suo ("Ripristina").
+    const kept = mode === 'replace' && existing ? [{ ...existing, id: newId(), active: false, archived: true }] : [];
+    await db.dietPlans.bulkPut([...deactivateOthers(plans, plan.id), ...kept, plan]);
     return plan;
   });
 }

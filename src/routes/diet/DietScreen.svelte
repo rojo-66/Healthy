@@ -9,24 +9,25 @@
   import { ValidationError } from '../../lib/data/errors';
   import { liveState } from '../../lib/data/live.svelte';
   import { getDietLogDay } from '../../lib/data/repo/diet-log';
-  import { activateDietPlan, listDietPlans, saveImportedPlan, type DietSaveMode } from '../../lib/data/repo/diet-plans';
+  import { activateDietPlan, listDietPlans } from '../../lib/data/repo/diet-plans';
   import { getShoppingWeek } from '../../lib/data/repo/shopping';
   import type { DietLogDay } from '../../lib/data/schemas/diet-log';
   import type { DietPlan } from '../../lib/data/schemas/diet-plans';
   import type { ShoppingWeek } from '../../lib/data/schemas/shopping';
   import { headerDate, isoWeekday, minutesOfDay, toIsoDate, weekStartOf } from '../../lib/diet/calc/calendar';
-  import { readDietImport, type DietImport } from '../../lib/diet/import/detect';
   import { atPercent } from '../../lib/diet/format';
   import { parseRecipeParam } from '../../lib/diet/links';
   import { route } from '../../lib/router.svelte';
+  import { planCompleteness } from '../../lib/diet/calc/completeness';
   import { planExportFile } from '../../lib/diet/import/export';
-  import { previewDietImport, type DietImportPreview } from '../../lib/diet/import/preview';
+  import { routeHref } from '../../lib/routes';
+  import { prepareDietShare, type PreparedShare } from '../../lib/share/prepare';
   import Screen from '../Screen.svelte';
-  import ImportSheet from './ImportSheet.svelte';
   import PlanSheet from './PlanSheet.svelte';
   import PlanTab from './PlanTab.svelte';
   import RecipesTab from './RecipesTab.svelte';
   import ShoppingTab from './ShoppingTab.svelte';
+  import ShareSheet from '../share/ShareSheet.svelte';
 
   interface Props {
     now: Date;
@@ -72,23 +73,23 @@
   let planOpen = $state(false);
   let planStatus = $state('');
   let status = $state('');
-  let errorTitle = $state('');
-  let errors = $state<readonly string[]>([]);
-  /** Piano appena importato ma incompleto: proposta "Completa il piano". */
-  let incompleteAfterImport = $state<number | null>(null);
-  let pendingExport = $state<File | null>(null);
+  /** Arrivo da `#/importa` dopo il salvataggio (`?importato=1`): conferma e, se serve, "Completa il piano". */
+  const justImported = untrack(() => route.query['importato']) === '1';
+  const incompleteAfterImport = $derived.by(() => {
+    if (!justImported || !active) return null;
+    const percent = planCompleteness(active.payload).percent;
+    return percent < 100 ? percent : null;
+  });
+  $effect(() => {
+    if (justImported && active) untrack(() => (status = `Piano «${active.title}» importato: ora è quello attivo.`));
+  });
 
-  let incoming = $state.raw<{ imp: DietImport; preview: DietImportPreview } | null>(null);
-  let importOpen = $state(false);
-  let importTitle = $state('');
-  let importErrors = $state<readonly string[]>([]);
-
-  let fileInput: HTMLInputElement;
+  // Condividi (M8): link, QR o file, dopo l'avviso sui dati personali.
+  let shared = $state.raw<PreparedShare | null>(null);
+  let shareOpen = $state(false);
 
   function resetMessages() {
     status = '';
-    errorTitle = '';
-    errors = [];
     planStatus = '';
   }
 
@@ -102,51 +103,9 @@
     }
   }
 
-  function chooseFile() {
-    resetMessages();
-    fileInput.click();
-  }
+  const importHref = routeHref('/importa', { da: 'dieta' });
 
-  function onPageFile() {
-    const file = fileInput.files?.[0];
-    fileInput.value = '';
-    if (file) openFile(file);
-  }
-
-  function openFile(file: File) {
-    resetMessages();
-    void run(async () => {
-      const result = await readDietImport(file);
-      planOpen = false;
-      if (!result.ok) {
-        errorTitle = 'File non valido: nessun dato modificato';
-        errors = result.errors;
-        return;
-      }
-      incoming = { imp: result.value, preview: previewDietImport(result.value, plans.current) };
-      importTitle = result.value.file.title;
-      importErrors = [];
-      importOpen = true;
-    });
-  }
-
-  function saveImport(mode: DietSaveMode) {
-    const pending = incoming;
-    if (!pending) return;
-    void run(async () => {
-      try {
-        const title = pending.imp.origin === 'mydiet' ? importTitle.trim() : pending.imp.file.title;
-        const saved = await saveImportedPlan({ ...pending.imp.file, title }, pending.imp.origin, mode);
-        importOpen = false;
-        status = `Piano «${saved.title}» importato: ora è quello attivo.`;
-        incompleteAfterImport = pending.preview.completeness.percent < 100 ? pending.preview.completeness.percent : null;
-        tab = 'piano';
-        selected = todayWeekday;
-      } catch (error) {
-        importErrors = error instanceof ValidationError ? error.errors : ['Salvataggio non riuscito: nessun dato modificato.'];
-      }
-    });
-  }
+  let pendingExport = $state<File | null>(null);
 
   async function deliver(file: File) {
     const result = await deliverFile(file);
@@ -172,6 +131,20 @@
         planStatus = error instanceof ValidationError ? error.errors.join(' ') : 'Esportazione non riuscita.';
       }
     });
+  }
+
+  /** "Condividi": pannello unico (link, QR, file) dopo l'avviso sui dati personali. */
+  function openShare() {
+    const plan = active;
+    if (!plan) return;
+    resetMessages();
+    try {
+      shared = prepareDietShare(plan);
+      planOpen = false;
+      shareOpen = true;
+    } catch (error) {
+      planStatus = error instanceof ValidationError ? error.errors.join(' ') : 'Non riesco a preparare il piano per la condivisione.';
+    }
   }
 
   function restore(plan: DietPlan) {
@@ -215,30 +188,12 @@
       </div>
     </header>
 
-    <input
-      bind:this={fileInput}
-      class="visually-hidden"
-      type="file"
-      accept=".json,application/json"
-      tabindex="-1"
-      aria-hidden="true"
-      data-testid="diet-input"
-      onchange={onPageFile}
-    />
-
     <p class="status" role="status" aria-live="polite">{status}</p>
     {#if pendingExport}
       <Button tone="food" variant="secondary" block onclick={() => pendingExport && void run(() => deliver(pendingExport!))}>
         {#snippet icon()}<Icon name="share" size={18} />{/snippet}
         Condividi il file
       </Button>
-    {/if}
-    {#if errors.length > 0}
-      <NoteBox title={errorTitle} mark="!">
-        <ul class="errors">
-          {#each errors as message, i (i)}<li>{message}</li>{/each}
-        </ul>
-      </NoteBox>
     {/if}
     {#if incompleteAfterImport !== null && active}
       <NoteBox title="Piano da completare" mark="!">
@@ -258,7 +213,7 @@
           Importa il piano del tuo nutrizionista: va bene il file JSON esportato da MyDiet oppure un piano di Healthy. Resta
           sul telefono e funziona anche senza rete.
         </p>
-        <Button tone="food" size="lg" block disabled={busy} onclick={chooseFile}>Importa il tuo piano</Button>
+        <Button tone="food" size="lg" block href={importHref}>Importa il tuo piano</Button>
         {#if archived.length > 0}
           <p class="empty-text">Oppure ripristina un piano precedente:</p>
           {#each archived as old (old.id)}
@@ -302,23 +257,17 @@
     {archived}
     {busy}
     status={planStatus}
-    onfile={openFile}
+    {importHref}
     onexport={exportPlan}
     onedit={edit}
-    onshare={() => (planStatus = 'Link e QR arrivano con la condivisione (in un prossimo aggiornamento). Per ora usa «Esporta».')}
+    onshare={openShare}
     onrestore={restore}
   />
 {/if}
 
-<ImportSheet
-  bind:open={importOpen}
-  preview={incoming?.preview ?? null}
-  bind:title={importTitle}
-  {busy}
-  errors={importErrors}
-  onsave={saveImport}
-  onclose={() => (incoming = null)}
-/>
+{#if shared}
+  <ShareSheet bind:open={shareOpen} share={shared} tone="food" personalWarning />
+{/if}
 
 <style>
   .page {
@@ -389,13 +338,6 @@
     margin: 0;
     font-size: 14px;
     color: var(--text-2);
-  }
-
-  .errors {
-    margin: 0;
-    padding-left: 1.2em;
-    font-size: 14px;
-    overflow-wrap: anywhere;
   }
 
   .note-text {

@@ -34,6 +34,14 @@ export async function readJsonFile(file: FileLike, maxBytes: number): Promise<Re
   }
   // La dimensione dichiarata potrebbe non corrispondere al contenuto.
   if (content.length > maxBytes) return fail(`Il file è troppo grande: il massimo è ${formatMb(maxBytes)}.`);
+  return parseJsonText(content, 'Il file non è un JSON valido: forse è danneggiato o non è un file di Healthy.', 'Il file');
+}
+
+/**
+ * `JSON.parse` che non lancia mai e rifiuta `__proto__` (file, link, testo incollato).
+ * `invalidMessage` è l'errore da mostrare se il testo non è JSON; `what` apre il messaggio sulla chiave vietata.
+ */
+export function parseJsonText(content: string, invalidMessage: string, what = 'Il contenuto'): Result<unknown> {
   let value: unknown;
   let forbiddenKey = false;
   try {
@@ -43,9 +51,9 @@ export async function readJsonFile(file: FileLike, maxBytes: number): Promise<Re
       return inner;
     });
   } catch {
-    return fail('Il file non è un JSON valido: forse è danneggiato o non è un file di Healthy.');
+    return fail(invalidMessage);
   }
-  if (forbiddenKey) return fail('Il file contiene una chiave non ammessa («__proto__»).');
+  if (forbiddenKey) return fail(`${what} contiene una chiave non ammessa («__proto__»).`);
   return { ok: true, value };
 }
 
@@ -53,6 +61,7 @@ const KIND_NAMES: Readonly<Record<string, string>> = {
   workout: 'una scheda',
   diet: 'un piano alimentare',
   backup: 'un backup',
+  session: 'il resoconto di un allenamento',
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {

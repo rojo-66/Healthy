@@ -2,7 +2,7 @@
   import type { Workout } from '../../lib/data/schemas/workouts';
 
   /** Dati mostrati: una scheda salvata o la bozza dell'editor (stessa vista, in sola lettura). */
-  export type PreviewWorkout = Pick<Workout, 'name' | 'source' | 'author' | 'intro' | 'warmup' | 'cardio'> & {
+  export type PreviewWorkout = Pick<Workout, 'name' | 'source' | 'author' | 'intro' | 'warmup' | 'cardio' | 'received'> & {
     /** Versione mostrata (per la bozza: quella dopo il salvataggio). */
     version: number;
     items: readonly (Omit<Workout['items'][number], 'videoUrl' | 'exerciseId'> & { videoUrl: string | null })[];
@@ -30,7 +30,7 @@
 <article class="preview tone-training" class:inset aria-label="Anteprima della scheda {workout.name}">
   <header class="head">
     <span class="mono-label origin" class:pt={workout.source === 'pt'}>
-      {originLabel(workout)}{workout.source === 'pt' && workout.author ? ` · ${workout.author}` : ''}
+      {originLabel(workout)}{workout.source === 'pt' && workout.author && !workout.received ? ` · ${workout.author}` : ''}
     </span>
     <h2 class="graffiti name">{workout.name || 'Senza nome'}</h2>
     <p class="mono totals">

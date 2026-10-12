@@ -18,6 +18,7 @@
   const loadSummary = () => import('./routes/session/Summary.svelte');
   const loadProfile = () => import('./routes/Profile.svelte');
   const loadMeasurement = () => import('./routes/Measurement.svelte');
+  const loadImport = () => import('./routes/Import.svelte');
 </script>
 
 {#if route.path === '/showcase'}
@@ -85,6 +86,12 @@
   {#await loadMeasurement() then { default: Measurement }}
     {#key route.nav}
       <Measurement id={route.query['id'] ?? null} />
+    {/key}
+  {/await}
+{:else if route.path === '/importa'}
+  {#await loadImport() then { default: Import }}
+    {#key route.nav}
+      <Import query={route.query} />
     {/key}
   {/await}
 {:else}

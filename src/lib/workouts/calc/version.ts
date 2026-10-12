@@ -14,11 +14,15 @@ import { normalize } from '../library/search';
  */
 export type SaveKind = 'new' | 'update' | 'copy';
 
-/** La scheda è mia? TUA sempre; PT solo se l'autore è il nome che ho impostato. */
-export function isOwnWorkout(w: Pick<Workout, 'source' | 'author'>, author: WorkoutAuthor): boolean {
-  if (w.source === 'own') return true;
+/**
+ * La scheda è mia? TUA sempre; PT solo se l'autore è il nome che ho impostato.
+ * Una scheda ricevuta (M8) è mia solo se l'autore sono io, anche se l'amico l'aveva creata "per sé".
+ */
+export function isOwnWorkout(w: Pick<Workout, 'source' | 'author' | 'received'>, author: WorkoutAuthor): boolean {
   const me = normalize(author.name);
-  return me !== '' && normalize(w.author) === me;
+  const byMe = me !== '' && normalize(w.author) === me;
+  if (w.received) return byMe;
+  return w.source === 'own' || byMe;
 }
 
 export function saveKind(original: Workout | undefined, author: WorkoutAuthor): SaveKind {
@@ -44,11 +48,19 @@ export function prepareSave(
   const updatedAt = nowIso(now);
   switch (saveKind(original, author)) {
     case 'new':
-      return { ...candidate, version: 1, updatedAt };
+      return { ...candidate, version: 1, updatedAt, received: null, previousVersions: [] };
     case 'update':
-      return { ...candidate, id: original!.id, version: versionAfterSave(original, author), updatedAt };
+      // La bozza non conosce origine dell'import e cronologia (M8): restano quelle della scheda.
+      return {
+        ...candidate,
+        id: original!.id,
+        version: versionAfterSave(original, author),
+        updatedAt,
+        received: original!.received,
+        previousVersions: original!.previousVersions,
+      };
     case 'copy':
-      return { ...candidate, id: newId(), version: 1, source: 'own', author: '', updatedAt };
+      return { ...candidate, id: newId(), version: 1, source: 'own', author: '', updatedAt, received: null, previousVersions: [] };
   }
 }
 
@@ -73,5 +85,7 @@ export function duplicateWorkout(w: Workout, author: WorkoutAuthor, now: Date = 
     name: copyName(w.name),
     weekdays: [],
     updatedAt: nowIso(now),
+    received: null,
+    previousVersions: [],
   };
 }

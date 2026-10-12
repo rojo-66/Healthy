@@ -39,6 +39,11 @@ export const workoutFileSchema = z.object({
   id: entityId,
   version: versionSchema,
   author: text(MAX_TEXT.name).default(''),
+  /**
+   * Come l'ha creata chi la manda (M8, facoltativo): `pt` = "Come PT", `own` = scheda personale di un amico.
+   * I file senza questo campo (prima di M8) sono del PT.
+   */
+  source: z.enum(['pt', 'own']).default('pt'),
   name: requiredText(MAX_TEXT.name),
   weekdays: weekdaysSchema.default([]),
   time: hhmm.nullable().default(null),

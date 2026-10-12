@@ -71,6 +71,20 @@ export const DB_VERSIONS: readonly DbVersion[] = [
           if (!('activityLevel' in p)) p.activityLevel = 'sedentary';
         }),
   },
+  {
+    // M8: le schede ricevute ricordano versione e impronta dell'import (`received`) e conservano
+    // le versioni sostituite (`previousVersions`). Indici invariati.
+    version: 5,
+    stores: {},
+    upgrade: (tx) =>
+      tx
+        .table('workouts')
+        .toCollection()
+        .modify((w: Record<string, unknown>) => {
+          if (!('received' in w)) w.received = null;
+          if (!('previousVersions' in w)) w.previousVersions = [];
+        }),
+  },
 ];
 
 export function applyVersions(db: Dexie, versions: readonly DbVersion[]): void {

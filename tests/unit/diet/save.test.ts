@@ -58,13 +58,20 @@ describe('salvataggio di un piano importato', () => {
   it('"Sostituisci" usa lo stesso id; "Salva come copia" crea un nuovo piano', async () => {
     await saveImportedPlan(extendedFile(), 'file', 'new', NOW);
     const newer = { ...extendedFile(), version: 3, title: 'Piano aggiornato' };
-    const replaced = await saveImportedPlan(newer, 'file', 'replace', LATER);
-    expect(await db.dietPlans.count()).toBe(1);
+    const replaced = await saveImportedPlan(newer, 'file', 'replace', LATER, () => 'vecchia-v2');
     expect(replaced).toMatchObject({ id: extendedFile().id, version: 3, title: 'Piano aggiornato', active: true });
+    // M8: la versione sostituita resta nell'archivio con un id suo, pronta per "Ripristina".
+    expect(await db.dietPlans.count()).toBe(2);
+    expect(await listArchivedDietPlans()).toEqual([
+      expect.objectContaining({ id: 'vecchia-v2', version: 2, title: 'Piano di esempio', active: false, archived: true }),
+    ]);
+    await activateDietPlan('vecchia-v2');
+    expect((await getActiveDietPlan())!.version).toBe(2);
+    await activateDietPlan(extendedFile().id);
 
     const copy = await saveImportedPlan(extendedFile(), 'file', 'copy', LATER, () => 'copia-1');
     expect(copy).toMatchObject({ id: 'copia-1', title: 'Piano di esempio (copia)', active: true });
-    expect(await db.dietPlans.count()).toBe(2);
+    expect(await db.dietPlans.count()).toBe(3);
     expect((await db.dietPlans.get(extendedFile().id))!.archived).toBe(true);
   });
 

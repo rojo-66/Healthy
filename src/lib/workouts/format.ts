@@ -61,8 +61,20 @@ export function nextMeta(w: Pick<Workout, 'items' | 'cardio'>): string {
   return w.cardio && w.cardio.minutes > 0 ? `${base} + ${w.cardio.minutes}’ ${w.cardio.type}` : base;
 }
 
-/** Etichetta origine: "PT · v3" (gialla) o "TUA" (grigia). */
-export function originLabel(w: Pick<Workout, 'source' | 'version'>): string {
+const AUTHOR_MAX = 14;
+
+/**
+ * Etichetta origine: "PT · v3" (gialla) o "TUA" (grigia) per le mie schede; per quelle ricevute (M8)
+ * autore e versione, "MARCO · v2" (o "RICEVUTA · v2" senza autore). Il colore lo decide `source`:
+ * giallo se chi l'ha mandata l'aveva creata come PT, grigio se era la scheda personale di un amico.
+ */
+export function originLabel(w: Pick<Workout, 'source' | 'version' | 'author' | 'received'>): string {
+  if (w.received) {
+    const name = w.author.trim().toLocaleUpperCase('it-IT');
+    if (name === '') return `RICEVUTA · v${w.version}`;
+    const short = name.length > AUTHOR_MAX ? `${name.slice(0, AUTHOR_MAX).trimEnd()}…` : name;
+    return `${short} · v${w.version}`;
+  }
   return w.source === 'pt' ? `PT · v${w.version}` : 'TUA';
 }
 

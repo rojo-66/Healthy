@@ -124,12 +124,40 @@ describe('migrazioni', () => {
     await old.table('profile').add(structuredClone(stored));
     old.close();
 
-    const next = open('migration-profile', DB_VERSIONS);
+    const next = open('migration-profile', DB_VERSIONS.slice(0, 4));
     await next.open();
     expect(next.verno).toBe(4);
     const [row] = await next.profile.toArray();
     expect(row).toEqual({ ...stored, activityLevel: 'sedentary' });
     expect(validate(profileSchema, row).ok).toBe(true);
+  });
+
+  it('v5 vera (M8): le schede già salvate non risultano ricevute e non hanno cronologia, valide per lo schema', async () => {
+    const old = open('migration-received', DB_VERSIONS.slice(0, 4));
+    const { received: _r, previousVersions: _p, ...stored } = workoutSchema.parse(structuredClone(workoutFixture));
+    await old.table('workouts').add(stored);
+    old.close();
+
+    const next = open('migration-received', DB_VERSIONS);
+    await next.open();
+    expect(next.verno).toBe(5);
+    const [row] = await next.workouts.toArray();
+    expect(row).toEqual({ ...stored, received: null, previousVersions: [] });
+    expect(validate(workoutSchema, row).ok).toBe(true);
+  });
+
+  it('v5 vera (M8): le schede già salvate non risultano ricevute e non hanno cronologia, valide per lo schema', async () => {
+    const old = open('migration-received', DB_VERSIONS.slice(0, 4));
+    const { received: _r, previousVersions: _p, ...stored } = workoutSchema.parse(structuredClone(workoutFixture));
+    await old.table('workouts').add(stored);
+    old.close();
+
+    const next = open('migration-received', DB_VERSIONS);
+    await next.open();
+    expect(next.verno).toBe(5);
+    const [row] = await next.workouts.toArray();
+    expect(row).toEqual({ ...stored, received: null, previousVersions: [] });
+    expect(validate(workoutSchema, row).ok).toBe(true);
   });
 
   it('se la migrazione fallisce il database resta alla versione precedente, dati intatti', async () => {

@@ -285,11 +285,10 @@ test('stati vuoti: senza piano invita a importarlo, senza schede invita a crearl
   const clearSheet = page.getByRole('dialog', { name: 'Svuotare tutto?' });
   await clearSheet.getByRole('button', { name: 'Svuota' }).click();
   await expect(clearSheet).toBeHidden();
-  await page.goto('./#/dieta');
-  await page.getByTestId('diet-input').setInputFiles(EXTENDED);
-  const importSheet = page.getByRole('dialog', { name: 'Importa piano' });
-  await importSheet.getByRole('button', { name: 'Importa', exact: true }).click();
-  await expect(importSheet).toBeHidden();
+  await page.goto('./#/importa?da=dieta');
+  await page.getByTestId('import-file').setInputFiles(EXTENDED);
+  await page.getByRole('button', { name: 'Importa', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Dieta', level: 1 })).toBeVisible();
   await page.goto('./#/');
   const noWorkout = page.getByRole('region', { name: 'Nessuna scheda' });
   await expect(noWorkout.getByRole('link', { name: 'Crea la tua scheda' })).toHaveAttribute('href', '#/allena/editor');

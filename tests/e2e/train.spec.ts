@@ -41,12 +41,15 @@ async function createBasic(page: Page, name: string) {
   await addFromLibrary(page, 'lat machine', 'Lat machine presa larga', 'Dorsali');
 }
 
+/** "Salva e invia" (M8): salva e apre il pannello Condividi; si chiude e si torna alle schede. */
 async function saveAndBack(page: Page, expected: string | RegExp) {
   await page.getByRole('button', { name: 'Salva e invia' }).click();
-  const saved = page.getByRole('dialog', { name: 'Scheda salvata' });
-  await expect(saved).toContainText(expected);
-  await expect(saved).toContainText('arriva con la condivisione');
-  await saved.getByRole('button', { name: 'Torna alle schede' }).click();
+  const share = page.getByRole('dialog', { name: /^Condividi «/ });
+  await expect(share).toContainText(expected);
+  await expect(share.getByRole('button', { name: 'Condividi file' })).toBeVisible();
+  await share.getByRole('button', { name: 'Chiudi' }).last().click();
+  await expect(share).toBeHidden();
+  await page.getByRole('button', { name: 'Torna alle schede' }).click();
   await expect(page.getByRole('heading', { name: 'Allena', level: 1 })).toBeVisible();
 }
 
@@ -57,17 +60,17 @@ async function openActions(page: Page, name: string): Promise<Locator> {
   return sheet;
 }
 
-test('Allena vuota: invito a creare la prima scheda, Storico vuoto, Importa "in arrivo"', async ({ page }) => {
+test('Allena vuota: invito a creare la prima scheda, Storico vuoto, Importa apre la schermata di import', async ({ page }) => {
   await page.goto('./#/allena');
   await expect(page.getByRole('heading', { name: 'Nessuna scheda' })).toBeVisible();
   await expect(strip(page)).toHaveCount(7);
   await expect(page.getByTestId('day-detail')).toContainText('Lunedì · Riposo');
 
-  await page.getByRole('button', { name: 'Importa una scheda da link, QR o file' }).click();
-  const info = page.getByRole('dialog', { name: 'Importa una scheda' });
-  await expect(info).toContainText('arrivano con la condivisione');
-  await info.getByRole('button', { name: 'Ho capito' }).click();
-  await expect(info).toBeHidden();
+  await page.getByRole('link', { name: 'Importa una scheda da link, QR o file' }).click();
+  await expect(page.getByRole('heading', { name: 'Importa', level: 1 })).toBeVisible();
+  await expect(page.getByLabel('Incolla link o codice')).toBeVisible();
+  await page.getByRole('button', { name: 'Indietro' }).click();
+  await expect(page.getByRole('heading', { name: 'Nessuna scheda' })).toBeVisible();
 
   await page.getByRole('tab', { name: 'Storico' }).click();
   await expect(page.getByText('Nessun allenamento ancora')).toBeVisible();
