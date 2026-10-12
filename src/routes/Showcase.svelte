@@ -245,7 +245,7 @@
     <div class="grid3">
       <Stepper label="Serie" bind:value={sets} min={1} max={10} decLabel="Una serie in meno" incLabel="Una serie in più" />
       <Stepper label="Ripetizioni" bind:value={reps} min={1} max={50} />
-      <Stepper label="Kg" bind:value={kg} min={0} max={300} step={2.5} unit="kg" />
+      <Stepper label="Kg" bind:value={kg} min={0} max={300} step={2.5} unit="kg" confirmAbove={250} />
     </div>
     <div class="grid3">
       <Stepper label="Al massimo" bind:value={maxed} min={1} max={10} />

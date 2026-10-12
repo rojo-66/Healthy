@@ -13,7 +13,7 @@
   import type { Session } from '../../lib/data/schemas/sessions';
   import type { Workout } from '../../lib/data/schemas/workouts';
   import { addDays, dayMonthYear, fromIsoDate, minutesOfDay, toIsoDate } from '../../lib/diet/calc/calendar';
-  import { daySwipe } from '../../lib/design/day-swipe';
+  import { swipe } from '../../lib/design/swipe-action';
   import { rise } from '../../lib/design/transitions';
   import InstallBanner from '../../lib/pwa/InstallBanner.svelte';
   import { buildHomeDay, homeWeek, relativeDayWord, weekDates } from '../../lib/today/home';
@@ -171,7 +171,7 @@
         role="group"
         aria-label="Giornata mostrata: scorri a destra o a sinistra per cambiare giorno"
         data-testid="home-swipe"
-        use:daySwipe={{ hasPrevious: index > 0, hasNext: index < dates.length - 1, onswipe, target: swipeTarget }}
+        use:swipe={{ canGo: (dir) => dates[index + dir] !== undefined, onswipe, target: swipeTarget }}
       >
         <div class="days-inner" bind:this={swipeTarget}>
         <!-- Restano montate cambiando giorno (l'anello non si ricrea): cambiano solo i valori. -->
@@ -245,11 +245,6 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-5);
-  }
-
-  /* Ascolta il dito senza muoversi; si sposta solo il contenuto interno. */
-  .days {
-    touch-action: pan-y;
   }
 
   .loading {

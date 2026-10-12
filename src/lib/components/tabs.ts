@@ -1,7 +1,10 @@
-/** Posizione dell'evidenziatore: `translateX(index * 100%)` della sua stessa larghezza (1/count). */
+/**
+ * Posizione dell'evidenziatore: `translateX(index * 100%)` della sua stessa larghezza (1/count).
+ * Accetta posizioni intermedie (l'indicatore segue il dito durante lo swipe tra tab).
+ */
 export function indicatorTransform(index: number, count: number): string {
   const i = count > 0 ? Math.min(count - 1, Math.max(0, index)) : 0;
-  return `translateX(${i * 100}%)`;
+  return `translateX(${Math.round(i * 10000) / 100}%)`;
 }
 
 /** Tab da attivare con la tastiera (pattern ARIA "tabs"); `null` se il tasto non c'entra. */

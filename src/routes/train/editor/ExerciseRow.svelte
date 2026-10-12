@@ -3,11 +3,20 @@
   import Stepper from '../../../lib/components/Stepper.svelte';
   import type { FieldErrors } from '../../../lib/workouts/calc/editor-schema';
   import { enablePyramid, setSetsCount, setUniform, updateSetDetail } from '../../../lib/workouts/calc/sets-detail';
-  import { KG_MAX, kgStep, REPS_MAX, REPS_MIN, restOptions, SETS_MAX, SETS_MIN } from '../../../lib/workouts/calc/values';
+  import {
+    KG_CONFIRM_ABOVE,
+    KG_MAX,
+    kgStep,
+    REPS_CONFIRM_ABOVE,
+    REPS_MAX,
+    REPS_MIN,
+    restOptions,
+    SETS_MAX,
+    SETS_MIN,
+  } from '../../../lib/workouts/calc/values';
   import type { DraftItem } from '../../../lib/data/schemas/workout-draft';
   import { drop } from '../../../lib/design/transitions';
   import { itemSummary } from '../../../lib/workouts/format';
-  import MiniStepper from './MiniStepper.svelte';
 
   interface Props {
     item: DraftItem;
@@ -79,6 +88,7 @@
             value={item.reps}
             min={REPS_MIN}
             max={REPS_MAX}
+            confirmAbove={REPS_CONFIRM_ABOVE}
             decLabel="Una ripetizione in meno"
             incLabel="Una ripetizione in più"
             onchange={(v) => onchange(setUniform(item, { reps: v }))}
@@ -89,6 +99,7 @@
             min={0}
             max={KG_MAX}
             step={2.5}
+            confirmAbove={KG_CONFIRM_ABOVE}
             next={kgStep}
             decLabel="Meno 2,5 kg"
             incLabel="Più 2,5 kg"
@@ -116,19 +127,24 @@
           {#each item.setsDetail as set, j (j)}
             <div class="p-row">
               <span class="p-n mono">{j + 1}</span>
-              <MiniStepper
+              <Stepper
+                layout="inline"
                 label="Serie {j + 1}, ripetizioni"
                 value={set.reps}
                 min={REPS_MIN}
                 max={REPS_MAX}
+                confirmAbove={REPS_CONFIRM_ABOVE}
                 invalid={!!errors[`setsDetail.${j}.reps`]}
                 onchange={(v) => onchange(updateSetDetail(item, j, { reps: v }))}
               />
-              <MiniStepper
+              <Stepper
+                layout="inline"
                 label="Serie {j + 1}, kg"
                 value={set.kg}
                 min={0}
                 max={KG_MAX}
+                step={2.5}
+                confirmAbove={KG_CONFIRM_ABOVE}
                 next={kgStep}
                 onchange={(v) => onchange(updateSetDetail(item, j, { kg: v }))}
               />

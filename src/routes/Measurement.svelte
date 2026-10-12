@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { edgeSwipe } from '../lib/sessions/edge-swipe';
   import { onMount } from 'svelte';
   import Button from '../lib/components/Button.svelte';
   import NoteBox from '../lib/components/NoteBox.svelte';
@@ -128,7 +129,7 @@
   }
 </script>
 
-<div class="screen tone-progress">
+<div class="screen tone-progress" use:edgeSwipe={() => (location.hash = backHref)}>
   <TopBanner title={original ? 'Modifica misura' : 'Nuova misura'} tone="progress" {backHref} backLabel="Torna al profilo" />
 
   <main class="body scroll" onfocusin={(e) => keepFocusedVisible(e, reduce)}>
@@ -147,43 +148,45 @@
       {#each FORM_GROUPS as group (group.id)}
         <fieldset class="group" data-testid="group-{group.id}">
           <legend class="mono-label">{group.title}</legend>
-          {#if group.id === 'base'}
-            <div class="field">
-              <label for="ms-date">Data</label>
-              <input
-                id="ms-date"
-                type="date"
-                max={today}
-                required
-                aria-invalid={errors.date ? 'true' : undefined}
-                aria-describedby={errors.date ? 'ms-date-err' : undefined}
-                bind:value={form.date}
-              />
-              {#if errors.date}<p class="err" id="ms-date-err">{errors.date}</p>{/if}
-            </div>
-          {/if}
-          <div class="fields" class:single={group.fields.length === 1}>
-            {#each group.fields as f (f.key)}
+          <div class="group-body">
+            {#if group.id === 'base'}
               <div class="field">
-                <label for={inputId(f.key)}>{f.label} <span class="unit">({f.unit})</span></label>
+                <label for="ms-date">Data</label>
                 <input
-                  id={inputId(f.key)}
-                  type="text"
-                  inputmode={f.integer ? 'numeric' : 'decimal'}
-                  enterkeyhint="next"
-                  autocomplete="off"
-                  placeholder={suggestion(previous, f.key)}
-                  aria-invalid={errors[f.key] ? 'true' : undefined}
-                  aria-describedby={errors[f.key] ? `${inputId(f.key)}-err` : undefined}
-                  bind:value={form.values[f.key]}
+                  id="ms-date"
+                  type="date"
+                  max={today}
+                  required
+                  aria-invalid={errors.date ? 'true' : undefined}
+                  aria-describedby={errors.date ? 'ms-date-err' : undefined}
+                  bind:value={form.date}
                 />
-                {#if errors[f.key]}<p class="err" id="{inputId(f.key)}-err">{errors[f.key]}</p>{/if}
+                {#if errors.date}<p class="err" id="ms-date-err">{errors.date}</p>{/if}
               </div>
-            {/each}
+            {/if}
+            <div class="fields" class:single={group.fields.length === 1}>
+              {#each group.fields as f (f.key)}
+                <div class="field">
+                  <label for={inputId(f.key)}>{f.label} <span class="unit">({f.unit})</span></label>
+                  <input
+                    id={inputId(f.key)}
+                    type="text"
+                    inputmode={f.integer ? 'numeric' : 'decimal'}
+                    enterkeyhint="next"
+                    autocomplete="off"
+                    placeholder={suggestion(previous, f.key)}
+                    aria-invalid={errors[f.key] ? 'true' : undefined}
+                    aria-describedby={errors[f.key] ? `${inputId(f.key)}-err` : undefined}
+                    bind:value={form.values[f.key]}
+                  />
+                  {#if errors[f.key]}<p class="err" id="{inputId(f.key)}-err">{errors[f.key]}</p>{/if}
+                </div>
+              {/each}
+            </div>
+            {#if computedText(group.id)}
+              <p class="computed mono" data-testid="computed-{group.id}">{computedText(group.id)}</p>
+            {/if}
           </div>
-          {#if computedText(group.id)}
-            <p class="computed mono" data-testid="computed-{group.id}">{computedText(group.id)}</p>
-          {/if}
         </fieldset>
       {/each}
 
@@ -198,16 +201,18 @@
 
       <fieldset class="group">
         <legend class="mono-label">Note</legend>
-        <div class="field">
-          <label for="ms-notes">Lettura del nutrizionista</label>
-          <textarea
-            id="ms-notes"
-            rows="4"
-            maxlength={MAX_TEXT.note}
-            placeholder="Cosa ti ha detto il nutrizionista di questa misura (facoltativo)"
-            bind:value={form.notes}
-          ></textarea>
-          {#if errors.notes}<p class="err">{errors.notes}</p>{/if}
+        <div class="group-body">
+          <div class="field">
+            <label for="ms-notes">Lettura del nutrizionista</label>
+            <textarea
+              id="ms-notes"
+              rows="4"
+              maxlength={MAX_TEXT.note}
+              placeholder="Cosa ti ha detto il nutrizionista di questa misura (facoltativo)"
+              bind:value={form.notes}
+            ></textarea>
+            {#if errors.notes}<p class="err">{errors.notes}</p>{/if}
+          </div>
         </div>
       </fieldset>
 
@@ -247,7 +252,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     overflow: hidden;
     background-image: radial-gradient(circle at 90% 8%, var(--tone-tint), transparent 40%);
   }
@@ -264,23 +269,24 @@
     scroll-padding: var(--space-4) 0 calc(100px + var(--safe-bottom));
   }
 
+  /* Riquadro del gruppo: block (non flex), così la legend resta dentro (vedi reset in app.css). */
   .group {
+    padding: var(--space-4);
+    background: var(--surface);
+  }
+
+  /* Titolo del gruppo come i titoli delle card: etichetta mono nel colore della sezione, dentro il riquadro. */
+  legend {
+    margin-bottom: var(--space-3);
+    font-size: 12px;
+    color: var(--tone);
+  }
+
+  .group-body {
     display: flex;
     flex-direction: column;
     gap: var(--space-3);
     min-width: 0;
-    margin: 0;
-    padding: var(--space-4);
-    border: 0;
-    background: var(--surface);
-  }
-
-  legend {
-    float: left;
-    width: 100%;
-    padding: 0;
-    font-size: 12px;
-    color: var(--progress);
   }
 
   .fields {

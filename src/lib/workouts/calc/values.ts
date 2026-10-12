@@ -10,6 +10,10 @@ export const KG_MAX = 500;
 export const REST_PRESETS = [60, 90, 120, 180] as const;
 export const DEFAULT_REST = 90;
 export const CARDIO_MAX_MIN = 180;
+/** Valori scritti a mano oltre i quali lo Stepper chiede conferma (forse un errore di battitura). */
+export const KG_CONFIRM_ABOVE = 250;
+export const REPS_CONFIRM_ABOVE = 50;
+export const CARDIO_CONFIRM_ABOVE = 120;
 
 /** Valori di un esercizio appena aggiunto dalla libreria (come nel mockup). */
 export const NEW_ITEM = { sets: 3, reps: 10, kg: 0, restSec: DEFAULT_REST } as const;
@@ -25,14 +29,11 @@ export const clampReps = (n: number) => clampInt(n, REPS_MIN, REPS_MAX);
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
 /**
- * Kg dopo un tocco su − o +: passo 2,5 agganciato alla griglia dei dischi
- * (22 → + 22,5 / − 20; 22,5 → + 25 / − 20). Mai sotto 0 né sopra il massimo.
+ * Kg dopo un tocco su − o +: passo 2,5 dal valore attuale, anche se scritto a mano fuori griglia
+ * (20 → + 22,5; 22 → + 24,5 / − 19,5). Mai sotto 0 né sopra il massimo.
  */
 export function kgStep(value: number, dir: 1 | -1): number {
-  const grid = value / KG_STEP;
-  const eps = 1e-9;
-  const next = dir === 1 ? (Math.floor(grid + eps) + 1) * KG_STEP : (Math.ceil(grid - eps) - 1) * KG_STEP;
-  return round2(Math.min(KG_MAX, Math.max(0, next)));
+  return round2(Math.min(KG_MAX, Math.max(0, value + dir * KG_STEP)));
 }
 
 export function isPresetRest(sec: number): boolean {

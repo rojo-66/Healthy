@@ -11,7 +11,7 @@ html {
 
 body {
   margin: 0;
-  min-height: 100dvh;
+  min-height: var(--app-h);
   background: var(--bg);
   color: var(--text);
   font-family: var(--font-body);
@@ -24,12 +24,49 @@ body {
   overflow-x: clip;
 }
 
+/*
+ * Niente zoom col doppio tocco (SPEC § 10). `touch-action` non si eredita oltre i contenitori che scorrono,
+ * quindi vale per tutti gli elementi; specificità zero: le regole dei componenti (pan-y, none) vincono.
+ * Il pizzico a due dita resta (accessibilità).
+ */
+:where(*) {
+  touch-action: manipulation;
+}
+
 button,
 input,
 textarea,
 select {
   font: inherit;
   color: inherit;
+}
+
+/* Campi: su iPhone sotto i 16 px Safari ingrandisce la pagina al tocco. Mai più piccoli. */
+input,
+textarea,
+select {
+  font-size: 16px;
+}
+
+/*
+ * Gruppi di campi: niente bordo né spazi del browser. La legend "galleggia" dentro il riquadro invece di
+ * stare a cavallo del bordo (il fieldset non deve essere flex/grid, lì Safari ignora il float).
+ */
+fieldset {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+legend {
+  float: left;
+  width: 100%;
+  padding: 0;
+}
+
+legend + * {
+  clear: both;
 }
 
 a {

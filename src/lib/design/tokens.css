@@ -90,4 +90,8 @@
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+  /* Altezza dello schermo: la scrive JS da window.innerHeight (100dvh su iOS può restare vecchio). */
+  --app-h: 100dvh;
+  /* Barra di navigazione senza safe area: 10 + 44 + 10. */
+  --nav-h: 64px;
 }

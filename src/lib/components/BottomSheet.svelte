@@ -238,7 +238,7 @@
     bottom: var(--kb, 0px);
     display: flex;
     flex-direction: column;
-    max-height: calc(100dvh - var(--safe-top) - 24px - var(--kb, 0px));
+    max-height: calc(var(--app-h) - var(--safe-top) - 24px - var(--kb, 0px));
     padding: 0 var(--space-5) calc(var(--space-6) + var(--safe-bottom));
     padding-left: calc(var(--space-5) + var(--safe-left));
     padding-right: calc(var(--space-5) + var(--safe-right));

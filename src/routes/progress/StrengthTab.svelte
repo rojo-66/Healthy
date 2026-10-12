@@ -130,7 +130,7 @@
 {:else}
   <div class="tab">
     {#if choices.length > 0}
-      <div class="chips scroll" role="group" aria-label="Esercizio" data-testid="exercise-chips">
+      <div class="chips scroll" role="group" aria-label="Esercizio" data-testid="exercise-chips" data-swipe-ignore>
         {#each choices as c (c.key)}
           <button type="button" class="chip tap" aria-pressed={c.key === chosen?.key} onclick={() => (progressView.exercise = c.key)}>
             {c.name}

@@ -17,7 +17,6 @@ import { buildShoppingList, shoppingProgress, shoppingShareText } from '../../..
 import { setDayType, setProductValues, setSupplements, setTargets } from '../../../src/lib/diet/edit';
 import { formatDecimal, formatInt, formatQuantity } from '../../../src/lib/diet/format';
 import { parseDietImport } from '../../../src/lib/diet/import/detect';
-import { lockAxis, swipeDecision, swipeOffset } from '../../../src/lib/diet/swipe';
 import { myDietJson, payload, PRODUCTS } from './helpers';
 
 const VALUES = { kcal: 100, protein: 10, carbs: 10, fat: 1, fiber: 1 };
@@ -252,32 +251,5 @@ describe('completamento guidato', () => {
 
     const supplements = [{ name: 'Vitamina D3', when: 'cena', dose: '2.000 UI', skip: true }];
     expect(setSupplements(p, 3, supplements).days[2]!.supplements).toEqual(supplements);
-  });
-});
-
-describe('swipe tra i giorni', () => {
-  it('riconosce lo swipe orizzontale e lascia lo scroll verticale', () => {
-    expect(lockAxis(4, 3)).toBeNull();
-    expect(lockAxis(30, 5)).toBe(true);
-    expect(lockAxis(5, 30)).toBe(false);
-    expect(lockAxis(12, 11)).toBe(false);
-  });
-
-  it('decide il giorno al rilascio: 1/4 della larghezza o colpo veloce', () => {
-    expect(swipeDecision(-100, 0, 390, true, true)).toBe(1);
-    expect(swipeDecision(100, 0, 390, true, true)).toBe(-1);
-    expect(swipeDecision(-90, 0, 390, true, true)).toBe(0);
-    expect(swipeDecision(-40, -0.8, 390, true, true)).toBe(1);
-    // Colpo veloce nella direzione opposta allo spostamento: resta.
-    expect(swipeDecision(-40, 0.8, 390, true, true)).toBe(0);
-    // Ai bordi della settimana non si va oltre.
-    expect(swipeDecision(200, 0, 390, false, true)).toBe(0);
-    expect(swipeDecision(-200, 0, 390, true, false)).toBe(0);
-  });
-
-  it('resistenza oltre lunedì e domenica', () => {
-    expect(swipeOffset(100, true, true)).toBe(100);
-    expect(swipeOffset(100, false, true)).toBe(25);
-    expect(swipeOffset(-100, true, false)).toBe(-25);
   });
 });

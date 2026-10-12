@@ -1,6 +1,8 @@
 <script lang="ts" generics="Id extends string">
   import type { Snippet } from 'svelte';
-  import { fade } from '../design/transitions';
+  import { swipe } from '../design/swipe-action';
+  import type { SwipeDir } from '../design/swipe';
+  import { fade, slideX } from '../design/transitions';
   import { indicatorTransform, nextTabIndex } from './tabs';
   import type { Tone } from './types';
 
@@ -13,9 +15,11 @@
     onchange?: (id: Id) => void;
     /** Contenuto del pannello della tab attiva. */
     panel?: Snippet<[Id]>;
+    /** Swipe orizzontale sul pannello e sulla barra per cambiare tab (di base sì, se c'è il pannello). */
+    swipeable?: boolean;
   }
 
-  let { tabs, selected = $bindable(), label, tone, onchange, panel }: Props = $props();
+  let { tabs, selected = $bindable(), label, tone, onchange, panel, swipeable = true }: Props = $props();
 
   const uid = $props.id();
   let list: HTMLDivElement;
@@ -31,6 +35,24 @@
     if (focus) list.querySelectorAll<HTMLButtonElement>('[role="tab"]')[i]?.focus();
   }
 
+  // --- Swipe (§ 4): il contenuto segue il dito, l'evidenziatore si sposta in proporzione ---
+  let panelTarget = $state<HTMLDivElement>();
+  /** Frazione di tab trascinata (+ verso la successiva); 0 = ferma. */
+  let progress = $state(0);
+  /** Direzione dell'ultimo cambio fatto con lo swipe: il nuovo pannello entra da quel lato (0 = tocco, dissolvenza). */
+  let enterDir: SwipeDir | 0 = 0;
+
+  function onswipe(dir: SwipeDir) {
+    enterDir = dir;
+    select(index + dir);
+  }
+
+  function enter(node: Element) {
+    const dir = enterDir;
+    enterDir = 0;
+    return dir === 0 ? fade(node, { duration: 200 }) : slideX(node, { dir });
+  }
+
   function onkeydown(e: KeyboardEvent) {
     const next = nextTabIndex(e.key, index, tabs.length);
     if (next === null) return;
@@ -39,9 +61,24 @@
   }
 </script>
 
-<div class="tabs tone-{tone}">
+<div
+  class="tabs tone-{tone}"
+  use:swipe={{
+    canGo: (d) => tabs[index + d] !== undefined,
+    onswipe,
+    target: panelTarget,
+    snap: true,
+    claims: () => swipeable && !!panel,
+    onprogress: (f) => (progress = f),
+  }}
+>
   <div class="list" role="tablist" aria-label={label} bind:this={list} style:--n={tabs.length}>
-    <span class="indicator ind" aria-hidden="true" style:transform={indicatorTransform(index, tabs.length)}></span>
+    <span
+      class="indicator ind"
+      class:dragging={progress !== 0}
+      aria-hidden="true"
+      style:transform={indicatorTransform(index + progress, tabs.length)}
+    ></span>
     {#each tabs as tab, i (tab.id)}
       <button
         type="button"
@@ -59,9 +96,11 @@
 
   {#if panel}
     <div class="panel" role="tabpanel" id="{uid}-panel" aria-labelledby="{uid}-tab-{selected}">
-      {#key selected}
-        <div in:fade={{ duration: 200 }}>{@render panel(selected)}</div>
-      {/key}
+      <div bind:this={panelTarget}>
+        {#key selected}
+          <div in:enter>{@render panel(selected)}</div>
+        {/key}
+      </div>
     </div>
   {/if}
 </div>
@@ -90,6 +129,11 @@
       0 100%,
       0 var(--cut-s)
     );
+  }
+
+  /* Mentre il dito trascina l'evidenziatore lo segue senza ritardo. */
+  .indicator.dragging {
+    transition: none;
   }
 
   .tab {

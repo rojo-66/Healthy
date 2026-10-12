@@ -11,11 +11,12 @@
   import { TABLE_LABELS, TABLE_NAMES } from '../lib/data/schemas';
   import type { Backup } from '../lib/data/schemas/backup';
   import { routeHref } from '../lib/routes';
+  import ScreenDiagnostics from './dev/ScreenDiagnostics.svelte';
   import RestoreConfirmSheet, { type IncomingBackup } from './profile/RestoreConfirmSheet.svelte';
   // Dati finti: un'unica fonte con i test (tests/fixtures), finiscono solo in questo chunk.
   import demoBackup from '../../tests/fixtures/backup-valid.json';
 
-  // Strumenti di sviluppo (raggiungibili solo dall'indirizzo e da #/showcase). Backup, ripristino,
+  // Strumenti di sviluppo (dal Profilo › Informazioni e da #/showcase). Backup, ripristino,
   // persistenza e spazio usato sono nel Profilo (M7): qui restano conteggi, dati di prova e "Svuota tutto".
 
   const EMPTY = Object.fromEntries(TABLE_NAMES.map((name) => [name, 0])) as TableCounts;
@@ -84,12 +85,21 @@
 
 <div class="page">
   <header class="top">
-    <a class="back tap" href="#/showcase" aria-label="Torna ai componenti"><Icon name="back" stroke={1.6} /></a>
+    <a class="back tap" href={routeHref('/profilo')} aria-label="Torna al profilo"><Icon name="back" stroke={1.6} /></a>
     <div>
       <h1 class="graffiti">Dati</h1>
       <p class="sub">Strumenti di sviluppo · database «healthy-app»</p>
     </div>
   </header>
+
+  <section class="block" aria-labelledby="s-screen">
+    <h2 id="s-screen" class="mono-label">Schermo</h2>
+    <ScreenDiagnostics />
+    <p class="hint">
+      Si aggiorna da solo. Dopo il blocco del telefono o la chiusura della tastiera: innerHeight uguale all'altezza
+      dello schermo, scrollY 0, --app-h uguale a innerHeight.
+    </p>
+  </section>
 
   <section class="block" aria-labelledby="s-counts">
     <h2 id="s-counts" class="mono-label">Contenuto</h2>
@@ -128,6 +138,7 @@
     <p class="hint">
       Backup, ripristino e memoria del telefono sono nel <a href={routeHref('/profilo')}>Profilo</a>.
     </p>
+    <p class="hint">Pagina di prova del design system: <a href="#/showcase">Componenti</a>.</p>
   </section>
 </div>
 

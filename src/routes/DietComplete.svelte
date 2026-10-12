@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { edgeSwipe } from '../lib/sessions/edge-swipe';
   import Button from '../lib/components/Button.svelte';
   import NoteBox from '../lib/components/NoteBox.svelte';
   import ProgressBar from '../lib/components/ProgressBar.svelte';
@@ -109,7 +110,7 @@
   });
 </script>
 
-<div class="screen tone-food">
+<div class="screen tone-food" use:edgeSwipe={() => (location.hash = '#/dieta')}>
   <TopBanner title="Completa il piano" tone="food" backHref="#/dieta" backLabel="Torna alla dieta" />
 
   <div class="body scroll">
@@ -245,7 +246,7 @@
   .screen {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
   }
 
   .body {

@@ -89,6 +89,8 @@
 
   let current = $state<Workout | null>(null);
   let actionsOpen = $state(false);
+  /** Riga con Duplica/Elimina rivelate dallo swipe (una per volta). */
+  let swipedRow = $state<string | null>(null);
   let status = $state('');
 
   // Arrivo da Importa (`?importata=<id>`, M8): conferma con nome e origine.
@@ -253,7 +255,16 @@
                 <span class="mono count">{workouts.current.length}</span>
               </div>
               {#each workouts.current as w (w.id)}
-                <WorkoutRow workout={w} lastRun={lastRun.get(w.id) ?? null} onopen={() => openActions(w)} onshare={() => openShare(w)} />
+                <WorkoutRow
+                  workout={w}
+                  lastRun={lastRun.get(w.id) ?? null}
+                  open={swipedRow === w.id}
+                  onopenchange={(o) => (swipedRow = o ? w.id : swipedRow === w.id ? null : swipedRow)}
+                  onopen={() => openActions(w)}
+                  onshare={() => openShare(w)}
+                  onduplicate={() => void duplicate(w)}
+                  ondelete={() => askDelete(w)}
+                />
               {/each}
               <a class="new tap" href={routeHref('/allena/editor')}>+ Nuova scheda</a>
             {/if}

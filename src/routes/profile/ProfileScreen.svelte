@@ -251,6 +251,7 @@
         Nessun account, nessun tracciamento, nessuna connessione: i dati restano su questo telefono e nei backup che
         crei tu. L'app mostra i tuoi dati e le note che scrivi: non dà interpretazioni mediche.
       </p>
+      <a class="tech tap" href={routeHref('/dev-data')}>Strumenti tecnici</a>
     </section>
   </div>
 </Screen>
@@ -431,6 +432,16 @@
     margin: 0;
     font-size: 14px;
     color: var(--text-2);
+  }
+
+  /* Discreto: serve solo per le verifiche sul telefono (diagnostica dello schermo). */
+  .tech {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    font-size: 13px;
+    color: var(--muted);
   }
 
   .small {

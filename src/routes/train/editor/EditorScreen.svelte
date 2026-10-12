@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { edgeSwipe } from '../../../lib/sessions/edge-swipe';
   import { onMount, tick, untrack } from 'svelte';
   import BottomSheet from '../../../lib/components/BottomSheet.svelte';
   import Button from '../../../lib/components/Button.svelte';
@@ -396,7 +397,7 @@
   });
 </script>
 
-<div class="screen tone-training">
+<div class="screen tone-training" use:edgeSwipe={{ onback: back, leaves: () => !dirty }}>
   <EditorHeader
     name={draft.name}
     {badge}
@@ -572,7 +573,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     overflow: hidden;
     background-image: radial-gradient(circle at 90% 8%, var(--tone-tint), transparent 40%);
   }

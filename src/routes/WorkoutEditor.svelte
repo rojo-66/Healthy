@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { edgeSwipe } from '../lib/sessions/edge-swipe';
   import { onMount, untrack } from 'svelte';
   import Button from '../lib/components/Button.svelte';
   import NoteBox from '../lib/components/NoteBox.svelte';
@@ -93,7 +94,7 @@
 {#if phase.kind === 'ready'}
   <EditorScreen initial={phase.initial} baseline={phase.baseline} original={phase.original} author={phase.author} resumed={phase.resumed} />
 {:else}
-  <div class="screen">
+  <div class="screen" use:edgeSwipe={() => (location.hash = '#/allena')}>
     <TopBanner title={id ? 'Modifica scheda' : 'Nuova scheda'} tone="training" backHref="#/allena" backLabel="Torna alle schede" />
     <div class="body">
       {#if phase.kind === 'notfound'}
@@ -123,7 +124,7 @@
   .screen {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
   }
 
   .body {

@@ -1,26 +1,14 @@
-/** Differenza (px) tra finestra e area visibile oltre la quale consideriamo aperta la tastiera di iPhone. */
-const KEYBOARD_MIN = 150;
+import { viewport } from '../design/viewport.svelte';
 
 /**
  * Tastiera virtuale aperta? Su iPhone la tastiera non ridimensiona la pagina: si restringe solo
- * `visualViewport`. Serve per nascondere il banner inferiore fisso mentre si scrive.
- * Va chiamata durante l'inizializzazione di un componente.
+ * `visualViewport`. Serve per nascondere i banner inferiori fissi mentre si scrive.
+ * Lo stato è unico per tutta l'app (`design/viewport.svelte.ts`).
  */
 export function keyboardState(): { readonly open: boolean } {
-  let open = $state(false);
-  $effect(() => {
-    const vv = window.visualViewport;
-    if (!vv) return;
-    const update = () => {
-      open = window.innerHeight - vv.height > KEYBOARD_MIN;
-    };
-    vv.addEventListener('resize', update);
-    update();
-    return () => vv.removeEventListener('resize', update);
-  });
   return {
     get open() {
-      return open;
+      return viewport.keyboardOpen;
     },
   };
 }

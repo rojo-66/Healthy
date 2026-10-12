@@ -117,17 +117,17 @@ test('Tabs: tocco e frecce cambiano la scheda attiva e il pannello', async ({ pa
 test('Stepper: + e − cambiano il valore nei limiti, passo 2,5 con la virgola', async ({ page }) => {
   await openShowcase(page);
   const kg = page.getByRole('group', { name: 'Kg' });
-  await expect(kg.locator('output')).toContainText('72,5');
+  await expect(kg.getByRole('spinbutton')).toHaveValue('72,5');
   await kg.getByRole('button', { name: 'Più 2,5 kg' }).click();
-  await expect(kg.locator('output')).toContainText('75');
+  await expect(kg.getByRole('spinbutton')).toHaveValue('75');
   await kg.getByRole('button', { name: 'Meno 2,5 kg' }).click();
   await kg.getByRole('button', { name: 'Meno 2,5 kg' }).click();
-  await expect(kg.locator('output')).toContainText('70');
+  await expect(kg.getByRole('spinbutton')).toHaveValue('70');
 
   const sets = page.getByRole('group', { name: 'Serie' });
   const more = sets.getByRole('button', { name: 'Una serie in più' });
   for (let i = 0; i < 6; i++) await more.click();
-  await expect(sets.locator('output')).toContainText('10');
+  await expect(sets.getByRole('spinbutton')).toHaveValue('10');
   await expect(more).toBeDisabled();
 
   await expect(page.getByRole('group', { name: 'Al massimo' }).getByRole('button', { name: 'Più 1' })).toBeDisabled();

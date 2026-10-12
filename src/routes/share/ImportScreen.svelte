@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { edgeSwipe } from '../../lib/sessions/edge-swipe';
   import { untrack } from 'svelte';
   import Button from '../../lib/components/Button.svelte';
   import Icon from '../../lib/components/Icon.svelte';
@@ -167,7 +168,7 @@
   const titleMissing = $derived(loaded?.kind === 'diet' && loaded.imp.origin === 'mydiet' && dietTitle.trim() === '');
 </script>
 
-<div class="screen tone-{tone}">
+<div class="screen tone-{tone}" use:edgeSwipe={back}>
   <header class="head tone-progress">
     <button type="button" class="back tap" aria-label="Indietro" onclick={back}>
       <Icon name="back" stroke={1.6} />
@@ -288,7 +289,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     overflow: hidden;
     background-image: radial-gradient(circle at 90% 8%, var(--tone-tint), transparent 40%);
   }

@@ -6,6 +6,7 @@
   /**
    * Contenitore interattivo comune dei grafici (SPEC § 5.7):
    * - tocco e trascinamento orizzontale scelgono il punto più vicino (`touch-action: pan-y`);
+   *   lo swipe tra le tab non parte dal grafico (`data-swipe-ignore`);
    * - da tastiera frecce, Home e Fine tra i punti;
    * - il riassunto del grafico è l'etichetta, il punto scelto si annuncia con `aria-live="polite"`.
    */
@@ -53,6 +54,7 @@
     style:height="{height}px"
     bind:clientWidth={width}
     use:scrub={{ onpick: pick }}
+    data-swipe-ignore
     {onkeydown}
   >
     {@render children()}
@@ -68,7 +70,7 @@
   .frame {
     position: relative;
     width: 100%;
-    touch-action: pan-y;
+    touch-action: pan-y pinch-zoom;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;

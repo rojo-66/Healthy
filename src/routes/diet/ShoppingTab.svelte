@@ -263,7 +263,8 @@
     border: 1px solid var(--line-strong);
     color: var(--text);
     font-family: var(--font-mono);
-    font-size: 13px;
+    /* 16 px anche in sola lettura: al tocco (per selezionare) Safari ingrandirebbe la pagina. */
+    font-size: 16px;
     -webkit-user-select: text;
     user-select: text;
   }

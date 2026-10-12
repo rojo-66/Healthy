@@ -3,7 +3,7 @@
   import type { DraftCardio } from '../../../lib/data/schemas/workout-draft';
   import { drop } from '../../../lib/design/transitions';
   import type { FieldErrors } from '../../../lib/workouts/calc/editor-schema';
-  import { CARDIO_MAX_MIN } from '../../../lib/workouts/calc/values';
+  import { CARDIO_CONFIRM_ABOVE, CARDIO_MAX_MIN } from '../../../lib/workouts/calc/values';
 
   interface Props {
     cardio: DraftCardio | null;
@@ -54,6 +54,7 @@
           value={cardio.minutes}
           min={1}
           max={CARDIO_MAX_MIN}
+          confirmAbove={CARDIO_CONFIRM_ABOVE}
           decLabel="Un minuto in meno"
           incLabel="Un minuto in più"
           onchange={(v) => onchange({ ...cardio, minutes: v })}

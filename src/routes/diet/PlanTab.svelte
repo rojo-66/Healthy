@@ -9,7 +9,7 @@
   import type { DietPlan } from '../../lib/data/schemas/diet-plans';
   import { effectiveWeekday } from '../../lib/diet/calc/calendar';
   import { OBSERVATION_DISCLAIMER } from '../../lib/diet/calc/observations';
-  import { daySwipe } from '../../lib/design/day-swipe';
+  import { swipe } from '../../lib/design/swipe-action';
   import { rise } from '../../lib/design/transitions';
   import { buildDayView, findDay, weekStrip } from '../../lib/diet/view';
   import DayStrip from './DayStrip.svelte';
@@ -41,6 +41,7 @@
   const view = $derived(buildDayView(payload, shownWeekday, { today: isToday, eaten, nowMinutes }));
 
   let error = $state<readonly string[]>([]);
+  let dayTarget = $state<HTMLDivElement>();
 
   async function write(task: () => Promise<unknown>) {
     error = [];
@@ -91,66 +92,69 @@
 </script>
 
 <div class="plan">
-  <DayStrip days={strip} {selected} today={todayWeekday} onselect={(d) => (selected = d)} />
+  <!-- Swipe tra i giorni (§ 4) su striscia e contenuto: vince sul cambio di tab. La striscia resta ferma. -->
+  <div
+    class="swipe"
+    role="group"
+    aria-label="Giorno mostrato: scorri a destra o a sinistra per cambiare giorno"
+    data-testid="day-swipe"
+    use:swipe={{ canGo: (dir) => (dir === -1 ? prevDay : nextDay) !== null, onswipe, target: dayTarget }}
+  >
+    <DayStrip days={strip} {selected} today={todayWeekday} onselect={(d) => (selected = d)} />
 
-  {#if view}
-    <div
-      class="swipe"
-      role="group"
-      aria-label="Giorno mostrato: scorri a destra o a sinistra per cambiare giorno"
-      data-testid="day-swipe"
-      use:daySwipe={{ hasPrevious: prevDay !== null, hasNext: nextDay !== null, onswipe }}
-    >
-      <!-- Il riepilogo (con l'unico anello) resta montato: cambiano solo i valori. -->
-      <DaySummary {view} today={isToday} calendarWeekday={selected} />
+    {#if view}
+      <div class="day" bind:this={dayTarget}>
+        <!-- Il riepilogo (con l'unico anello) resta montato: cambiano solo i valori. -->
+        <DaySummary {view} today={isToday} calendarWeekday={selected} />
 
-      <!-- Solo l'elenco del giorno si ricrea, con sola entrata: il vecchio sparisce subito, niente doppioni. -->
-      {#key `${selected}-${shownWeekday}`}
-        <div class="day-content" in:rise>
-          {#each view.meals as meal (meal.key)}
-            <MealCard {meal} canTick={isToday} ontick={(v) => tick(meal.key, v)} {onrecipe} />
-          {:else}
-            <p class="empty">Nessun pasto in programma.</p>
-          {/each}
+        <!-- Solo l'elenco del giorno si ricrea, con sola entrata: il vecchio sparisce subito, niente doppioni. -->
+        {#key `${selected}-${shownWeekday}`}
+          <div class="day-content" in:rise>
+            {#each view.meals as meal (meal.key)}
+              <MealCard {meal} canTick={isToday} ontick={(v) => tick(meal.key, v)} {onrecipe} />
+            {:else}
+              <p class="empty">Nessun pasto in programma.</p>
+            {/each}
 
-          {#if view.supplements.length > 0}
-            <section class="supps" aria-labelledby="supps-title">
-              <h3 id="supps-title" class="mono-label">Integratori</h3>
-              <ul>
-                {#each view.supplements as s, i (i)}
-                  <li class:skip={s.skip}>
-                    {[s.name, s.dose, s.when].filter(Boolean).join(' · ')}{#if s.skip}<span class="visually-hidden">
-                        (non serve oggi)</span
-                      >{/if}
-                  </li>
+            {#if view.supplements.length > 0}
+              <section class="supps" aria-labelledby="supps-title">
+                <h3 id="supps-title" class="mono-label">Integratori</h3>
+                <ul>
+                  {#each view.supplements as s, i (i)}
+                    <li class:skip={s.skip}>
+                      {[s.name, s.dose, s.when].filter(Boolean).join(' · ')}{#if s.skip}<span class="visually-hidden">
+                          (non serve oggi)</span
+                        >{/if}
+                    </li>
+                  {/each}
+                </ul>
+              </section>
+            {/if}
+
+            {#if view.note}
+              <NoteBox title="Nota del nutrizionista" mark="✎" text={view.note} />
+            {/if}
+
+            {#if view.observations.length > 0}
+              <NoteBox title="Osservazione dell'app" mark="✦">
+                {#each view.observations as o, i (i)}
+                  <p class="obs">{o.text}</p>
                 {/each}
-              </ul>
-            </section>
-          {/if}
+                <p class="disclaimer">{OBSERVATION_DISCLAIMER}</p>
+              </NoteBox>
+            {/if}
+          </div>
+        {/key}
 
-          {#if view.note}
-            <NoteBox title="Nota del nutrizionista" mark="✎" text={view.note} />
-          {/if}
-
-          {#if view.observations.length > 0}
-            <NoteBox title="Osservazione dell'app" mark="✦">
-              {#each view.observations as o, i (i)}
-                <p class="obs">{o.text}</p>
-              {/each}
-              <p class="disclaimer">{OBSERVATION_DISCLAIMER}</p>
-            </NoteBox>
-          {/if}
-        </div>
-      {/key}
-
-      <!-- Valida per tutti i giorni: fuori dal {#key}, non si ricrea cambiando giorno. -->
-      {#if plan.payload.generalNotes}
-        <NoteBox title="Indicazioni generali del nutrizionista" mark="✎" text={plan.payload.generalNotes} />
-      {/if}
-    </div>
-  {:else}
-    <p class="empty">Questo giorno non è nel piano.</p>
-  {/if}
+        <!-- Valida per tutti i giorni: fuori dal {#key}, non si ricrea cambiando giorno. -->
+        {#if plan.payload.generalNotes}
+          <NoteBox title="Indicazioni generali del nutrizionista" mark="✎" text={plan.payload.generalNotes} />
+        {/if}
+      </div>
+    {:else}
+      <p class="empty">Questo giorno non è nel piano.</p>
+    {/if}
+  </div>
 
   {#if error.length > 0}
     <NoteBox title="Non salvato" mark="!" text={error.join('\n')} />
@@ -192,11 +196,12 @@
     gap: var(--space-4);
   }
 
-  .swipe {
+  /* Solo il contenuto del giorno segue il dito: la striscia resta ferma. */
+  .swipe,
+  .day {
     display: flex;
     flex-direction: column;
     gap: var(--space-4);
-    touch-action: pan-y;
   }
 
   .day-content {

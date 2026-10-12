@@ -67,14 +67,15 @@ describe('regole sui valori', () => {
     expect(clampReps(Number.NaN)).toBe(1);
   });
 
-  it('kg: passo 2,5 agganciato alla griglia, mai sotto 0', () => {
+  it('kg: passo 2,5 dal valore attuale (anche scritto a mano fuori griglia), mai sotto 0 né oltre il massimo', () => {
     expect(kgStep(20, 1)).toBe(22.5);
     expect(kgStep(22.5, -1)).toBe(20);
-    expect(kgStep(22, 1)).toBe(22.5);
-    expect(kgStep(22, -1)).toBe(20);
+    expect(kgStep(22, 1)).toBe(24.5);
+    expect(kgStep(22, -1)).toBe(19.5);
     expect(kgStep(0, -1)).toBe(0);
     expect(kgStep(1, -1)).toBe(0);
     expect(kgStep(57.5, 1)).toBe(60);
+    expect(kgStep(499, 1)).toBe(500);
   });
 
   it('recupero: preset 60/90/120/180, più un valore importato fuori preset', () => {

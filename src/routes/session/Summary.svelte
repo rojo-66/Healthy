@@ -230,7 +230,7 @@
   .screen {
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     background-image:
       radial-gradient(circle at 90% 8%, var(--tone-tint), transparent 40%),
       radial-gradient(circle at 5% 60%, var(--progress-tint), transparent 35%);

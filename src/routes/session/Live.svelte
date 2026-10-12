@@ -9,6 +9,7 @@
   import { MAX_TEXT } from '../../lib/data/limits';
   import { deleteSession, lastCompletedForWorkout, saveSession, sessionsRepo } from '../../lib/data/repo/sessions';
   import type { Session } from '../../lib/data/schemas/sessions';
+  import { swipe } from '../../lib/design/swipe-action';
   import { prefersReducedMotion, slideX } from '../../lib/design/transitions';
   import { beeper } from '../../lib/sessions/audio';
   import {
@@ -59,6 +60,8 @@
   let missing = $state(false);
   let now = $state(Date.now());
   let scroller = $state<HTMLElement>();
+  /** Esercizio che segue il dito durante lo swipe (il contenitore che ascolta resta fermo). */
+  let swipeTarget = $state<HTMLDivElement>();
   /** Direzione dell'ultimo cambio di esercizio (1 = SUCC, -1 = PREC): entra da quel lato. */
   let dir = $state(1);
   let online = $state(typeof navigator === 'undefined' ? true : navigator.onLine);
@@ -257,100 +260,114 @@
     {:else if session && item}
       {@const s = session}
       {@const it = item}
-      {#key index}
-        <div class="exercise" in:slideX={{ dir }}>
-          <Card tone="training" label="Esercizio in corso">
-            <div class="ex-head">
-              <span class="mono-label kicker">Esercizio {index + 1} / {items.length}</span>
-              <span class="mono scheme">{schemeLabel(it)}</span>
-            </div>
-            <h2 class="ex-name">{it.name}</h2>
-            <div class="ex-meta">
-              <div class="muscles">
-                {#each it.muscles as m (m)}<span>{m}</span>{/each}
-              </div>
-              {#if it.videoUrl}
-                {#if online}
-                  <a
-                    class="video tap"
-                    href={it.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Video di {it.name} (si apre fuori dall'app)"
-                  >
-                    <Icon name="play" size={14} />Video
-                  </a>
-                {:else}
-                  <span class="video-off">Video: serve la rete</span>
+      <!--
+        Swipe tra gli esercizi (← successivo, → precedente): non parte dai campi kg/rip né vicino ai bordi.
+        Sull'ultimo esercizio ← resiste e torna a posto: resta "Termina allenamento".
+      -->
+      <div
+        class="ex-swipe"
+        role="group"
+        aria-label="Esercizio: scorri a destra o a sinistra per cambiarlo"
+        data-testid="exercise-swipe"
+        use:swipe={{ canGo: (d) => items[index + d] !== undefined, onswipe: go, target: swipeTarget, snap: true }}
+      >
+        <div bind:this={swipeTarget}>
+          {#key index}
+            <div class="exercise" in:slideX={{ dir }}>
+              <Card tone="training" label="Esercizio in corso">
+                <div class="ex-head">
+                  <span class="mono-label kicker">Esercizio {index + 1} / {items.length}</span>
+                  <span class="mono scheme">{schemeLabel(it)}</span>
+                </div>
+                <h2 class="ex-name">{it.name}</h2>
+                <div class="ex-meta">
+                  <div class="muscles">
+                    {#each it.muscles as m (m)}<span>{m}</span>{/each}
+                  </div>
+                  {#if it.videoUrl}
+                    {#if online}
+                      <a
+                        class="video tap"
+                        href={it.videoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label="Video di {it.name} (si apre fuori dall'app)"
+                      >
+                        <Icon name="play" size={14} />Video
+                      </a>
+                    {:else}
+                      <span class="video-off">Video: serve la rete</span>
+                    {/if}
+                  {/if}
+                </div>
+    
+                {#if it.note}
+                  <NoteBox title="Nota del PT" text={it.note} />
                 {/if}
+    
+                <div class="table" role="table" aria-label="Serie di {it.name}">
+                  <div class="thead mono" role="row">
+                    <span role="columnheader">SET</span>
+                    <span role="columnheader">ULTIMA VOLTA</span>
+                    <span role="columnheader" class="c">KG</span>
+                    <span role="columnheader" class="c">RIP</span>
+                    <span role="columnheader" class="c">
+                      <button
+                        type="button"
+                        class="all tap"
+                        class:on={everyDone}
+                        aria-pressed={everyDone}
+                        aria-label={everyDone ? 'Togli tutte le spunte' : 'Spunta tutte le serie'}
+                        onclick={toggleEvery}
+                      >
+                        <span class="all-fill" aria-hidden="true"></span>
+                        <Icon name="doubleCheck" size={20} stroke={2.6} />
+                      </button>
+                    </span>
+                  </div>
+                  {#each sets as set (set.setIndex)}
+                    <SetRow
+                      {set}
+                      last={last[index]?.[set.setIndex]}
+                      extra={isExtra(s, set)}
+                      onkg={(kg) => session && commit(updateSet(session, index, set.setIndex, { kg }), true)}
+                      onreps={(reps) => session && commit(updateSet(session, index, set.setIndex, { reps }), true)}
+                      ontoggle={() => toggle(set.setIndex)}
+                    />
+                  {/each}
+                </div>
+                <button
+                  type="button"
+                  class="add tap"
+                  disabled={!canAddSet(s, index)}
+                  onclick={() => session && commit(addSet(session, index))}>+ Aggiungi serie</button
+                >
+              </Card>
+    
+              <section class="notes">
+                <label class="mono-label" for="note-pt">Le tue note per il PT</label>
+                <textarea
+                  id="note-pt"
+                  rows="4"
+                  maxlength={MAX_TEXT.note}
+                  placeholder="Cosa noti, cosa ti viene male, fastidi, sensazioni…"
+                  value={noteFor(s, index)}
+                  oninput={(e) => session && commit(setUserNote(session, index, e.currentTarget.value), true)}
+                ></textarea>
+                <span class="hint">Finiscono nel riepilogo che condividi con il PT.</span>
+              </section>
+    
+              {#if isLast}
+                <div class="end">
+                  <Button tone="training" size="lg" block onclick={openFinish}>Termina allenamento</Button>
+                  <span class="hint">Crea il riepilogo della sessione</span>
+                </div>
               {/if}
+              {#if error}<p class="error" role="alert">{error}</p>{/if}
             </div>
-
-            {#if it.note}
-              <NoteBox title="Nota del PT" text={it.note} />
-            {/if}
-
-            <div class="table" role="table" aria-label="Serie di {it.name}">
-              <div class="thead mono" role="row">
-                <span role="columnheader">SET</span>
-                <span role="columnheader">ULTIMA VOLTA</span>
-                <span role="columnheader" class="c">KG</span>
-                <span role="columnheader" class="c">RIP</span>
-                <span role="columnheader" class="c">
-                  <button
-                    type="button"
-                    class="all tap"
-                    class:on={everyDone}
-                    aria-pressed={everyDone}
-                    aria-label={everyDone ? 'Togli tutte le spunte' : 'Spunta tutte le serie'}
-                    onclick={toggleEvery}
-                  >
-                    <span class="all-fill" aria-hidden="true"></span>
-                    <Icon name="doubleCheck" size={20} stroke={2.6} />
-                  </button>
-                </span>
-              </div>
-              {#each sets as set (set.setIndex)}
-                <SetRow
-                  {set}
-                  last={last[index]?.[set.setIndex]}
-                  extra={isExtra(s, set)}
-                  onkg={(kg) => session && commit(updateSet(session, index, set.setIndex, { kg }), true)}
-                  onreps={(reps) => session && commit(updateSet(session, index, set.setIndex, { reps }), true)}
-                  ontoggle={() => toggle(set.setIndex)}
-                />
-              {/each}
-            </div>
-            <button
-              type="button"
-              class="add tap"
-              disabled={!canAddSet(s, index)}
-              onclick={() => session && commit(addSet(session, index))}>+ Aggiungi serie</button
-            >
-          </Card>
-
-          <section class="notes">
-            <label class="mono-label" for="note-pt">Le tue note per il PT</label>
-            <textarea
-              id="note-pt"
-              rows="4"
-              maxlength={MAX_TEXT.note}
-              placeholder="Cosa noti, cosa ti viene male, fastidi, sensazioni…"
-              value={noteFor(s, index)}
-              oninput={(e) => session && commit(setUserNote(session, index, e.currentTarget.value), true)}
-            ></textarea>
-            <span class="hint">Finiscono nel riepilogo che condividi con il PT.</span>
-          </section>
-
-          {#if isLast}
-            <div class="end">
-              <Button tone="training" size="lg" block onclick={openFinish}>Termina allenamento</Button>
-              <span class="hint">Crea il riepilogo della sessione</span>
-            </div>
-          {/if}
-          {#if error}<p class="error" role="alert">{error}</p>{/if}
+          {/key}
         </div>
-      {/key}
+      </div>
     {/if}
   </main>
 
@@ -418,7 +435,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     overflow: hidden;
     background-image: radial-gradient(circle at 90% 8%, var(--tone-tint), transparent 40%);
   }

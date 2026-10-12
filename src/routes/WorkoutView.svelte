@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { edgeSwipe } from '../lib/sessions/edge-swipe';
   import Button from '../lib/components/Button.svelte';
   import NoteBox from '../lib/components/NoteBox.svelte';
   import TopBanner from '../lib/components/TopBanner.svelte';
@@ -21,7 +22,7 @@
   let gate: StartGate;
 </script>
 
-<div class="screen tone-training">
+<div class="screen tone-training" use:edgeSwipe={() => (location.hash = '#/allena')}>
   <TopBanner title={workout.current?.name ?? 'Scheda'} tone="training" backHref="#/allena" backLabel="Torna alle schede" />
 
   <div class="body scroll">
@@ -50,7 +51,7 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    height: 100dvh;
+    height: var(--app-h);
     background-image: radial-gradient(circle at 90% 8%, var(--tone-tint), transparent 40%);
   }
 
