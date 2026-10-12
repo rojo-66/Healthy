@@ -120,7 +120,7 @@ test('Stepper: pressione lunga ripete accelerando e si ferma al rilascio', async
   await expect(sets.getByRole('spinbutton')).toHaveValue('10');
 });
 
-test('sessione live: swipe tra gli esercizi, non dai campi, niente oltre l’ultimo', async ({ page }) => {
+test('sessione live: swipe tra gli esercizi anche partendo da un campo; mai mentre si scrive; niente oltre gli estremi', async ({ page }) => {
   await loadBackup(page);
   await startSession(page);
   const area = page.getByTestId('exercise-swipe');
@@ -132,10 +132,30 @@ test('sessione live: swipe tra gli esercizi, non dai campi, niente oltre l’ult
   await drag(page, y, 80, 320);
   await expect(exerciseName(page)).toHaveText('Panca piana con bilanciere');
 
-  // Uno swipe che parte dal campo kg non cambia esercizio.
-  const kgField = await center(page.getByLabel('Chili serie 1'));
-  await drag(page, kgField.y, kgField.x, kgField.x - 200);
+  // Sul primo esercizio → non fa niente e il contenuto non si muove.
+  const target = area.locator('> div').first();
+  await page.mouse.move(80, y);
+  await page.mouse.down();
+  for (let x = 80; x <= 300; x += 20) await page.mouse.move(x, y);
+  expect(await target.evaluate((el) => (el as HTMLElement).style.transform)).toBe('');
+  await page.mouse.up();
   await expect(exerciseName(page)).toHaveText('Panca piana con bilanciere');
+
+  // Da un campo kg non attivo lo swipe parte (il tocco non lo attiva).
+  const kg = page.getByLabel('Chili serie 1');
+  const kgField = await center(kg);
+  await drag(page, kgField.y, kgField.x + 10, kgField.x - 200);
+  await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
+  await drag(page, y, 80, 320);
+  await expect(exerciseName(page)).toHaveText('Panca piana con bilanciere');
+
+  // Mentre si scrive in un campo, niente swipe.
+  await kg.click();
+  await expect(kg).toBeFocused();
+  await drag(page, y, 320, 80);
+  await page.clock.runFor(500);
+  await expect(exerciseName(page)).toHaveText('Panca piana con bilanciere');
+  await kg.blur();
 
   // Movimento verticale: niente cambio.
   await page.mouse.move(200, y);
@@ -147,12 +167,74 @@ test('sessione live: swipe tra gli esercizi, non dai campi, niente oltre l’ult
   // Fino all'ultimo: lì lo swipe in avanti non fa niente e resta "Termina allenamento".
   await drag(page, y, 320, 80);
   await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
-  await drag(page, y, 320, 80);
+  await drag(page, y, 370, 120); // dal bordo destro: il pollice parte spesso da lì
   await expect(exerciseName(page)).toHaveText('Plank');
   await drag(page, y, 320, 40);
   await page.clock.runFor(500);
   await expect(exerciseName(page)).toHaveText('Plank');
   await expect(page.getByRole('button', { name: 'Termina allenamento' })).toBeVisible();
+});
+
+/** Gesto col dito vero (eventi touch di Chromium: passano dallo scroll del browser come su un telefono). */
+async function touchDrag(
+  page: Page,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+  steps: number,
+  stepMs: number,
+  opts: { hold?: boolean } = {},
+) {
+  const cdp = await page.context().newCDPSession(page);
+  await cdp.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [from] });
+  for (let i = 1; i <= steps; i++) {
+    const p = { x: from.x + ((to.x - from.x) * i) / steps, y: from.y + ((to.y - from.y) * i) / steps };
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [p] });
+    if (stepMs > 0) await page.waitForTimeout(stepMs);
+  }
+  const end = async () => {
+    await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+    await cdp.detach();
+  };
+  if (opts.hold) return end;
+  await end();
+  return null;
+}
+
+test('sessione live: swipe col dito lento, medio e veloce; il contenuto segue il dito; lo scroll resta', async ({ page }) => {
+  await loadBackup(page);
+  await startSession(page);
+  const { box } = await center(page.getByTestId('exercise-swipe'));
+  const y = box.y + 60;
+  const target = page.getByTestId('exercise-swipe').locator('> div').first();
+
+  // Lento: tanti piccoli passi, un po' storti come col pollice; a metà gesto il contenuto segue il dito.
+  const release = await touchDrag(page, { x: 330, y }, { x: 190, y: y + 12 }, 28, 16, { hold: true });
+  const moved = await target.evaluate((el) => new DOMMatrix(getComputedStyle(el).transform).m41);
+  expect(moved).toBeLessThan(-100);
+  await release!();
+  await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
+
+  // Medio.
+  await touchDrag(page, { x: 120, y }, { x: 300, y: y - 10 }, 10, 12);
+  await expect(exerciseName(page)).toHaveText('Panca piana con bilanciere');
+
+  // Veloce: un colpo corto.
+  await touchDrag(page, { x: 300, y }, { x: 220, y }, 3, 8);
+  await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
+
+  // Gesto verticale col dito: l'esercizio resta e il contenuto non si sposta di lato.
+  await touchDrag(page, { x: 200, y: y + 300 }, { x: 190, y: y + 20 }, 20, 16);
+  await page.waitForTimeout(300);
+  await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
+  expect(await target.evaluate((el) => (el as HTMLElement).style.transform)).toBe('');
+
+  // Su una pagina lunga con zone di swipe annidate (Dieta › Piano), lo scroll verticale col dito scorre.
+  await page.goto('./#/dieta');
+  await expect(page.getByRole('tab', { name: 'Spesa' })).toBeVisible();
+  const body = page.locator('.body.scroll').first();
+  await touchDrag(page, { x: 200, y: 650 }, { x: 192, y: 350 }, 20, 16);
+  await expect.poll(() => body.evaluate((el) => el.scrollTop)).toBeGreaterThan(100);
+  await expect(page.getByRole('tab', { name: 'Piano' })).toHaveAttribute('aria-selected', 'true');
 });
 
 test('tab: swipe sul contenuto e sulla barra, l’indicatore segue; in Piano vince il giorno', async ({ page }) => {
@@ -220,6 +302,13 @@ test('riga scheda: trascinando a sinistra compaiono Duplica ed Elimina', async (
   await expect(page.getByRole('dialog', { name: 'Eliminare la scheda?' })).toBeVisible();
   await page.getByRole('dialog', { name: 'Eliminare la scheda?' }).getByRole('button', { name: 'Annulla' }).click();
   await expect(duplicate).toBeHidden();
+
+  // Col dito, lento: la riga segue e si apre (dopo che la conferma si è chiusa del tutto).
+  await expect(page.getByRole('dialog', { name: 'Eliminare la scheda?' })).toBeHidden();
+  const r2 = await center(row);
+  await touchDrag(page, { x: 300, y: r2.y }, { x: 150, y: r2.y + 8 }, 20, 16);
+  await expect(duplicate).toBeVisible();
+  await expect(page.getByRole('tab', { name: 'Schede' })).toHaveAttribute('aria-selected', 'true');
 });
 
 test('Nuova misura: i titoli dei gruppi stanno dentro i riquadri', async ({ page }) => {
@@ -312,4 +401,22 @@ test('nessun campo con testo sotto i 16 px (niente zoom al tocco)', async ({ pag
   await scan('#/sessione/live');
 
   expect(small).toEqual([]);
+});
+
+test('pannello dal basso: entra dal fondo senza passare dall’alto e resta attaccato al fondo', async ({ page }) => {
+  await page.goto('./#/profilo');
+  await page.getByTestId('profile-facts').click();
+  const dialog = page.getByRole('dialog', { name: 'Il tuo profilo' });
+  // Durante l'entrata il dialog non deve mai scorrere (il pannello comparirebbe in alto).
+  const scrolls = await dialog.evaluate(async (el) => {
+    const seen: number[] = [];
+    for (let i = 0; i < 30; i++) {
+      seen.push(el.scrollTop);
+      await new Promise((r) => requestAnimationFrame(r));
+    }
+    return seen;
+  });
+  expect(Math.max(...scrolls)).toBe(0);
+  const panel = dialog.locator('.panel');
+  await expect.poll(async () => Math.round((await panel.boundingBox())!.y + (await panel.boundingBox())!.height)).toBe(844);
 });

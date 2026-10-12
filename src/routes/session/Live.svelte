@@ -181,9 +181,13 @@
   });
 
   // --- Esercizi ---
-  function go(delta: number) {
+  /** Cambio fatto con lo swipe: entra già con il movimento dello swipe, senza la sua transizione. */
+  let viaSwipe = $state(false);
+
+  function go(delta: number, swiped = false) {
     if (!session) return;
     dir = delta > 0 ? 1 : -1;
+    viaSwipe = swiped;
     commit(goToItem(session, index + delta));
     scroller?.scrollTo({ top: 0 });
   }
@@ -261,19 +265,19 @@
       {@const s = session}
       {@const it = item}
       <!--
-        Swipe tra gli esercizi (← successivo, → precedente): non parte dai campi kg/rip né vicino ai bordi.
-        Sull'ultimo esercizio ← resiste e torna a posto: resta "Termina allenamento".
+        Swipe tra gli esercizi (← successivo, → precedente): non parte mentre scrivi nei campi kg/rip né dal bordo sinistro.
+        Sull'ultimo esercizio ← non fa niente (resta "Termina allenamento"); sul primo → non fa niente.
       -->
       <div
         class="ex-swipe"
         role="group"
         aria-label="Esercizio: scorri a destra o a sinistra per cambiarlo"
         data-testid="exercise-swipe"
-        use:swipe={{ canGo: (d) => items[index + d] !== undefined, onswipe: go, target: swipeTarget, snap: true }}
+        use:swipe={{ canGo: (d) => items[index + d] !== undefined, onswipe: (d) => go(d, true), target: swipeTarget }}
       >
         <div bind:this={swipeTarget}>
           {#key index}
-            <div class="exercise" in:slideX={{ dir }}>
+            <div class="exercise" in:slideX={{ dir, duration: viaSwipe ? 0 : 300 }}>
               <Card tone="training" label="Esercizio in corso">
                 <div class="ex-head">
                   <span class="mono-label kicker">Esercizio {index + 1} / {items.length}</span>

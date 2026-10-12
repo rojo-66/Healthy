@@ -4,39 +4,53 @@
   import { viewport } from '../../lib/design/viewport.svelte';
   import { isStandalone } from '../../lib/pwa/standalone';
 
-  // Diagnostica dello schermo (Rifinitura iPhone 1): per verificare sul telefono barra di navigazione e tastiera.
+  // Diagnostica dello schermo: per verificare sul telefono barra di navigazione, pannelli e tastiera.
+  interface Props {
+    /** Riquadro compatto fisso sopra l'app (su tutte le schermate). */
+    overlay?: boolean;
+  }
+
+  let { overlay = false }: Props = $props();
+
   interface Row {
     label: string;
+    short: string;
     value: string;
   }
 
-  let probe: HTMLDivElement;
+  let safeRaw: HTMLDivElement;
+  let safeUsed: HTMLDivElement;
+  let fixedBottom: HTMLDivElement;
   let rows = $state<Row[]>([]);
 
   function px(n: number | null | undefined): string {
-    return n === null || n === undefined ? '—' : `${Math.round(n)} px`;
+    return n === null || n === undefined ? '—' : `${Math.round(n)}`;
+  }
+
+  function insets(el: HTMLElement | undefined): string {
+    if (!el) return '—';
+    const s = getComputedStyle(el);
+    return [s.paddingTop, s.paddingRight, s.paddingBottom, s.paddingLeft].map((v) => parseInt(v, 10) || 0).join('·');
   }
 
   function read() {
     const vv = window.visualViewport;
     const root = document.documentElement;
-    const safe = probe ? getComputedStyle(probe) : null;
-    const standalone = isStandalone(window);
     rows = [
-      { label: 'innerHeight', value: px(window.innerHeight) },
-      { label: 'visualViewport.height', value: px(vv?.height) },
-      { label: 'visualViewport.offsetTop', value: px(vv?.offsetTop) },
-      { label: 'visualViewport.scale', value: vv ? vv.scale.toFixed(2) : '—' },
-      { label: 'clientHeight', value: px(root.clientHeight) },
-      { label: '--app-h', value: root.style.getPropertyValue('--app-h') || '(CSS)' },
-      { label: 'scrollY', value: px(window.scrollY) },
-      { label: 'schermo', value: `${screen.width} × ${screen.height}` },
-      {
-        label: 'safe-area (su dx giù sx)',
-        value: safe ? [safe.paddingTop, safe.paddingRight, safe.paddingBottom, safe.paddingLeft].map((v) => parseInt(v, 10) || 0).join(' · ') : '—',
-      },
-      { label: 'display-mode', value: standalone ? 'standalone' : 'browser' },
-      { label: 'tastiera', value: viewport.keyboardOpen ? 'aperta' : 'chiusa' },
+      { label: 'innerHeight', short: 'inner', value: px(window.innerHeight) },
+      { label: 'visualViewport.height', short: 'vv', value: px(vv?.height) },
+      { label: 'visualViewport.offsetTop', short: 'vvTop', value: px(vv?.offsetTop) },
+      { label: 'visualViewport.scale', short: 'scala', value: vv ? vv.scale.toFixed(2) : '—' },
+      { label: 'screen.height', short: 'screen', value: px(screen.height) },
+      { label: 'clientHeight', short: 'client', value: px(root.clientHeight) },
+      { label: '--app-h', short: 'appH', value: root.style.getPropertyValue('--app-h').replace('px', '') || '(CSS)' },
+      { label: 'scrollY', short: 'scrollY', value: px(window.scrollY) },
+      // Dove finisce davvero un elemento `position: fixed; bottom: 0` (deve essere = innerHeight).
+      { label: 'fondo di un elemento fisso', short: 'fixBot', value: px(fixedBottom?.getBoundingClientRect().bottom) },
+      { label: 'safe-area grezza (su dx giù sx)', short: 'safe', value: insets(safeRaw) },
+      { label: 'safe-area usata', short: 'usata', value: insets(safeUsed) },
+      { label: 'display-mode', short: 'mode', value: isStandalone(window) ? 'standalone' : 'browser' },
+      { label: 'tastiera', short: 'kb', value: viewport.keyboardOpen ? 'aperta' : 'chiusa' },
     ];
   }
 
@@ -47,27 +61,35 @@
   });
 </script>
 
-<!-- Sonda: il browser risolve qui le safe area (env() non si legge da JS). -->
-<div class="probe" bind:this={probe} aria-hidden="true"></div>
+<!-- Sonde: il browser risolve qui le safe area (env() non si legge da JS) e la posizione di un elemento fisso. -->
+<div class="probe safe-raw" bind:this={safeRaw} aria-hidden="true"></div>
+<div class="probe safe-used" bind:this={safeUsed} aria-hidden="true"></div>
+<div class="probe fixed-bottom" bind:this={fixedBottom} aria-hidden="true"></div>
 
-<Card tone="progress" label="Diagnostica dello schermo">
-  <dl class="rows mono" data-testid="screen-diagnostics">
-    {#each rows as r (r.label)}
-      <div class="row">
-        <dt>{r.label}</dt>
-        <dd>{r.value}</dd>
-      </div>
-    {/each}
-  </dl>
-  <h3 class="mono-label events-title">Ultimi eventi</h3>
-  <ol class="events mono">
-    {#each viewport.events as e, i (i)}
-      <li><span class="at">{e.at}</span> {e.name}</li>
-    {:else}
-      <li>—</li>
-    {/each}
-  </ol>
-</Card>
+{#if overlay}
+  <div class="overlay mono" aria-hidden="true" data-testid="diag-overlay">
+    {#each rows as r (r.label)}<span><b>{r.short}</b> {r.value}</span>{/each}
+  </div>
+{:else}
+  <Card tone="progress" label="Diagnostica dello schermo">
+    <dl class="rows mono" data-testid="screen-diagnostics">
+      {#each rows as r (r.label)}
+        <div class="row">
+          <dt>{r.label}</dt>
+          <dd>{r.value}</dd>
+        </div>
+      {/each}
+    </dl>
+    <h3 class="mono-label events-title">Ultimi eventi</h3>
+    <ol class="events mono">
+      {#each viewport.events as e, i (i)}
+        <li><span class="at">{e.at}</span> {e.name}</li>
+      {:else}
+        <li>—</li>
+      {/each}
+    </ol>
+  </Card>
+{/if}
 
 <style>
   .probe {
@@ -78,8 +100,44 @@
     height: 0;
     visibility: hidden;
     pointer-events: none;
+  }
+
+  .safe-raw {
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px)
       env(safe-area-inset-left, 0px);
+  }
+
+  .safe-used {
+    padding: var(--safe-top) var(--safe-right) var(--safe-bottom) var(--safe-left);
+  }
+
+  .fixed-bottom {
+    top: auto;
+    bottom: 0;
+    height: 1px;
+  }
+
+  .overlay {
+    position: fixed;
+    top: calc(var(--safe-top) + 4px);
+    left: calc(8px + var(--safe-left));
+    right: calc(8px + var(--safe-right));
+    z-index: calc(var(--z-toast) + 1);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 10px;
+    padding: 6px 8px;
+    background: rgba(0, 0, 0, 0.82);
+    border: 1px solid var(--tip);
+    color: var(--text);
+    font-size: 11px;
+    line-height: 1.3;
+    pointer-events: none;
+  }
+
+  .overlay b {
+    color: var(--tip);
+    font-weight: 500;
   }
 
   .rows {

@@ -2,7 +2,7 @@
   import type { Snippet } from 'svelte';
   import { swipe } from '../design/swipe-action';
   import type { SwipeDir } from '../design/swipe';
-  import { fade, slideX } from '../design/transitions';
+  import { fade } from '../design/transitions';
   import { indicatorTransform, nextTabIndex } from './tabs';
   import type { Tone } from './types';
 
@@ -37,20 +37,21 @@
 
   // --- Swipe (§ 4): il contenuto segue il dito, l'evidenziatore si sposta in proporzione ---
   let panelTarget = $state<HTMLDivElement>();
-  /** Frazione di tab trascinata (+ verso la successiva); 0 = ferma. */
+  /** Frazione di tab trascinata (+ verso la successiva); 0 = ferma. Con `dragging` segue il dito senza ritardo. */
   let progress = $state(0);
-  /** Direzione dell'ultimo cambio fatto con lo swipe: il nuovo pannello entra da quel lato (0 = tocco, dissolvenza). */
-  let enterDir: SwipeDir | 0 = 0;
+  let dragging = $state(false);
+  /** Cambio fatto con lo swipe: il pannello nuovo entra con il movimento dello swipe (al tocco: dissolvenza). */
+  let viaSwipe = false;
 
   function onswipe(dir: SwipeDir) {
-    enterDir = dir;
+    viaSwipe = true;
     select(index + dir);
   }
 
   function enter(node: Element) {
-    const dir = enterDir;
-    enterDir = 0;
-    return dir === 0 ? fade(node, { duration: 200 }) : slideX(node, { dir });
+    const swiped = viaSwipe;
+    viaSwipe = false;
+    return fade(node, { duration: swiped ? 0 : 200 });
   }
 
   function onkeydown(e: KeyboardEvent) {
@@ -67,15 +68,17 @@
     canGo: (d) => tabs[index + d] !== undefined,
     onswipe,
     target: panelTarget,
-    snap: true,
-    claims: () => swipeable && !!panel,
-    onprogress: (f) => (progress = f),
+    claims: (d) => swipeable && !!panel && tabs[index + d] !== undefined,
+    onprogress: (f, drag) => {
+      progress = f;
+      dragging = drag;
+    },
   }}
 >
   <div class="list" role="tablist" aria-label={label} bind:this={list} style:--n={tabs.length}>
     <span
       class="indicator ind"
-      class:dragging={progress !== 0}
+      class:dragging
       aria-hidden="true"
       style:transform={indicatorTransform(index + progress, tabs.length)}
     ></span>

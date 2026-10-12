@@ -59,7 +59,6 @@ export function edgeSwipe(node: HTMLElement, back: EdgeBack) {
       node.addEventListener('transitionend', go, { once: true });
       setTimeout(go, 400);
     },
-    cancel: () => reset(true),
   }));
 
   return {

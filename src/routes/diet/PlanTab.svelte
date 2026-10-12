@@ -92,13 +92,16 @@
 </script>
 
 <div class="plan">
-  <!-- Swipe tra i giorni (§ 4) su striscia e contenuto: vince sul cambio di tab. La striscia resta ferma. -->
+  <!--
+    Swipe tra i giorni (§ 4) su striscia e contenuto. Vince sempre sul cambio di tab, anche al primo/ultimo
+    giorno (lì non succede niente). La striscia resta ferma.
+  -->
   <div
     class="swipe"
     role="group"
     aria-label="Giorno mostrato: scorri a destra o a sinistra per cambiare giorno"
     data-testid="day-swipe"
-    use:swipe={{ canGo: (dir) => (dir === -1 ? prevDay : nextDay) !== null, onswipe, target: dayTarget }}
+    use:swipe={{ canGo: (dir) => (dir === -1 ? prevDay : nextDay) !== null, onswipe, target: dayTarget, claims: () => true }}
   >
     <DayStrip days={strip} {selected} today={todayWeekday} onselect={(d) => (selected = d)} />
 

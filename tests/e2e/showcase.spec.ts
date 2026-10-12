@@ -1,4 +1,4 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test, type Locator, type Page } from '@playwright/test';
 
 async function openShowcase(page: Page) {
   await page.goto('./#/showcase');
@@ -27,6 +27,19 @@ test('la pagina di prova si apre dall’indirizzo, e il refresh la mantiene', as
   await page.getByRole('link', { name: 'Torna alla Home' }).click();
   await expect(page.getByTestId('home-strip')).toBeVisible();
 });
+
+/** Il pannello entra dal fondo: si aspetta che sia fermo prima di afferrarlo. */
+async function settled(locator: Locator) {
+  let last = -1;
+  await expect
+    .poll(async () => {
+      const y = Math.round((await locator.boundingBox())?.y ?? -1);
+      const still = y === last;
+      last = y;
+      return still;
+    })
+    .toBe(true);
+}
 
 test('BottomSheet: si apre e si chiude con Esc, overlay, ✕ e trascinamento', async ({ page }) => {
   await openShowcase(page);
@@ -60,6 +73,7 @@ test('BottomSheet: si apre e si chiude con Esc, overlay, ✕ e trascinamento', a
   await expect(sheet).toBeVisible();
   const title = sheet.getByRole('heading', { name: 'Recupero' });
   await expect(title).toBeInViewport();
+  await settled(title);
   const box = (await title.boundingBox())!;
   await page.mouse.move(box.x + 10, box.y + box.height / 2);
   await page.mouse.down();
@@ -71,6 +85,7 @@ test('BottomSheet: si apre e si chiude con Esc, overlay, ✕ e trascinamento', a
   // Un trascinamento breve e lento non chiude
   await opener.click();
   await expect(title).toBeInViewport();
+  await settled(title);
   const box2 = (await title.boundingBox())!;
   await page.mouse.move(box2.x + 10, box2.y + box2.height / 2);
   await page.mouse.down();

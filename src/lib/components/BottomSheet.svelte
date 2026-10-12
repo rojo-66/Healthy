@@ -72,10 +72,16 @@
       document.documentElement.style.overflow = 'hidden';
       dialog.showModal();
     }
+    // showModal() e il focus non devono far scorrere il dialog (vedi sotto).
+    dialog.scrollTop = 0;
     instantOut = false;
     shown = true;
     await tick();
-    panel?.focus();
+    /*
+     * Il pannello sta ancora entrando da sotto lo schermo: su iPhone il focus "normale" fa scorrere il dialog
+     * per mostrarlo (il pannello compare in alto e poi scende). Il focus non deve spostare niente.
+     */
+    panel?.focus({ preventScroll: true });
   }
 
   function close() {
@@ -89,7 +95,7 @@
     dialog.close();
     document.documentElement.style.overflow = previousOverflow;
     onclose?.();
-    opener?.focus();
+    opener?.focus({ preventScroll: true });
     opener = null;
   }
 
@@ -214,7 +220,9 @@
     border: 0;
     background: transparent;
     color: var(--text);
+    /* clip: il dialog non è un contenitore che scorre, nemmeno da codice o per il focus. */
     overflow: hidden;
+    overflow: clip;
   }
 
   .dialog::backdrop {

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { diagOverlay } from './lib/design/diag-overlay.svelte';
   import UpdatePrompt from './lib/pwa/UpdatePrompt.svelte';
   import { route } from './lib/router.svelte';
 
@@ -20,6 +21,7 @@
   const loadMeasurement = () => import('./routes/Measurement.svelte');
   const loadImport = () => import('./routes/Import.svelte');
   const loadProgress = () => import('./routes/Progress.svelte');
+  const loadDiagnostics = () => import('./routes/dev/ScreenDiagnostics.svelte');
 </script>
 
 {#if route.path === '/showcase'}
@@ -108,3 +110,10 @@
 {/if}
 
 <UpdatePrompt />
+
+<!-- Diagnostica sopra l'app (Strumenti tecnici): solo se attivata su questo telefono. -->
+{#if diagOverlay.enabled}
+  {#await loadDiagnostics() then { default: ScreenDiagnostics }}
+    <ScreenDiagnostics overlay />
+  {/await}
+{/if}

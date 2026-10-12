@@ -6,6 +6,7 @@
   import NoteBox from '../lib/components/NoteBox.svelte';
   import { parseBackup, previewBackup, restoreBackup } from '../lib/data/backup';
   import { ValidationError } from '../lib/data/errors';
+  import { diagOverlay, setDiagOverlay } from '../lib/design/diag-overlay.svelte';
   import { liveState } from '../lib/data/live.svelte';
   import { clearAll, countAll, type TableCounts } from '../lib/data/repo/maintenance';
   import { TABLE_LABELS, TABLE_NAMES } from '../lib/data/schemas';
@@ -95,9 +96,19 @@
   <section class="block" aria-labelledby="s-screen">
     <h2 id="s-screen" class="mono-label">Schermo</h2>
     <ScreenDiagnostics />
+    <Button
+      variant="secondary"
+      tone="progress"
+      block
+      pressed={diagOverlay.enabled}
+      onclick={() => setDiagOverlay(!diagOverlay.enabled)}
+    >
+      {diagOverlay.enabled ? 'Nascondi i numeri sopra l’app' : 'Mostra i numeri sopra l’app'}
+    </Button>
     <p class="hint">
-      Si aggiorna da solo. Dopo il blocco del telefono o la chiusura della tastiera: innerHeight uguale all'altezza
-      dello schermo, scrollY 0, --app-h uguale a innerHeight.
+      Si aggiorna da solo. Con i numeri sopra l'app puoi fotografarli proprio quando compare la fascia vuota (su
+      qualsiasi schermata, anche con un pannello aperto). Normale: innerHeight = screen.height, scrollY 0, fixBot =
+      innerHeight, safe-area giù 34 (o 0 sugli iPhone col tasto Home).
     </p>
   </section>
 

@@ -80,8 +80,12 @@
   }
 }
 
-/* Scorrimento interno con scrollbar nascosta. */
+/*
+ * Scorrimento interno con scrollbar nascosta. Solo verticale: il contenuto spostato da uno swipe non deve
+ * rendere scorrevole il contenitore di lato (su iPhone il gesto finirebbe al contenitore).
+ */
 .scroll {
+  overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;

@@ -47,7 +47,6 @@
         settle();
         if (next !== open) onopenchange?.(next);
       },
-      cancel: settle,
     }));
   }
 
