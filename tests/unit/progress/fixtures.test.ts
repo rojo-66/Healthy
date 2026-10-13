@@ -20,6 +20,6 @@ describe('fixture finta di Progressi (e2e e unitari)', () => {
     expect(t.measurements.some((m) => m.weightKg === null)).toBe(true);
     expect(t.sessions.some((s) => s.startedAt >= '2026-08-10' && s.startedAt < '2026-08-17')).toBe(false);
     expect(t.dietLog.some((l) => l.date === '2026-10-04')).toBe(false);
-    expect(t.dietLog.some((l) => l.swappedFromWeekday !== null)).toBe(true);
+    expect(t.dietLog.some((l) => l.mealsFrom !== null)).toBe(true);
   });
 });

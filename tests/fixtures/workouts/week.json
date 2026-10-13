@@ -13,6 +13,7 @@
     ],
     "items": [
       {
+        "kind": "strength",
         "exerciseId": "fx-barbell-bench-press-medium-grip",
         "name": "Panca piana con bilanciere",
         "muscles": ["Petto", "Tricipiti", "Spalle"],
@@ -30,6 +31,7 @@
         ]
       },
       {
+        "kind": "strength",
         "exerciseId": "fx-wide-grip-lat-pulldown",
         "name": "Lat machine presa larga",
         "muscles": ["Dorsali", "Bicipiti"],
@@ -42,6 +44,7 @@
         "setsDetail": null
       },
       {
+        "kind": "strength",
         "exerciseId": "fx-plank",
         "name": "Plank",
         "muscles": ["Addominali"],
@@ -52,9 +55,20 @@
         "note": "Tieni 40 secondi.",
         "videoUrl": null,
         "setsDetail": null
+      },
+      {
+        "kind": "cardio",
+        "exerciseId": "cd-tapis-corsa",
+        "name": "Tapis roulant · corsa",
+        "minutes": 12,
+        "distanceKm": null,
+        "speedKmh": null,
+        "inclinePct": null,
+        "level": null,
+        "note": "",
+        "videoUrl": null
       }
     ],
-    "cardio": { "type": "tapis roulant", "minutes": 12 },
     "updatedAt": "2026-10-05T17:00:00.000Z"
   },
   {
@@ -68,6 +82,7 @@
     "warmup": [],
     "items": [
       {
+        "kind": "strength",
         "exerciseId": "fx-barbell-squat",
         "name": "Squat con bilanciere",
         "muscles": ["Quadricipiti", "Glutei"],
@@ -80,6 +95,7 @@
         "setsDetail": null
       },
       {
+        "kind": "strength",
         "exerciseId": "fx-leg-press",
         "name": "Leg press (pressa 45°)",
         "muscles": ["Quadricipiti", "Glutei"],
@@ -92,7 +108,6 @@
         "setsDetail": null
       }
     ],
-    "cardio": null,
     "updatedAt": "2026-10-04T17:00:00.000Z"
   },
   {
@@ -106,6 +121,7 @@
     "warmup": [],
     "items": [
       {
+        "kind": "strength",
         "exerciseId": "c0000000-0000-4000-8000-000000000001",
         "name": "Crunch sul rullo",
         "muscles": ["Addominali"],
@@ -118,7 +134,6 @@
         "setsDetail": null
       }
     ],
-    "cardio": null,
     "updatedAt": "2026-10-03T17:00:00.000Z"
   },
   {
@@ -132,6 +147,7 @@
     "warmup": [],
     "items": [
       {
+        "kind": "strength",
         "exerciseId": "fx-barbell-curl",
         "name": "Curl con bilanciere",
         "muscles": ["Bicipiti"],
@@ -144,7 +160,6 @@
         "setsDetail": null
       }
     ],
-    "cardio": null,
     "updatedAt": "2026-10-02T17:00:00.000Z"
   }
 ]

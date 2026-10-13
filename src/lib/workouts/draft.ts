@@ -1,9 +1,11 @@
 import { newId, nowIso } from '../data/ids';
 import type { Exercise } from '../data/schemas/exercises';
-import type { DraftItem, DraftWarmup, WorkoutAuthor, WorkoutDraft } from '../data/schemas/workout-draft';
-import type { Workout } from '../data/schemas/workouts';
+import { CARDIO_FIELDS, type CardioField } from '../data/schemas/exercises';
+import type { DraftCardio, DraftItem, DraftStrength, DraftWarmup, WorkoutAuthor, WorkoutDraft } from '../data/schemas/workout-draft';
+import type { Workout, WorkoutItem } from '../data/schemas/workouts';
 import { move } from './calc/reorder';
-import { NEW_ITEM } from './calc/values';
+import { NEW_CARDIO_MIN, NEW_ITEM } from './calc/values';
+import { CARDIO_LIBRARY } from './library/cardio';
 
 /** Chiave locale di una riga dell'editor (per `{#each}` e riordino): mai salvata nella scheda. */
 export const newKey = (): string => newId();
@@ -24,7 +26,49 @@ export function emptyDraft(author: WorkoutAuthor): WorkoutDraft {
     intro: '',
     warmup: [],
     items: [],
-    cardio: null,
+  };
+}
+
+/**
+ * Campi cardio da mostrare subito per un esercizio: quelli della voce della libreria;
+ * per un esercizio personalizzato o non collegato tutti (gli altri restano dietro "Altri campi").
+ */
+export function cardioFieldsFor(exerciseId: string | null): CardioField[] {
+  const entry = exerciseId ? CARDIO_LIBRARY.find((e) => e.id === exerciseId) : undefined;
+  return entry ? [...entry.fields] : [...CARDIO_FIELDS];
+}
+
+function draftItemFrom(item: WorkoutItem): DraftItem {
+  if (item.kind === 'cardio') {
+    return {
+      kind: 'cardio',
+      key: newKey(),
+      exerciseId: item.exerciseId,
+      name: item.name,
+      minutes: item.minutes,
+      distanceKm: item.distanceKm,
+      speedKmh: item.speedKmh,
+      inclinePct: item.inclinePct,
+      level: item.level,
+      note: item.note,
+      videoUrl: item.videoUrl ?? '',
+      fields: cardioFieldsFor(item.exerciseId),
+    };
+  }
+  return {
+    kind: 'strength',
+    key: newKey(),
+    exerciseId: item.exerciseId,
+    name: item.name,
+    muscles: [...item.muscles],
+    sets: item.sets,
+    reps: item.reps,
+    kg: item.kg,
+    restSec: item.restSec,
+    note: item.note,
+    videoUrl: item.videoUrl ?? '',
+    setsDetail: item.setsDetail ? item.setsDetail.map((s) => ({ ...s })) : null,
+    setsDetailMemory: null,
   };
 }
 
@@ -39,27 +83,35 @@ export function draftFromWorkout(w: Workout): WorkoutDraft {
     time: w.time,
     intro: w.intro,
     warmup: w.warmup.map((x) => ({ key: newKey(), ...x })),
-    items: w.items.map((item) => ({
-      key: newKey(),
-      exerciseId: item.exerciseId,
-      name: item.name,
-      muscles: [...item.muscles],
-      sets: item.sets,
-      reps: item.reps,
-      kg: item.kg,
-      restSec: item.restSec,
-      note: item.note,
-      videoUrl: item.videoUrl ?? '',
-      setsDetail: item.setsDetail ? item.setsDetail.map((s) => ({ ...s })) : null,
-      setsDetailMemory: null,
-    })),
-    cardio: w.cardio ? { ...w.cardio } : null,
+    items: w.items.map(draftItemFrom),
   };
 }
 
-/** Riga nuova da un esercizio della libreria: 3 × 10, 0 kg, 90 s; nome, muscoli e video copiati. */
-export function itemFromExercise(ex: Pick<Exercise, 'id' | 'name' | 'muscles' | 'videoUrl'>): DraftItem {
+/**
+ * Riga nuova da un esercizio della libreria: forza 3 × 10, 0 kg, 90 s; cardio 10 minuti con gli altri campi vuoti.
+ * Nome, muscoli e video copiati.
+ */
+export function itemFromExercise(
+  ex: Pick<Exercise, 'id' | 'name' | 'muscles' | 'videoUrl' | 'kind' | 'cardioFields'>,
+): DraftItem {
+  if (ex.kind === 'cardio') {
+    return {
+      kind: 'cardio',
+      key: newKey(),
+      exerciseId: ex.id,
+      name: ex.name,
+      minutes: NEW_CARDIO_MIN,
+      distanceKm: null,
+      speedKmh: null,
+      inclinePct: null,
+      level: null,
+      note: '',
+      videoUrl: ex.videoUrl ?? '',
+      fields: [...ex.cardioFields],
+    };
+  }
   return {
+    kind: 'strength',
     key: newKey(),
     exerciseId: ex.id,
     name: ex.name,
@@ -91,19 +143,36 @@ export function draftToCandidate(d: WorkoutDraft, now: Date = new Date()): Recor
     time: d.time,
     intro: d.intro,
     warmup: d.warmup.map(({ name, hint, dose }) => ({ name, hint, dose })),
-    items: d.items.map((item) => ({
-      exerciseId: item.exerciseId,
-      name: item.name,
-      muscles: item.muscles,
-      sets: item.sets,
-      reps: item.reps,
-      kg: item.kg,
-      restSec: item.restSec,
-      note: item.note,
-      videoUrl: item.videoUrl.trim() === '' ? null : item.videoUrl.trim(),
-      setsDetail: item.setsDetail,
-    })),
-    cardio: d.cardio,
+    items: d.items.map((item) => {
+      const videoUrl = item.videoUrl.trim() === '' ? null : item.videoUrl.trim();
+      if (item.kind === 'cardio') {
+        return {
+          kind: 'cardio',
+          exerciseId: item.exerciseId,
+          name: item.name,
+          minutes: item.minutes,
+          distanceKm: item.distanceKm,
+          speedKmh: item.speedKmh,
+          inclinePct: item.inclinePct,
+          level: item.level,
+          note: item.note,
+          videoUrl,
+        };
+      }
+      return {
+        kind: 'strength',
+        exerciseId: item.exerciseId,
+        name: item.name,
+        muscles: item.muscles,
+        sets: item.sets,
+        reps: item.reps,
+        kg: item.kg,
+        restSec: item.restSec,
+        note: item.note,
+        videoUrl,
+        setsDetail: item.setsDetail,
+      };
+    }),
     updatedAt: nowIso(now),
   };
 }
@@ -133,6 +202,11 @@ export function removeItem(d: WorkoutDraft, index: number): WorkoutDraft {
   return { ...d, items: d.items.filter((_, i) => i !== index) };
 }
 
-export function updateItem(d: WorkoutDraft, index: number, patch: Partial<DraftItem>): WorkoutDraft {
-  return { ...d, items: d.items.map((item, i) => (i === index ? { ...item, ...patch } : item)) };
+/** Modifica una riga; il tipo della riga non cambia. */
+export function updateItem(
+  d: WorkoutDraft,
+  index: number,
+  patch: Partial<Omit<DraftStrength, 'kind'>> | Partial<Omit<DraftCardio, 'kind'>>,
+): WorkoutDraft {
+  return { ...d, items: d.items.map((item, i) => (i === index ? ({ ...item, ...patch, kind: item.kind } as DraftItem) : item)) };
 }

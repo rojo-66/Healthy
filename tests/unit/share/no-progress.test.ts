@@ -52,10 +52,16 @@ function forbiddenStrings(d: ReturnType<typeof trackedData>, ownSessionId?: stri
     'measurements',
     'dietLog',
     'swappedFromWeekday',
+    'mealsFrom',
     '"eaten"',
     'previousKg',
     'adherence',
     'ADERENZA',
+    // 2a: corse fatte e pianificate restano sul telefono
+    'runLogs',
+    'runName',
+    'durationSec',
+    'targetMinutes',
     // id delle sessioni (lo storico), tranne quella mandata al PT con "Invia al PT" (M5)
     ...d.sessions.map((s) => s.id).filter((id) => id !== ownSessionId),
     // date del diario: compaiono solo nei dati di Progressi
@@ -108,8 +114,23 @@ describe('i dati di Progressi non escono mai dal telefono', () => {
   });
 
   it('Progressi non salva niente: le tabelle del database (e quindi del backup) sono quelle di sempre', () => {
+    // 2a: le tabelle della corsa (pianificata e fatta); 2c: quelle del calendario. Nessuna la scrive Progressi.
     expect([...TABLE_NAMES].sort()).toEqual(
-      ['dietLog', 'dietPlans', 'exercises', 'measurements', 'profile', 'sessions', 'settings', 'shopping', 'workouts'].sort(),
+      [
+        'calendarEdits',
+        'dayChoices',
+        'dietLog',
+        'dietPlans',
+        'exercises',
+        'measurements',
+        'profile',
+        'runLogs',
+        'runs',
+        'sessions',
+        'settings',
+        'shopping',
+        'workouts',
+      ].sort(),
     );
     // I calcoli esistono davvero (il controllo sopra non è vuoto per caso).
     expect(d.records.length).toBeGreaterThan(0);
@@ -148,5 +169,29 @@ describe('i dati di Progressi non escono mai dal telefono', () => {
     const reached = [...seen].map((p) => p.replaceAll('\\', '/'));
     expect(reached.length).toBeGreaterThan(entries.length);
     expect(reached.filter((p) => p.includes('/src/lib/progress/') || p.includes('/src/lib/charts/'))).toEqual([]);
+    // 2a: corse pianificate e fatte non si condividono mai (né la logica né il loro archivio).
+    const sharing = reached.filter((p) => !p.endsWith('/src/lib/data/backup.ts'));
+    expect(sharing.filter((p) => p.includes('/src/lib/runs/') || p.includes('/src/lib/data/repo/runs'))).toEqual([]);
+    // 2c: nemmeno il calendario (spostamenti, salti, diete scelte).
+    expect(sharing.filter((p) => p.includes('/src/lib/calendar/') || p.includes('/src/lib/data/repo/calendar'))).toEqual([]);
+  });
+});
+
+describe('calendario (2c): spostamenti, salti, diete scelte e corse fatte non si condividono mai', () => {
+  const d = trackedData();
+  /** Nomi dei campi del calendario: non devono comparire in nessun file, link o testo condiviso. */
+  const calendarFields = ['calendarEdits', 'dayChoices', 'mealSources', 'calendarStart', 'originalDate', 'toDate', 'dietType', 'runLogs'];
+
+  it('schede, diete, sessioni e spesa (anche dopo gli spostamenti) senza dati del calendario', async () => {
+    for (const w of d.t.workouts) {
+      expectClean(JSON.stringify(workoutToShareFile(w, ME)), calendarFields);
+      expectClean(await prepareWorkoutShare(w, ME, BASE).file.text(), calendarFields);
+    }
+    expectClean(JSON.stringify(dietToShareFile(d.active)), calendarFields);
+    expectClean(await planExportFile(d.active).text(), calendarFields);
+    const session = d.sessions.at(-1)!;
+    expectClean(JSON.stringify(sessionToFile(session)), calendarFields);
+    const moved = buildShoppingList(d.active.payload, ['rest', 'gym', 'gym', 'rest', 'gym', 'run', 'rest'].map((type) => ({ type })));
+    expectClean(shoppingShareText(moved, {}, '12–18 ott'), calendarFields);
   });
 });

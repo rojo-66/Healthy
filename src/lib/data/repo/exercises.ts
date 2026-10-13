@@ -22,6 +22,8 @@ export function exercisesForMuscle(muscle: string): Promise<Exercise[]> {
 
 export interface CustomExerciseFields {
   name: string;
+  /** Forza o cardio (2a). */
+  kind: 'strength' | 'cardio';
   muscles: readonly string[];
   equipment: string;
   /** Testo del campo: vuoto = nessun link. */

@@ -92,9 +92,11 @@
     {:else if workout.current && totals}
       {@const w = workout.current}
       <div class="chips mono" data-testid="intro-chips">
-        <span>{exercisesLabel(totals.exercises)}</span>
-        <span>{totals.sets} serie</span>
-        {#if w.cardio && w.cardio.minutes > 0}<span>+ {w.cardio.minutes}’ {w.cardio.type}</span>{/if}
+        {#if totals.exercises > 0}
+          <span>{exercisesLabel(totals.exercises)}</span>
+          <span>{totals.sets} serie</span>
+        {/if}
+        {#if totals.cardioMin > 0}<span>+ {totals.cardioMin}’ cardio</span>{/if}
       </div>
 
       {#if w.intro}

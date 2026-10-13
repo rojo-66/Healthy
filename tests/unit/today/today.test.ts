@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import { toMinutes } from '../../../src/lib/diet/calc/meal-now';
-import { findDay } from '../../../src/lib/diet/view';
-import { conflictText, resolveDayType } from '../../../src/lib/today/day-type';
-import { buildHomeDay, homeWeek, relationOf, relativeDayWord, weekDates, type HomeInput } from '../../../src/lib/today/home';
+import { dayInfo, dayInfos } from '../../../src/lib/calendar/days';
+import { buildCalendar, type CalendarInput } from '../../../src/lib/calendar/occurrences';
+import type { CalendarEdit, DayChoice } from '../../../src/lib/data/schemas/calendar';
+import type { DietLogDay } from '../../../src/lib/data/schemas/diet-log';
+import type { DietPlan } from '../../../src/lib/data/schemas/diet-plans';
+import type { Run, RunLog } from '../../../src/lib/data/schemas/runs';
+import type { Session } from '../../../src/lib/data/schemas/sessions';
+import type { Workout } from '../../../src/lib/data/schemas/workouts';
+import { buildHomeDay, homeStrip, relationOf, relativeDayWord, weekDates } from '../../../src/lib/today/home';
 import { isSyncOk, syncStatus, type SyncInputs } from '../../../src/lib/today/sync';
 import { dailyTip, GENERIC_TIPS, genericTipsFor } from '../../../src/lib/today/tips';
 import { inTimeLabel, workoutWhen } from '../../../src/lib/today/workout-day';
@@ -12,8 +18,29 @@ import { extendedPlan, partialPlan, sessionOf, swapLogs, TODAY } from './helpers
 
 const at = (hhmm: string) => toMinutes(hhmm);
 
-function home(overrides: Partial<HomeInput> = {}) {
-  return buildHomeDay({
+interface HomeCase {
+  date: string;
+  todayIso: string;
+  nowMinutes: number;
+  plan: DietPlan | null;
+  log: DietLogDay | undefined;
+  workouts: Workout[];
+  sessions: Session[];
+  active: Session | null;
+  runs: Run[];
+  runLogs: RunLog[];
+  edits: CalendarEdit[];
+  choices: DayChoice[];
+  /**
+   * Primo giorno con il tipo dalle attività (2c). Qui di base nel futuro: questi test verificano la Home con il tipo
+   * del piano, come prima del 2c; il tipo dalle attività ha i suoi test (`day-type.test.ts`).
+   */
+  calendarStart: string | null;
+}
+
+/** Giorno della Home come lo calcola la schermata: calendario del giorno, tipo di giornata, diario. */
+function home(overrides: Partial<HomeCase> = {}) {
+  const c: HomeCase = {
     date: TODAY,
     todayIso: TODAY,
     nowMinutes: at('13:00'),
@@ -22,20 +49,39 @@ function home(overrides: Partial<HomeInput> = {}) {
     workouts: weekWorkouts(),
     sessions: [],
     active: null,
+    runs: [],
+    runLogs: [],
+    edits: [],
+    choices: [],
+    calendarStart: '2100-01-01',
     ...overrides,
-  });
+  };
+  const input: CalendarInput = {
+    workouts: c.workouts,
+    runs: c.runs,
+    edits: c.edits,
+    sessions: c.sessions,
+    runLogs: c.runLogs,
+    active: c.active,
+    todayIso: c.todayIso,
+  };
+  const diet = { plan: c.plan, logs: c.log ? [c.log] : [], choices: c.choices, calendarStart: c.calendarStart };
+  const days = buildCalendar(c.date, c.date, input);
+  const info = dayInfo(c.date, days, input, diet);
+  return buildHomeDay({ todayIso: c.todayIso, nowMinutes: c.nowMinutes, plan: c.plan, info, days, workouts: c.workouts, active: c.active });
 }
 
-const focus = (overrides: Partial<HomeInput>) => {
+const focus = (overrides: Partial<HomeCase>) => {
   const m = home(overrides).meal;
   return m.kind === 'meal' ? `${m.mode}:${m.meal.key}` : m.kind === 'finished' ? `finished:${m.eaten}/${m.total}` : m.kind;
 };
 
-const eatenLog = (eaten: Record<string, boolean>, date = TODAY) => ({
+const eatenLog = (eaten: Record<string, boolean>, date = TODAY): DietLogDay => ({
   date,
   planId: extendedPlan().id,
-  swappedFromWeekday: null,
+  mealsFrom: null,
   eaten,
+  mealSources: {},
 });
 
 describe('pasto del momento (Home), orologio simulato', () => {
@@ -86,14 +132,13 @@ describe('pasto del momento (Home), orologio simulato', () => {
   });
 });
 
-describe('"oggi seguo il piano di un altro giorno"', () => {
+describe('"oggi seguo il piano di un altro giorno" già salvato (2b, ora in sola lettura)', () => {
   const log = swapLogs()[0]!;
 
-  it('oggi mostra e conteggia i pasti del giorno scelto, e lo dichiara', () => {
+  it('oggi mostra e conteggia i pasti del giorno scelto', () => {
     const day = home({ log });
     expect(day.weekday).toBe(1);
-    expect(day.followsWeekday).toBe(3);
-    expect(day.swapped).toBe(true);
+    expect(day.view?.weekday).toBe(3);
     // Mercoledì: 4 pasti visibili (lo spuntino vuoto non si mostra).
     expect(day.view?.meals.map((m) => m.key)).toEqual(['colazione', 'spuntino1', 'pranzo', 'cena']);
     const wednesday = home({ date: '2026-10-14', todayIso: '2026-10-14' });
@@ -103,17 +148,17 @@ describe('"oggi seguo il piano di un altro giorno"', () => {
     expect(day.timeline.find((t) => t.id === 'meal:colazione')?.state).toBe('done');
   });
 
-  it('il tipo di giornata segue il piano scelto (riposo) e il conflitto con la scheda di lunedì si dichiara', () => {
+  it('prima del calendario il tipo di giornata segue il piano scelto (riposo)', () => {
     const day = home({ log });
-    expect(day.dayType).toMatchObject({ key: 'rest', label: 'Riposo', source: 'plan', conflict: 'plan-not-gym-with-workout' });
-    expect(day.conflict).toBe('Il piano alimentare di oggi è da giorno di riposo: i target restano quelli del piano.');
+    expect(day.dayType).toMatchObject({ key: 'rest', label: 'Riposo', source: 'plan' });
+    expect(day.typeNote).toBe('');
     expect(day.calories?.targets?.kcal).toBe(1550);
   });
 
   it('un diario di un altro piano non conta', () => {
     const other = swapLogs()[2]!;
     const day = home({ date: other.date, log: other });
-    expect(day.swapped).toBe(false);
+    expect(day.view?.weekday).toBe(6);
     expect(day.calories?.shown.total.kcal).toBe(0);
     expect(day.timeline.filter((t) => t.state === 'done')).toEqual([]);
   });
@@ -147,42 +192,6 @@ describe('calorie e macro del giorno', () => {
   });
 });
 
-describe('tipo di giornata e conflitti', () => {
-  const payload = extendedPlan().payload;
-  const day = (weekday: number) => findDay(payload, weekday) ?? null;
-
-  it('vince il piano', () => {
-    expect(resolveDayType(payload, day(1), 1)).toMatchObject({ key: 'gym', label: 'Giorno palestra', tone: 'training', conflict: null });
-    expect(resolveDayType(payload, day(6), 0)).toMatchObject({ key: 'run', label: 'Corsa', tone: 'progress', conflict: null });
-    expect(resolveDayType(payload, day(7), 0)).toMatchObject({ key: 'rest', label: 'Riposo', tone: 'muted', conflict: null });
-  });
-
-  it('conflitti dichiarati, tipo invariato', () => {
-    const rest = resolveDayType(payload, day(3), 1);
-    expect(rest).toMatchObject({ key: 'rest', conflict: 'plan-not-gym-with-workout' });
-    const run = resolveDayType(payload, day(6), 2);
-    expect(conflictText(run, false)).toBe('Il piano alimentare di questo giorno è da giorno di corsa: i target restano quelli del piano.');
-    const gym = resolveDayType(payload, day(4), 0);
-    expect(gym).toMatchObject({ key: 'gym', conflict: 'plan-gym-without-workout' });
-    expect(conflictText(gym, true)).toBe("Il piano alimentare di oggi è da giorno palestra, ma non c'è una scheda assegnata.");
-    expect(conflictText(resolveDayType(payload, day(1), 1), true)).toBe('');
-  });
-
-  it('senza piano o senza tipo decide la scheda; altrimenti riposo; tipi del piano sconosciuti senza conflitti', () => {
-    expect(resolveDayType(null, null, 1)).toMatchObject({ key: 'gym', label: 'Giorno palestra', source: 'workout' });
-    expect(resolveDayType(null, null, 0)).toMatchObject({ key: 'rest', label: 'Riposo', source: 'none' });
-    const partial = partialPlan().payload;
-    expect(resolveDayType(partial, findDay(partial, 4)!, 1).source).toBe('workout');
-    const custom = { ...payload, dayTypes: { scarico: { label: 'Scarico', targets: null, targetsSource: 'plan' as const } } };
-    expect(resolveDayType(custom, { ...day(1)!, type: 'scarico' }, 1)).toMatchObject({
-      key: 'scarico',
-      label: 'Scarico',
-      tone: 'muted',
-      conflict: null,
-    });
-  });
-});
-
 describe('timeline della giornata', () => {
   const petto = () => ({ ...workoutNamed('Petto + Schiena'), time: '18:00' });
   const states = (day: ReturnType<typeof home>) => day.timeline.map((t) => `${t.id}=${t.state}@${t.time}`);
@@ -194,7 +203,7 @@ describe('timeline della giornata', () => {
       'meal:spuntino1=missed@10:30',
       'meal:pranzo=now@13:00',
       'meal:spuntino2=next@18:00',
-      `workout:${petto().id}=next@18:00`,
+      `workout:workout:${petto().id}:2026-10-12=next@18:00`,
       'supp:0=next@18:00',
       'meal:cena=next@20:30',
       'supp:1=next@20:30',
@@ -216,7 +225,7 @@ describe('timeline della giornata', () => {
     const noTime = home({ workouts: [workoutNamed('Petto + Schiena')] });
     const ids = noTime.timeline.map((t) => t.id);
     // Pranzo › allenamento › whey "dopo palestra" › post-workout.
-    const workoutAt = ids.indexOf(`workout:${workoutNamed('Petto + Schiena').id}`);
+    const workoutAt = ids.indexOf(`workout:workout:${workoutNamed('Petto + Schiena').id}:2026-10-12`);
     expect(ids.slice(workoutAt - 1, workoutAt + 3)).toEqual(['meal:pranzo', ids[workoutAt], 'supp:0', 'meal:spuntino2']);
     expect(noTime.timeline.find((t) => t.kind === 'workout')?.time).toBe('');
 
@@ -226,7 +235,7 @@ describe('timeline della giornata', () => {
       'meal:pranzo@13:00',
       'meal:pre@17:00',
       'supp:1@',
-      `workout:${workoutNamed('Petto + Schiena').id}@`,
+      `workout:workout:${workoutNamed('Petto + Schiena').id}:2026-10-12@`,
       'meal:cena@20:30',
       'supp:2@20:30',
       'supp:3@20:30',
@@ -359,6 +368,13 @@ describe('indicatore SYNC OFFLINE', () => {
   });
 });
 
+/** Striscia della settimana di oggi, con il tipo del piano (prima del calendario). */
+function stripOf(plan: DietPlan | null, logs: DietLogDay[]) {
+  const input: CalendarInput = { workouts: weekWorkouts(), runs: [], edits: [], sessions: [], runLogs: [], active: null, todayIso: TODAY };
+  const { infos } = dayInfos('2026-10-12', '2026-10-18', input, { plan, logs, choices: [], calendarStart: '2100-01-01' });
+  return homeStrip(infos, TODAY);
+}
+
 describe('giorni e mezzanotte', () => {
   it('relazione con oggi e parola relativa', () => {
     expect(relationOf('2026-10-12', TODAY)).toBe('today');
@@ -380,7 +396,7 @@ describe('giorni e mezzanotte', () => {
     expect(home({ date: '2026-10-13', todayIso: '2026-10-13', nowMinutes: 0 }).relation).toBe('today');
   });
 
-  it('settimana L–D e striscia con il tipo di ogni giorno (scambio compreso)', () => {
+  it('settimana L–D e striscia con il tipo di ogni giorno (scambio compreso, prima del calendario)', () => {
     expect(weekDates('2026-10-14')).toEqual([
       '2026-10-12',
       '2026-10-13',
@@ -391,7 +407,7 @@ describe('giorni e mezzanotte', () => {
       '2026-10-18',
     ]);
     expect(weekDates('2026-10-18')[0]).toBe('2026-10-12');
-    const strip = homeWeek(TODAY, extendedPlan(), swapLogs(), weekWorkouts());
+    const strip = stripOf(extendedPlan(), swapLogs());
     expect(strip.map((d) => `${d.initial}${d.dayNumber}:${d.tone}`)).toEqual([
       'L12:muted', // lunedì segue mercoledì (riposo)
       'M13:training',
@@ -402,7 +418,7 @@ describe('giorni e mezzanotte', () => {
       'D18:muted',
     ]);
     expect(strip.filter((d) => d.isToday).map((d) => d.date)).toEqual([TODAY]);
-    expect(homeWeek(TODAY, null, [], weekWorkouts()).map((d) => d.tone)).toEqual([
+    expect(stripOf(null, []).map((d) => d.tone)).toEqual([
       'training',
       'training',
       'training',

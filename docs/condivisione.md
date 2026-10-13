@@ -34,3 +34,5 @@ Per lo stesso motivo il QR va letto con **Importa › Scansiona QR** dentro l'ap
 - *"Troppo lungo per un link"*: usa il file.
 - *Fotocamera negata*: consentila in Impostazioni › Safari › Fotocamera, oppure incolla il link o scegli il file.
 - Un **backup** si ripristina da *Profilo › Backup e dati*, non da Importa.
+- *"Creato con una versione più recente dell'app… aggiorna Healthy"*: chi la manda ha un'app più nuova (per esempio le schede con il cardio come esercizio). Aggiorna l'app (al prossimo avvio con la rete compare "Nuova versione disponibile") e riprova. Le schede mandate da un'app più vecchia si importano sempre.
+- Le **corse** (pianificate e fatte) restano sul tuo telefono: non si condividono.

@@ -2,23 +2,23 @@
   import { onMount, untrack } from 'svelte';
   import NoteBox from '../../lib/components/NoteBox.svelte';
   import { ValidationError } from '../../lib/data/errors';
-  import { liveState } from '../../lib/data/live.svelte';
-  import { dietLogBetween, setMealEaten } from '../../lib/data/repo/diet-log';
-  import { listDietPlans } from '../../lib/data/repo/diet-plans';
-  import { activeSession, sessionsBetween } from '../../lib/data/repo/sessions';
-  import { listWorkoutsRecent } from '../../lib/data/repo/workouts';
-  import type { DietLogDay } from '../../lib/data/schemas/diet-log';
-  import type { DietPlan } from '../../lib/data/schemas/diet-plans';
-  import { weekdayName } from '../../lib/data/schemas/diet-payload';
-  import type { Session } from '../../lib/data/schemas/sessions';
+  import { setMealEaten } from '../../lib/data/repo/diet-log';
+  import type { Run, RunLog } from '../../lib/data/schemas/runs';
+  import type { RunEntry } from '../../lib/today/workout-day';
+  import RunLogSheet from '../train/RunLogSheet.svelte';
   import type { Workout } from '../../lib/data/schemas/workouts';
-  import { addDays, dayMonthYear, fromIsoDate, minutesOfDay, toIsoDate } from '../../lib/diet/calc/calendar';
+  import { addDays, dayMonthYear, fromIsoDate, minutesOfDay, toIsoDate, weekStartOf } from '../../lib/diet/calc/calendar';
   import { swipe } from '../../lib/design/swipe-action';
   import { rise } from '../../lib/design/transitions';
   import InstallBanner from '../../lib/pwa/InstallBanner.svelte';
-  import { buildHomeDay, homeWeek, relativeDayWord, weekDates } from '../../lib/today/home';
+  import { dayInfos, sourceOf } from '../../lib/calendar/days';
+  import { liveCalendar } from '../../lib/calendar/live.svelte';
+  import { calendarWindow, datesBetween } from '../../lib/calendar/occurrences';
+  import { buildHomeDay, homeStrip, relativeDayWord } from '../../lib/today/home';
   import { syncStatus, type SyncInputs } from '../../lib/today/sync';
   import { readSyncInputs } from '../../lib/today/sync-env';
+  import CalendarActions from '../calendar/CalendarActions.svelte';
+  import DietChoice from '../calendar/DietChoice.svelte';
   import StartGate from '../session/StartGate.svelte';
   import Screen from '../Screen.svelte';
   import CaloriesCard from './CaloriesCard.svelte';
@@ -38,41 +38,61 @@
 
   // Fissati alla creazione: a mezzanotte la Home si ricrea (vedi Home.svelte).
   const todayIso = toIsoDate(untrack(() => now));
-  const dates = weekDates(todayIso);
+  // 2c: settimana scorsa, questa e prossima (la striscia scorre tra le tre).
+  const win = calendarWindow(todayIso);
+  const dates = datesBetween(win.from, win.to);
   const nowMinutes = $derived(minutesOfDay(now));
 
   // --- Dati, tutti dal database locale (si aggiornano da soli quando cambiano) ---
-  const plans = liveState<DietPlan[]>(listDietPlans, []);
-  const logs = liveState<DietLogDay[]>(() => dietLogBetween(dates[0]!, dates[6]!), []);
-  const workouts = liveState<Workout[]>(listWorkoutsRecent, []);
-  const sessions = liveState<Session[]>(
-    () => sessionsBetween(fromIsoDate(dates[0]!).toISOString(), fromIsoDate(addDays(dates[6]!, 1)).toISOString()),
-    [],
-  );
-  const active = liveState<Session | null>(activeSession, null);
+  const cal = liveCalendar(win.from, win.to);
+  const loaded = $derived(cal.loaded);
+  const plan = $derived(cal.plan);
+  const firstRun = $derived(loaded && cal.plans.length === 0 && cal.workouts.length === 0 && cal.runs.length === 0 && !cal.active);
+  const input = $derived(cal.input(todayIso));
+  /** Tipo di giornata, diario e attività dei 21 giorni (un calcolo solo). */
+  const all = $derived(dayInfos(win.from, win.to, input, cal.diet));
 
-  const loaded = $derived(plans.loaded && logs.loaded && workouts.loaded && sessions.loaded && active.loaded);
-  const plan = $derived(plans.current.find((p) => p.active) ?? null);
-  const firstRun = $derived(loaded && plans.current.length === 0 && workouts.current.length === 0 && !active.current);
-
-  // --- Giorno mostrato: oggi di default, poi striscia o swipe (solo nella settimana L–D, come la Dieta) ---
+  // --- Giorno mostrato: oggi di default, poi striscia o swipe (nelle 3 settimane) ---
   let selected = $state(todayIso);
   const index = $derived(dates.indexOf(selected));
+  const info = $derived(all.infos[index]!);
 
   // Un solo calcolo per giorno: funzioni pure, niente logica nel markup.
   const day = $derived(
-    buildHomeDay({
-      date: selected,
-      todayIso,
-      nowMinutes,
-      plan,
-      log: logs.current.find((l) => l.date === selected),
-      workouts: workouts.current,
-      sessions: sessions.current,
-      active: active.current,
-    }),
+    buildHomeDay({ todayIso, nowMinutes, plan, info, days: all.days, workouts: cal.workouts, active: cal.active }),
   );
-  const strip = $derived(homeWeek(todayIso, plan, logs.current, workouts.current));
+
+  // --- Settimana della striscia ---
+  const weekIndex = $derived(win.weeks.indexOf(weekStartOf(fromIsoDate(selected))));
+  const strip = $derived(homeStrip(all.infos.slice(weekIndex * 7, weekIndex * 7 + 7), todayIso));
+  const WEEK_LABELS = ['Settimana scorsa', 'Questa settimana', 'Settimana prossima'];
+  const canWeek = (dir: -1 | 1) => weekIndex + dir >= 0 && weekIndex + dir <= 2;
+  /** Settimana prima o dopo: stesso giorno della settimana. */
+  function onweek(dir: -1 | 1) {
+    if (canWeek(dir)) selected = addDays(selected, dir * 7);
+  }
+
+  // --- Corsa (2a): "Segna come fatta" per il giorno mostrato, dettaglio di una corsa fatta ---
+  let runSheetOpen = $state(false);
+  let sheetRun = $state.raw<Run | null>(null);
+  let sheetLog = $state.raw<RunLog | null>(null);
+  let sheetDate = $state(todayIso);
+  let runStatus = $state('');
+
+  function logRun(entry: RunEntry) {
+    sheetRun = entry.run;
+    sheetLog = null;
+    sheetDate = selected <= todayIso ? selected : todayIso;
+    runStatus = '';
+    runSheetOpen = true;
+  }
+
+  function showRun(log: RunLog) {
+    sheetRun = cal.runs.find((r) => r.id === log.runId) ?? null;
+    sheetLog = log;
+    runStatus = '';
+    runSheetOpen = true;
+  }
 
   function select(date: string) {
     if (dates.includes(date)) selected = date;
@@ -117,22 +137,21 @@
   let error = $state<readonly string[]>([]);
 
   async function tick(mealKey: string, eaten: boolean) {
-    if (!plan || day.relation !== 'today') return;
+    if (!plan || day.relation !== 'today' || !day.view) return;
     error = [];
     try {
-      await setMealEaten(todayIso, plan.id, mealKey, eaten);
+      // La fonte del pasto (giorno e variante di adesso): se poi il tipo di giornata cambia, resta com'era.
+      await setMealEaten(todayIso, plan.id, mealKey, eaten, sourceOf(day.view));
     } catch (e) {
       error = e instanceof ValidationError ? e.errors : ['Non sono riuscito a salvare: riprova.'];
     }
   }
 
   function start(workout: Workout) {
-    void gate.request(workout, active.loaded ? active.current : undefined);
+    void gate.request(workout, loaded ? cal.active : undefined);
   }
 
-  const swapText = $derived(
-    day.swapped && day.relation === 'today' ? `Oggi segui il piano di ${weekdayName(day.followsWeekday).toLowerCase()}` : '',
-  );
+  let actions: CalendarActions;
 </script>
 
 <Screen nav="oggi">
@@ -145,9 +164,12 @@
       weekday={day.weekday}
       typeLabel={day.dayType.label}
       typeTone={day.dayType.tone}
-      {swapText}
       days={strip}
+      weekLabel={WEEK_LABELS[weekIndex] ?? ''}
+      {canWeek}
+      {onweek}
       {selected}
+      {todayIso}
       relative={relativeDayWord(selected, todayIso)}
       onselect={select}
     />
@@ -199,14 +221,24 @@
               <MealFocusCard focus={day.meal} canTick={day.canTick} ontick={(key, value) => void tick(key, value)} />
             {/if}
 
+            {#if day.dayType.double}
+              <DietChoice date={day.date} {todayIso} current={day.dayType.key} />
+            {/if}
+
             <WorkoutSection
               entries={day.workouts}
+              runs={day.runs}
               relation={day.relation}
               {nowMinutes}
-              conflict={day.conflict}
-              hasWorkouts={workouts.current.length > 0}
+              note={day.typeNote}
+              hasWorkouts={cal.workouts.length > 0 || cal.runs.length > 0}
               onstart={start}
+              onlogrun={logRun}
+              onshowrun={showRun}
+              onmanage={(o) => actions.openMenu(o)}
+              onrestore={(o) => actions.restore(o)}
             />
+            {#if runStatus}<p class="run-status" role="status">{runStatus}</p>{/if}
 
             {#if day.timeline.length > 0}
               <DayTimeline items={day.timeline} />
@@ -225,6 +257,15 @@
 </Screen>
 
 <StartGate bind:this={gate} />
+<CalendarActions bind:this={actions} {input} diet={cal.diet} />
+<RunLogSheet
+  bind:open={runSheetOpen}
+  run={sheetRun}
+  log={sheetLog}
+  date={sheetDate}
+  today={todayIso}
+  onsaved={(m) => (runStatus = m)}
+/>
 
 <style>
   .page {
@@ -250,6 +291,12 @@
   .loading {
     margin: 0;
     color: var(--muted);
+  }
+
+  .run-status {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-2);
   }
 
   .note-text {

@@ -3,7 +3,8 @@ import { envelope, isoDateTime } from './common';
 import { sessionSchema } from './sessions';
 
 export const SESSION_FILE_KIND = 'session';
-export const SESSION_FILE_VERSION = 1;
+/** 2 (2a): copia della scheda con esercizi cardio, `cardio` al posto di `cardioDone`. */
+export const SESSION_FILE_VERSION = 2;
 
 /**
  * File di una sessione conclusa per il PT ("Invia al PT", M5): la sessione con la copia della scheda.

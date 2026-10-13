@@ -1,4 +1,7 @@
 import type { Dexie, Transaction } from 'dexie';
+import { migrateExerciseRow, migrateSessionRow, migrateSettingRow, migrateWorkoutRow } from './migrations/cardio';
+import { calendarStartSetting, localIsoDate, migrateDietLogRowV4 } from './migrations/calendar-v4';
+import { migrateDietLogRow, migrateDietPlanRow } from './migrations/diet-v3';
 import type { TableName } from './schemas';
 
 /**
@@ -97,7 +100,58 @@ export const DB_VERSIONS: readonly DbVersion[] = [
           if (p.payload && !('generalNotes' in p.payload)) p.payload.generalNotes = '';
         }),
   },
+  {
+    // 2a: il "cardio finale" diventa un esercizio cardio (schede, cronologia, sessioni, bozza dell'editor),
+    // gli esercizi hanno un tipo; nuove tabelle per la corsa (pianificata e fatta).
+    version: 7,
+    stores: {
+      runs: 'id, updatedAt, *weekdays',
+      runLogs: 'id, date, [runId+date]',
+    },
+    upgrade: async (tx) => {
+      await replaceRows(tx, 'exercises', migrateExerciseRow);
+      await replaceRows(tx, 'workouts', migrateWorkoutRow);
+      await replaceRows(tx, 'sessions', migrateSessionRow);
+      await replaceRows(tx, 'settings', migrateSettingRow);
+    },
+  },
+  {
+    // 2b: piano alimentare v3 (varianti per tipo di giornata, anche nei piani archiviati); nel diario lo scambio
+    // "oggi seguo il piano di un altro giorno" diventa la fonte dei pasti (`mealsFrom`). Indici invariati.
+    version: 8,
+    stores: {},
+    upgrade: async (tx) => {
+      await replaceRows(tx, 'dietPlans', migrateDietPlanRow);
+      await replaceRows(tx, 'dietLog', migrateDietLogRow);
+    },
+  },
+  {
+    // 2c: calendario delle attività. Eccezioni per data (spostamenti e salti) e dieta scelta nei giorni con palestra e
+    // corsa; nel diario la fonte dei pasti spuntati (restano com'erano se il tipo di giornata cambia); da oggi il tipo
+    // di giornata viene dalle attività (`calendarStart`: lo storico resta quello del piano).
+    version: 9,
+    stores: {
+      calendarEdits: 'key, originalDate, toDate',
+      dayChoices: 'date',
+    },
+    upgrade: async (tx) => {
+      await replaceRows(tx, 'dietLog', migrateDietLogRowV4);
+      const settings = tx.table('settings');
+      if ((await settings.get('calendarStart')) === undefined) await settings.put(calendarStartSetting(localIsoDate(new Date())));
+    },
+  },
 ];
+
+/** Sostituisce le righe di una tabella con la loro versione migrata (solo quelle che cambiano). */
+async function replaceRows(tx: Transaction, table: string, migrate: (row: unknown) => unknown): Promise<void> {
+  await tx
+    .table(table)
+    .toCollection()
+    .modify((row: unknown, ctx: { value: unknown }) => {
+      const next = migrate(row);
+      if (next !== row) ctx.value = next;
+    });
+}
 
 export function applyVersions(db: Dexie, versions: readonly DbVersion[]): void {
   for (const { version, stores, upgrade } of versions) {

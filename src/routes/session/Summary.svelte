@@ -6,18 +6,17 @@
   import { formatClock } from '../../lib/components/time';
   import { downloadFile } from '../../lib/data/deliver-file';
   import { liveState } from '../../lib/data/live.svelte';
-  import { getDietLogDay } from '../../lib/data/repo/diet-log';
-  import { getActiveDietPlan } from '../../lib/data/repo/diet-plans';
   import { completedSessions, deleteSession, sessionsRepo } from '../../lib/data/repo/sessions';
-  import type { DietLogDay } from '../../lib/data/schemas/diet-log';
-  import type { DietPlan } from '../../lib/data/schemas/diet-plans';
   import type { Session } from '../../lib/data/schemas/sessions';
   import { headerDate, isoWeekday, minutesOfDay, toIsoDate } from '../../lib/diet/calc/calendar';
   import { pop, slideX } from '../../lib/design/transitions';
   import { edgeSwipe } from '../../lib/sessions/edge-swipe';
-  import { exercisesLabel, timeRange, volumeLabel } from '../../lib/sessions/format';
+  import { cardioDoneLabel, exercisesLabel, timeRange, volumeLabel } from '../../lib/sessions/format';
   import { historyHref, liveHref, replaceTo } from '../../lib/sessions/nav';
   import { nextMeal } from '../../lib/sessions/next-meal';
+  import { dayInfo } from '../../lib/calendar/days';
+  import { buildCalendar } from '../../lib/calendar/occurrences';
+  import { liveCalendar } from '../../lib/calendar/live.svelte';
   import { READINESS_ITEMS, READINESS_MAX } from '../../lib/sessions/readiness';
   import { sessionExportFile, sessionText, shareSession } from '../../lib/sessions/share';
   import { summarize } from '../../lib/sessions/summary';
@@ -38,9 +37,13 @@
 
   const session = liveState<Session | undefined | null>(() => (id ? sessionsRepo.get(id) : undefined), null);
   const all = liveState<Session[]>(completedSessions, []);
-  const plan = liveState<DietPlan | undefined>(getActiveDietPlan, undefined);
   const todayIso = toIsoDate(new Date());
-  const log = liveState<DietLogDay | undefined>(() => getDietLogDay(todayIso), undefined);
+  // Piano, diario e attività di oggi: il prossimo pasto segue il tipo di giornata (2c).
+  const cal = liveCalendar(todayIso, todayIso);
+  const today = $derived.by(() => {
+    const input = cal.input(todayIso);
+    return dayInfo(todayIso, buildCalendar(todayIso, todayIso, input), input, cal.diet);
+  });
 
   // Una sessione ancora in corso non ha riepilogo: torna al Live.
   $effect(() => {
@@ -58,9 +61,10 @@
   const summary = $derived(done ? summarize(done, previous, all.current) : null);
 
   const meal = $derived.by(() => {
-    if (!done?.endedAt || toIsoDate(new Date(done.endedAt)) !== todayIso || !plan.current) return null;
+    const plan = cal.plan;
+    if (!done?.endedAt || toIsoDate(new Date(done.endedAt)) !== todayIso || !plan) return null;
     const now = new Date();
-    return nextMeal(plan.current.payload, isoWeekday(now), log.current, minutesOfDay(now));
+    return nextMeal(plan.payload, isoWeekday(now), today.log, minutesOfDay(now), today.type.request);
   });
 
   let openIndex = $state<number | null>(null);
@@ -167,20 +171,23 @@
       <section class="exercises" aria-labelledby="ex-title">
         <h2 id="ex-title" class="ex-title">Esercizi</h2>
         {#each summary.exercises as exercise (exercise.index)}
-          <ExerciseSummary
-            {exercise}
-            open={openIndex === exercise.index}
-            ontoggle={() => (openIndex = openIndex === exercise.index ? null : exercise.index)}
-          />
+          {#if exercise.cardio}
+            {@const c = exercise.cardio}
+            <div class="cardio" data-testid="summary-cardio">
+              <span class="cardio-name">Cardio · {exercise.name}</span>
+              <span class="mono" class:skipped={!c.done}>
+                {c.done ? `${cardioDoneLabel(c.plannedMin, c.minutes, c.distanceKm)} ✓` : `${c.plannedMin}’ · non fatto`}
+              </span>
+              {#if exercise.note}<p class="cardio-note">Tua nota per il PT: {exercise.note}</p>{/if}
+            </div>
+          {:else}
+            <ExerciseSummary
+              {exercise}
+              open={openIndex === exercise.index}
+              ontoggle={() => (openIndex = openIndex === exercise.index ? null : exercise.index)}
+            />
+          {/if}
         {/each}
-        {#if summary.cardio}
-          <div class="cardio" data-testid="summary-cardio">
-            <span>Cardio · {summary.cardio.type}</span>
-            <span class="mono" class:skipped={!summary.cardio.done}>
-              {summary.cardio.minutes}’ {summary.cardio.done ? '✓' : '· non fatto'}
-            </span>
-          </div>
-        {/if}
       </section>
 
       <section class="card" aria-label="Sforzo percepito">
@@ -396,6 +403,7 @@
 
   .cardio {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     gap: var(--space-2);
@@ -410,6 +418,17 @@
 
   .cardio .mono.skipped {
     color: var(--tip);
+  }
+
+  .cardio-name {
+    min-width: 0;
+  }
+
+  .cardio-note {
+    flex-basis: 100%;
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-2);
   }
 
   .status:empty {

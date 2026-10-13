@@ -75,7 +75,7 @@ test('Allena vuota: invito a creare la prima scheda, Storico vuoto, Importa apre
   await page.getByRole('tab', { name: 'Storico' }).click();
   await expect(page.getByText('Nessun allenamento ancora')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Ottobre' })).toBeVisible();
-  await expect(page.getByRole('listitem', { name: '12 ottobre, oggi: nessuna sessione' })).toBeVisible();
+  await expect(page.getByRole('listitem', { name: '12 ottobre, oggi: nessuna attività' })).toBeVisible();
 
   await page.getByRole('tab', { name: 'Schede' }).click();
   await page.getByRole('link', { name: 'Crea la tua prima scheda' }).click();

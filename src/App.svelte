@@ -13,6 +13,8 @@
   const loadTrain = () => import('./routes/Train.svelte');
   const loadEditor = () => import('./routes/WorkoutEditor.svelte');
   const loadView = () => import('./routes/WorkoutView.svelte');
+  const loadRunEditor = () => import('./routes/RunEditor.svelte');
+  const loadCalendar = () => import('./routes/Calendar.svelte');
   const loadReadiness = () => import('./routes/session/Readiness.svelte');
   const loadIntro = () => import('./routes/session/Intro.svelte');
   const loadLive = () => import('./routes/session/Live.svelte');
@@ -55,6 +57,18 @@
   {#await loadView() then { default: WorkoutView }}
     {#key route.nav}
       <WorkoutView id={route.query['id'] ?? ''} />
+    {/key}
+  {/await}
+{:else if route.path === '/allena/corsa'}
+  {#await loadRunEditor() then { default: RunEditor }}
+    {#key route.nav}
+      <RunEditor id={route.query['id'] ?? ''} />
+    {/key}
+  {/await}
+{:else if route.path === '/calendario'}
+  {#await loadCalendar() then { default: Calendar }}
+    {#key route.nav}
+      <Calendar day={route.query['giorno'] ?? ''} from={route.query['da'] ?? ''} />
     {/key}
   {/await}
 {:else if route.path === '/sessione/readiness'}

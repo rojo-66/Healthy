@@ -114,7 +114,8 @@ export function convertMyDiet(file: MyDietFile): MyDietConversion {
       return { key, label, time: null, window, name: pasto.nome, recipe: null, items: pasto.items };
     });
 
-    return { weekday, type: null, note: giorno.nota, supplements, meals };
+    // Formato v3 (2b): un solo menu per giorno = una sola variante, tipo da scegliere nel completamento guidato.
+    return { weekday, defaultType: null, variants: [{ type: null, note: giorno.nota, supplements, meals }] };
   });
 
   if (dieta.giorni.length < 7) {

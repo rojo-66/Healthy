@@ -40,7 +40,6 @@
   import ActionBar from '../ActionBar.svelte';
   import ConfirmSheet, { type ConfirmAction } from '../ConfirmSheet.svelte';
   import WorkoutPreview, { type PreviewWorkout } from '../WorkoutPreview.svelte';
-  import CardioField from './CardioField.svelte';
   import EditorHeader from './EditorHeader.svelte';
   import ExerciseRow from './ExerciseRow.svelte';
   import LibrarySheet from './LibrarySheet.svelte';
@@ -237,7 +236,7 @@
 
   function pyramidOff(index: number) {
     const item = draft.items[index];
-    if (!item?.setsDetail) return;
+    if (item?.kind !== 'strength' || !item.setsDetail) return;
     if (!pyramidDiffers(item)) return setItem(index, disablePyramid(item));
     const first = item.setsDetail[0]!;
     const key = item.key;
@@ -251,7 +250,7 @@
           run: () => {
             const i = draft.items.findIndex((x) => x.key === key);
             const current = draft.items[i];
-            if (current) setItem(i, disablePyramid(current));
+            if (current?.kind === 'strength') setItem(i, disablePyramid(current));
           },
         },
         { label: 'Annulla', kind: 'secondary', run: () => {} },
@@ -298,7 +297,12 @@
   function rebase(fresh: WorkoutDraft, old: WorkoutDraft): WorkoutDraft {
     return {
       ...fresh,
-      items: fresh.items.map((it, i) => ({ ...it, key: old.items[i]?.key ?? it.key, setsDetailMemory: old.items[i]?.setsDetailMemory ?? null })),
+      items: fresh.items.map((it, i) => {
+        const prev = old.items[i];
+        const key = prev?.key ?? it.key;
+        if (it.kind === 'cardio') return { ...it, key, fields: prev?.kind === 'cardio' ? prev.fields : it.fields };
+        return { ...it, key, setsDetailMemory: prev?.kind === 'strength' ? prev.setsDetailMemory : null };
+      }),
       warmup: fresh.warmup.map((w, i) => ({ ...w, key: old.warmup[i]?.key ?? w.key })),
     };
   }
@@ -379,21 +383,35 @@
     author: draft.author,
     intro: draft.intro,
     warmup: draft.warmup,
-    cardio: draft.cardio,
     // Dopo il salvataggio resta "ricevuta" solo una mia scheda ricevuta modificata sul posto (M8).
     received: kind === 'update' ? (original?.received ?? null) : null,
     version: versionAfterSave(original, author),
-    items: draft.items.map((it) => ({
-      name: it.name,
-      muscles: it.muscles,
-      sets: it.sets,
-      reps: it.reps,
-      kg: it.kg,
-      restSec: it.restSec,
-      note: it.note,
-      videoUrl: it.videoUrl.trim() || null,
-      setsDetail: it.setsDetail,
-    })),
+    items: draft.items.map((it) =>
+      it.kind === 'cardio'
+        ? {
+            kind: 'cardio' as const,
+            name: it.name,
+            minutes: it.minutes,
+            distanceKm: it.distanceKm,
+            speedKmh: it.speedKmh,
+            inclinePct: it.inclinePct,
+            level: it.level,
+            note: it.note,
+            videoUrl: it.videoUrl.trim() || null,
+          }
+        : {
+            kind: 'strength' as const,
+            name: it.name,
+            muscles: it.muscles,
+            sets: it.sets,
+            reps: it.reps,
+            kg: it.kg,
+            restSec: it.restSec,
+            note: it.note,
+            videoUrl: it.videoUrl.trim() || null,
+            setsDetail: it.setsDetail,
+          },
+    ),
   });
 </script>
 
@@ -520,8 +538,6 @@
       </button>
       {#if !canAdd}<p class="muted small">Massimo {MAX_ITEMS.workoutItems} esercizi per scheda.</p>{/if}
     </section>
-
-    <CardioField cardio={draft.cardio} errors={fields} onchange={(cardio) => set({ cardio })} />
 
     {#if saveError}
       <NoteBox title="Salvataggio non riuscito" mark="!" text={saveError} />

@@ -221,7 +221,8 @@ test('lettura del nutrizionista e condizioni: solo testo, mai HTML', async ({ pa
   await expect(reading).not.toContainText('finta');
   await expect(reading).toContainText('Scrivi qui cosa ti ha detto il nutrizionista');
   await page.getByTestId('history').getByRole('link', { name: /03\/07\/2026/ }).click();
-  await expect(page.getByLabel('Lettura del nutrizionista')).toHaveValue('Lettura di prova della prima misura.');
+  // Il campo della pagina Misura (sul Profilo la stessa etichetta è di un riquadro: si aspetta la navigazione).
+  await expect(page.getByRole('textbox', { name: 'Lettura del nutrizionista' })).toHaveValue('Lettura di prova della prima misura.');
   await page.getByRole('link', { name: 'Annulla' }).click();
 
   await page.getByTestId('next-measurement').getByRole('button', { name: 'Modifica' }).click();
@@ -259,7 +260,8 @@ test('backup dal Profilo: promemoria, esporta, svuota, reimporta, anche offline'
   // Reimporta il file esportato.
   await page.getByTestId('backup-input').setInputFiles(file);
   const sheet = page.getByRole('dialog', { name: 'Sostituire i dati?' });
-  await expect(sheet).toContainText('6 elementi');
+  // 6 righe di prima + l'inizio del calendario (2c), aggiunto al backup vecchio.
+  await expect(sheet).toContainText('7 elementi');
   await sheet.getByRole('button', { name: 'Sostituisci i dati' }).click();
   await expect(sheet).toBeHidden();
   await expect(page.getByTestId('history').getByRole('listitem')).toHaveCount(3);

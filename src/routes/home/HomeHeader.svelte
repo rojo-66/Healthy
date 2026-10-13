@@ -1,5 +1,7 @@
 <script lang="ts">
   import { weekdayName } from '../../lib/data/schemas/diet-payload';
+  import { swipe } from '../../lib/design/swipe-action';
+  import { routeHref } from '../../lib/routes';
   import type { DayTypeTone } from '../../lib/diet/view';
   import type { HomeStripDay } from '../../lib/today/home';
   import type { SyncStatus } from '../../lib/today/sync';
@@ -11,16 +13,23 @@
     weekday: number;
     typeLabel: string;
     typeTone: DayTypeTone;
-    /** "Oggi segui il piano di mercoledì" (vuoto senza scambio). */
-    swapText: string;
+    /** I 7 giorni della settimana mostrata nella striscia. */
     days: readonly HomeStripDay[];
+    /** "Questa settimana", "Settimana scorsa", "Settimana prossima". */
+    weekLabel: string;
+    /** Settimana precedente o successiva nella finestra di 3 settimane (2c). */
+    canWeek: (dir: -1 | 1) => boolean;
+    onweek: (dir: -1 | 1) => void;
     selected: string;
+    /** Oggi (`AAAA-MM-GG`): "Torna a oggi" funziona anche da un'altra settimana. */
+    todayIso: string;
     /** "Ieri", "Domani"… (vuoto se è oggi). */
     relative: string;
     onselect: (date: string) => void;
   }
 
-  let { dateLabel, sync, weekday, typeLabel, typeTone, swapText, days, selected, relative, onselect }: Props = $props();
+  let { dateLabel, sync, weekday, typeLabel, typeTone, days, weekLabel, canWeek, onweek, selected, todayIso, relative, onselect }: Props = $props();
+  let stripInner = $state<HTMLDivElement>();
 
   const toneClass = (tone: DayTypeTone) => (tone === 'muted' ? 'tone-neutral' : `tone-${tone}`);
 
@@ -45,11 +54,22 @@
     </span>
   </div>
 
-  {#if swapText}
-    <a class="swap tap" href="#/dieta">⇄ {swapText} · <span class="link">cambia in Dieta</span></a>
-  {/if}
+  <div class="week-row">
+    <button type="button" class="week-arrow tap" aria-label="Settimana precedente" disabled={!canWeek(-1)} onclick={() => onweek(-1)}>‹</button>
+    <span class="week-label mono" data-testid="home-week">{weekLabel}</span>
+    <button type="button" class="week-arrow tap" aria-label="Settimana successiva" disabled={!canWeek(1)} onclick={() => onweek(1)}>›</button>
+    <a class="cal-link tap" href={routeHref('/calendario', { giorno: selected })}>Calendario</a>
+  </div>
 
-  <div class="strip" role="group" aria-label="Giorni della settimana" data-testid="home-strip">
+  <!-- La striscia scorre tra le 3 settimane (scorsa, questa, prossima): la settimana segue il dito. -->
+  <div
+    class="strip-zone"
+    role="group"
+    aria-label="Settimana: scorri a destra o a sinistra per cambiarla"
+    data-testid="home-strip-swipe"
+    use:swipe={{ canGo: canWeek, onswipe: onweek, target: stripInner }}
+  >
+  <div class="strip" role="group" aria-label="Giorni della settimana" data-testid="home-strip" bind:this={stripInner}>
     {#each days as d (d.date)}
       <button
         type="button"
@@ -66,11 +86,12 @@
       </button>
     {/each}
   </div>
+  </div>
 
   {#if relative}
     <div class="hint-row">
       <span class="hint">{relative} · sola lettura</span>
-      <button type="button" class="back tap" onclick={() => onselect(days.find((d) => d.isToday)?.date ?? selected)}>
+      <button type="button" class="back tap" onclick={() => onselect(todayIso)}>
         Torna a oggi
       </button>
     </div>
@@ -176,19 +197,59 @@
     background: var(--progress);
   }
 
-  .swap {
-    align-self: flex-start;
+  .week-row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .week-arrow {
+    width: var(--touch);
+    height: var(--touch);
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--progress);
+    font-size: 24px;
+    line-height: 1;
+  }
+
+  .week-arrow:disabled {
+    opacity: 0.25;
+  }
+
+  .week-label {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+    font-size: 12px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .cal-link {
+    flex: none;
     display: inline-flex;
     align-items: center;
     min-height: var(--touch);
+    padding: 0 var(--space-2);
+    color: var(--progress);
     font-size: 13px;
-    color: var(--text-2);
+    font-weight: 700;
     text-decoration: none;
   }
 
-  .swap .link {
-    margin-left: 0.3em;
-    color: var(--progress);
+  /* La settimana che esce non allarga la pagina; il margine lascia spazio al bagliore del giorno scelto. */
+  .strip-zone {
+    overflow: hidden;
+    padding: 12px 0;
+    margin: -12px 0;
+    touch-action: pan-y;
   }
 
   /* Spazio stretto tra i giorni: anche su iPhone SE (375 px) ogni giorno è largo almeno 44 px. */

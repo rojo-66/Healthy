@@ -1,6 +1,7 @@
 import { nowIso } from '../data/ids';
 import type { Readiness, Session, SessionSet } from '../data/schemas/sessions';
-import type { Workout } from '../data/schemas/workouts';
+import type { Workout, WorkoutItem } from '../data/schemas/workouts';
+import { emptyCardioEntry } from './cardio';
 import { lastTimeTable, prefill } from './last-time';
 
 export interface NewSessionInput {
@@ -12,14 +13,22 @@ export interface NewSessionInput {
   now: Date;
 }
 
+/** Copia campo per campo (non structuredClone: la scheda può arrivare da uno stato reattivo di Svelte). */
+function copyItem(item: WorkoutItem): WorkoutItem {
+  if (item.kind === 'cardio') return { ...item };
+  return { ...item, muscles: [...item.muscles], setsDetail: item.setsDetail ? item.setsDetail.map((d) => ({ ...d })) : null };
+}
+
 /**
  * Sessione nuova al tocco su "Inizia allenamento": copia della scheda, tutte le serie del piano
- * precompilate e da fare, primo esercizio aperto, nessun recupero.
+ * precompilate e da fare, una voce vuota per ogni cardio, primo esercizio aperto, nessun recupero.
  */
 export function buildSession({ id, workout, readiness, previous, now }: NewSessionInput): Session {
   const last = lastTimeTable(workout.items, previous);
   const sets: SessionSet[] = workout.items.flatMap((item, itemIndex) =>
-    Array.from({ length: item.sets }, (_, setIndex) => ({
+    item.kind === 'cardio'
+      ? []
+      : Array.from({ length: item.sets }, (_, setIndex) => ({
       exerciseId: item.exerciseId,
       itemIndex,
       setIndex,
@@ -38,16 +47,8 @@ export function buildSession({ id, workout, readiness, previous, now }: NewSessi
     sets,
     userNotes: [],
     rpe: null,
-    cardioDone: null,
-    // Copia campo per campo (non structuredClone: la scheda può arrivare da uno stato reattivo di Svelte).
-    snapshot: {
-      items: workout.items.map((item) => ({
-        ...item,
-        muscles: [...item.muscles],
-        setsDetail: item.setsDetail ? item.setsDetail.map((d) => ({ ...d })) : null,
-      })),
-      cardio: workout.cardio ? { ...workout.cardio } : null,
-    },
+    cardio: workout.items.flatMap((item, itemIndex) => (item.kind === 'cardio' ? [emptyCardioEntry(itemIndex)] : [])),
+    snapshot: { items: workout.items.map(copyItem) },
     live: { itemIndex: 0, rest: null },
   };
 }

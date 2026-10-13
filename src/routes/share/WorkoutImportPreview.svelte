@@ -1,7 +1,6 @@
 <script lang="ts">
   import type { WorkoutFile } from '../../lib/data/schemas/workout-file';
-  import { workoutTotals } from '../../lib/workouts/calc/duration';
-  import { weekdaysLabel } from '../../lib/workouts/format';
+  import { weekdaysLabel, workoutMeta } from '../../lib/workouts/format';
   import WorkoutPreview, { type PreviewWorkout } from '../train/WorkoutPreview.svelte';
 
   // Anteprima di una scheda ricevuta: autore, versione, giorni, numeri e la scheda in sola lettura (solo testo).
@@ -11,14 +10,12 @@
 
   let { file }: Props = $props();
 
-  const totals = $derived(workoutTotals(file));
   const preview = $derived<PreviewWorkout>({
     name: file.name,
     source: file.source,
     author: file.author,
     intro: file.intro,
     warmup: file.warmup,
-    cardio: file.cardio,
     version: file.version,
     // Solo per l'etichetta "AUTORE · vN": la scheda non è ancora salvata.
     received: { version: file.version, hash: '00000000', at: '' },
@@ -35,7 +32,7 @@
     </div>
     <div>
       <dt>Durata</dt>
-      <dd class="mono">{totals.exercises} esercizi · {totals.sets} serie · ~{totals.totalMin} min</dd>
+      <dd class="mono">{workoutMeta(file).replace(/’$/, ' min')}</dd>
     </div>
   </dl>
   <WorkoutPreview workout={preview} />

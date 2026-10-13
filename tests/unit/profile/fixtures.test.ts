@@ -14,7 +14,8 @@ describe('fixture finta del Profilo (e2e)', () => {
     const { profile, measurements, settings } = result.value.tables;
     expect(profile[0]).toMatchObject({ goal: 'lose', activityLevel: 'active' });
     expect(measurements).toHaveLength(3);
-    expect(settings.map((s) => s.key).sort()).toEqual(['nextMeasurement', 'workoutAuthor']);
+    // 2c: il ripristino di un backup vecchio aggiunge l'inizio del calendario.
+    expect(settings.map((s) => s.key).sort()).toEqual(['calendarStart', 'nextMeasurement', 'workoutAuthor']);
     // L'ultima misura ha solo vita e addome: l'ultimo peso è quello prima.
     expect(latestWeight(measurements)).toBe(80.2);
   });

@@ -5,6 +5,7 @@ import { createCustomExercise } from '../../../src/lib/data/repo/exercises';
 import { buildBackup, restoreBackup } from '../../../src/lib/data/backup';
 import { clearAll, countAll } from '../../../src/lib/data/repo/maintenance';
 import { exerciseSchema } from '../../../src/lib/data/schemas/exercises';
+import { CARDIO_LIBRARY, findCardioEntry } from '../../../src/lib/workouts/library/cardio';
 import { COMMON_IDS, LIBRARY } from '../../../src/lib/workouts/library/data';
 import { EQUIPMENT, MUSCLES, isEquipment, isMuscle } from '../../../src/lib/workouts/library/muscles';
 import { normalize, searchExercises } from '../../../src/lib/workouts/library/search';
@@ -49,7 +50,8 @@ describe('dati della libreria', () => {
   });
 
   it('id stabili: fx- dalla fonte, it- aggiunti a mano; nessun esercizio personalizzato', () => {
-    expect(rows.every((r) => /^(fx|it)-[a-z0-9-]+$/.test(r.id))).toBe(true);
+    expect(rows.every((r) => /^(fx|it|cd)-[a-z0-9-]+$/.test(r.id))).toBe(true);
+    expect(rows.filter((r) => r.kind === 'cardio').every((r) => r.id.startsWith('cd-'))).toBe(true);
     expect(rows.every((r) => !r.custom && r.videoUrl === null)).toBe(true);
     expect(rows.find((r) => r.id === 'fx-barbell-bench-press-medium-grip')?.name).toBe('Panca piana con bilanciere');
   });
@@ -117,19 +119,19 @@ describe('caricamento della libreria', () => {
 
   it('è idempotente: la seconda volta non scrive niente e non crea doppioni', async () => {
     const first = await syncLibrary();
-    expect(first).toEqual({ added: LIBRARY.length, updated: 0 });
-    expect(await db.exercises.count()).toBe(LIBRARY.length);
+    expect(first).toEqual({ added: LIBRARY.length + CARDIO_LIBRARY.length, updated: 0 });
+    expect(await db.exercises.count()).toBe(LIBRARY.length + CARDIO_LIBRARY.length);
     const second = await syncLibrary();
     expect(second).toEqual({ added: 0, updated: 0 });
-    expect(await db.exercises.count()).toBe(LIBRARY.length);
+    expect(await db.exercises.count()).toBe(LIBRARY.length + CARDIO_LIBRARY.length);
   });
 
   it('non tocca gli esercizi personalizzati', async () => {
     await syncLibrary();
-    const mine = await createCustomExercise({ name: 'Crunch sul rullo', muscles: ['Addominali'], equipment: 'Altro', videoUrl: '' });
+    const mine = await createCustomExercise({ name: 'Crunch sul rullo', kind: 'strength', muscles: ['Addominali'], equipment: 'Altro', videoUrl: '' });
     await syncLibrary();
     expect(await db.exercises.get(mine.id)).toEqual(mine);
-    expect(await db.exercises.count()).toBe(LIBRARY.length + 1);
+    expect(await db.exercises.count()).toBe(LIBRARY.length + CARDIO_LIBRARY.length + 1);
   });
 
   it('una libreria aggiornata corregge le righe cambiate e aggiunge le nuove', async () => {
@@ -145,25 +147,90 @@ describe('caricamento della libreria', () => {
   });
 
   it('lascia le righe che la libreria non ha più', async () => {
-    await db.exercises.add({ id: 'fx-esercizio-ritirato', name: 'Esercizio ritirato', muscles: ['Petto'], equipment: 'Altro', videoUrl: null, custom: false });
+    await db.exercises.add({
+      id: 'fx-esercizio-ritirato',
+      name: 'Esercizio ritirato',
+      muscles: ['Petto'],
+      equipment: 'Altro',
+      videoUrl: null,
+      custom: false,
+      kind: 'strength',
+      cardioFields: [],
+    });
     await syncLibrary();
     expect(await db.exercises.get('fx-esercizio-ritirato')).toBeDefined();
   });
 
   it('la libreria è dell’app: fuori da conteggi e backup, "Svuota tutto" e ripristino non la toccano', async () => {
     await syncLibrary();
-    const mine = await createCustomExercise({ name: 'Crunch sul rullo', muscles: ['Addominali'], equipment: 'Altro', videoUrl: '' });
+    const mine = await createCustomExercise({ name: 'Crunch sul rullo', kind: 'strength', muscles: ['Addominali'], equipment: 'Altro', videoUrl: '' });
     expect((await countAll()).exercises).toBe(1);
     const backup = await buildBackup(new Date(2026, 9, 12));
     expect(backup.tables.exercises.map((e) => e.id)).toEqual([mine.id]);
 
     await clearAll();
-    expect(await db.exercises.count()).toBe(LIBRARY.length);
+    expect(await db.exercises.count()).toBe(LIBRARY.length + CARDIO_LIBRARY.length);
     expect((await countAll()).exercises).toBe(0);
 
     await restoreBackup(backup);
-    expect(await db.exercises.count()).toBe(LIBRARY.length + 1);
+    expect(await db.exercises.count()).toBe(LIBRARY.length + CARDIO_LIBRARY.length + 1);
     expect(await db.exercises.get(mine.id)).toEqual(mine);
     expect(await syncLibrary()).toEqual({ added: 0, updated: 0 });
+  });
+});
+
+describe('2a: esercizi cardio', () => {
+  it('18 voci con id cd- stabili, attrezzo dalla lista, solo campi noti, nessun muscolo', () => {
+    expect(CARDIO_LIBRARY).toHaveLength(18);
+    expect(new Set(CARDIO_LIBRARY.map((e) => e.id)).size).toBe(18);
+    for (const e of CARDIO_LIBRARY) {
+      expect(e.id, e.id).toMatch(/^cd-[a-z0-9-]+$/);
+      expect(isEquipment(e.equipment), e.id).toBe(true);
+    }
+    const rows = libraryExercises().filter((r) => r.kind === 'cardio');
+    expect(rows).toHaveLength(18);
+    expect(rows.every((r) => r.muscles.length === 0 && !r.custom)).toBe(true);
+    // Id pubblicati: non devono cambiare (schede, sessioni e "ultima volta" li usano).
+    expect(CARDIO_LIBRARY.map((e) => e.id)).toEqual([
+      'cd-tapis-corsa',
+      'cd-tapis-salita',
+      'cd-corsa-aperto',
+      'cd-camminata-veloce',
+      'cd-camminata',
+      'cd-cyclette',
+      'cd-bici',
+      'cd-spinning',
+      'cd-ellittica',
+      'cd-vogatore',
+      'cd-stair-climber',
+      'cd-step',
+      'cd-corda',
+      'cd-nuoto',
+      'cd-air-bike',
+      'cd-ski-erg',
+      'cd-ergometro-braccia',
+      'cd-hiit',
+    ]);
+  });
+
+  it('i tipi del vecchio cardio finale si collegano alla libreria (maiuscole, accenti e apostrofi non contano)', () => {
+    expect(findCardioEntry('tapis roulant')?.id).toBe('cd-tapis-corsa');
+    expect(findCardioEntry('Cyclette')?.id).toBe('cd-cyclette');
+    expect(findCardioEntry('ELLITTICA')?.id).toBe('cd-ellittica');
+    expect(findCardioEntry('vogatore')?.id).toBe('cd-vogatore');
+    expect(findCardioEntry('corsa')?.id).toBe('cd-corsa-aperto');
+    expect(findCardioEntry("Corsa all'aperto")?.id).toBe('cd-corsa-aperto');
+    expect(findCardioEntry('Corsa all’aperto')?.id).toBe('cd-corsa-aperto');
+    expect(findCardioEntry('pattinaggio')).toBeNull();
+  });
+
+  it('ricerca: il chip Cardio mostra solo i cardio; senza filtro compaiono insieme alla forza', () => {
+    const all = libraryExercises();
+    const cardio = searchExercises(all, '', null, () => false, 'cardio');
+    expect(cardio).toHaveLength(18);
+    expect(searchExercises(all, 'tapis', null, () => false, 'cardio').map((e) => e.id).sort()).toEqual(['cd-tapis-corsa', 'cd-tapis-salita']);
+    expect(searchExercises(all, 'cyclette').some((e) => e.id === 'cd-cyclette')).toBe(true);
+    // Il filtro per muscolo esclude i cardio (non hanno un muscolo principale).
+    expect(searchExercises(all, '', 'Quadricipiti').some((e) => e.kind === 'cardio')).toBe(false);
   });
 });

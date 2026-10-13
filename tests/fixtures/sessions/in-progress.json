@@ -5,13 +5,7 @@
   "workoutName": "Spinta finta",
   "startedAt": "2026-10-12T16:00:00.000Z",
   "endedAt": null,
-  "readiness": {
-    "sleep": 4,
-    "mood": 4,
-    "energy": 3,
-    "stress": 4,
-    "soreness": 3
-  },
+  "readiness": { "sleep": 4, "mood": 4, "energy": 3, "stress": 4, "soreness": 3 },
   "sets": [
     {
       "exerciseId": "fx-barbell-bench-press-medium-grip",
@@ -53,63 +47,31 @@
       "reps": 10,
       "done": false
     },
-    {
-      "exerciseId": null,
-      "itemIndex": 2,
-      "setIndex": 0,
-      "kg": 17.5,
-      "reps": 12,
-      "done": false
-    },
-    {
-      "exerciseId": null,
-      "itemIndex": 2,
-      "setIndex": 1,
-      "kg": 17.5,
-      "reps": 12,
-      "done": false
-    }
+    { "exerciseId": null, "itemIndex": 2, "setIndex": 0, "kg": 17.5, "reps": 12, "done": false },
+    { "exerciseId": null, "itemIndex": 2, "setIndex": 1, "kg": 17.5, "reps": 12, "done": false }
   ],
   "userNotes": [],
   "rpe": null,
-  "cardioDone": null,
   "snapshot": {
     "items": [
       {
+        "kind": "strength",
         "exerciseId": "fx-barbell-bench-press-medium-grip",
         "name": "Panca piana con bilanciere",
-        "muscles": [
-          "Petto",
-          "Tricipiti"
-        ],
+        "muscles": ["Petto", "Tricipiti"],
         "sets": 3,
         "reps": 8,
         "kg": 60,
         "restSec": 120,
         "note": "Scapole addotte.",
         "videoUrl": "https://example.com/video/panca",
-        "setsDetail": [
-          {
-            "reps": 10,
-            "kg": 55
-          },
-          {
-            "reps": 8,
-            "kg": 60
-          },
-          {
-            "reps": 6,
-            "kg": 65
-          }
-        ]
+        "setsDetail": [{ "reps": 10, "kg": 55 }, { "reps": 8, "kg": 60 }, { "reps": 6, "kg": 65 }]
       },
       {
+        "kind": "strength",
         "exerciseId": "fx-wide-grip-lat-pulldown",
         "name": "Lat machine presa larga",
-        "muscles": [
-          "Dorsali",
-          "Bicipiti"
-        ],
+        "muscles": ["Dorsali", "Bicipiti"],
         "sets": 2,
         "reps": 10,
         "kg": 50,
@@ -119,11 +81,10 @@
         "setsDetail": null
       },
       {
+        "kind": "strength",
         "exerciseId": null,
         "name": "Croci ai cavi",
-        "muscles": [
-          "Petto"
-        ],
+        "muscles": ["Petto"],
         "sets": 2,
         "reps": 12,
         "kg": 15,
@@ -131,19 +92,32 @@
         "note": "Gomiti morbidi.",
         "videoUrl": null,
         "setsDetail": null
+      },
+      {
+        "kind": "cardio",
+        "exerciseId": "cd-tapis-corsa",
+        "name": "Tapis roulant · corsa",
+        "minutes": 12,
+        "distanceKm": null,
+        "speedKmh": null,
+        "inclinePct": null,
+        "level": null,
+        "note": "",
+        "videoUrl": null
       }
-    ],
-    "cardio": {
-      "type": "tapis roulant",
-      "minutes": 12
-    }
+    ]
   },
   "live": {
     "itemIndex": 1,
-    "rest": {
-      "totalSec": 90,
-      "endsAt": "2026-10-12T16:20:00.000Z",
-      "pausedRemainingMs": null
+    "rest": { "totalSec": 90, "endsAt": "2026-10-12T16:20:00.000Z", "pausedRemainingMs": null }
+  },
+  "cardio": [
+    {
+      "itemIndex": 3,
+      "minutes": null,
+      "distanceKm": null,
+      "done": false,
+      "clock": { "runningSince": null, "elapsedMs": 0 }
     }
-  }
+  ]
 }

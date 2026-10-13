@@ -122,6 +122,14 @@
     background: var(--training);
     box-shadow: 0 0 10px var(--training);
   }
+  /* Corsa (2a): ciano. */
+  .run .dot {
+    background: var(--progress);
+  }
+  .now.run .dot {
+    background: var(--progress);
+    box-shadow: 0 0 10px var(--progress);
+  }
   .now .label {
     color: var(--text);
     font-weight: 700;

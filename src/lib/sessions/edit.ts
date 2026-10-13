@@ -59,7 +59,9 @@ export function addSet(session: Session, itemIndex: number): Session {
   if (!canAddSet(session, itemIndex)) return session;
   const sets = setsOf(session, itemIndex);
   const last = sets[sets.length - 1];
-  const item = sessionItems(session)[itemIndex];
+  const found = sessionItems(session)[itemIndex];
+  if (found?.kind === 'cardio') return session;
+  const item = found;
   const set: SessionSet = {
     exerciseId: item?.exerciseId ?? last?.exerciseId ?? null,
     itemIndex,
@@ -99,12 +101,6 @@ export function goToItem(session: Session, itemIndex: number): Session {
 
 export function setRest(session: Session, rest: RestTimer | null): Session {
   return { ...session, live: { itemIndex: currentItem(session), rest } };
-}
-
-/** Cardio finale fatto sì/no (con i minuti del piano). */
-export function setCardioDone(session: Session, done: boolean): Session {
-  const cardio = session.snapshot?.cardio ?? null;
-  return { ...session, cardioDone: done && cardio ? { type: cardio.type, minutes: cardio.minutes, distanceKm: null } : null };
 }
 
 export function setRpe(session: Session, rpe: number | null): Session {

@@ -87,13 +87,27 @@ export const mealSchema = z.object({
   items: z.array(mealItemSchema).max(MAX_ITEMS.itemsPerMeal).default([]),
 });
 
-export const daySchema = z.object({
-  weekday,
-  /** Chiave in `dayTypes`; `null` se il piano non distingue i tipi di giornata. */
+/**
+ * Variante di un giorno (2b, formato v3): i pasti, gli integratori e la nota per un tipo di giornata.
+ * `type: null` solo se è l'unica variante del giorno e il tipo non è ancora noto (MyDiet, completamento guidato).
+ */
+export const variantSchema = z.object({
+  /** Chiave in `dayTypes` (gym, run, rest…). */
   type: safeKey.nullable().default(null),
   note: text(MAX_TEXT.note).default(''),
   supplements: z.array(supplementSchema).max(MAX_ITEMS.supplementsPerDay).default([]),
   meals: z.array(mealSchema).max(MAX_ITEMS.mealsPerDay),
+});
+
+/**
+ * Giorno della settimana del piano (2b): 1–3 varianti per tipo di giornata e il tipo predefinito
+ * (quello del piano originale). Quale variante si segue in una data lo decide `resolveDietDay` (`diet/variants.ts`).
+ */
+export const daySchema = z.object({
+  weekday,
+  /** Tipo del piano originale per quel giorno; `null` se non è noto (lo si sceglie nel completamento guidato). */
+  defaultType: safeKey.nullable().default(null),
+  variants: z.array(variantSchema).min(1).max(MAX_ITEMS.variantsPerDay),
 });
 
 export const recipeSchema = z.object({
@@ -121,10 +135,20 @@ interface PayloadRefs {
   products: Record<string, unknown>;
   days: readonly {
     weekday: number;
-    type: string | null;
-    meals: readonly { key: string; label: string; recipe: number | null; items: readonly { p: string }[] }[];
+    defaultType: string | null;
+    variants: readonly {
+      type: string | null;
+      meals: readonly { key: string; label: string; recipe: number | null; items: readonly { p: string }[] }[];
+    }[];
   }[];
   recipes: readonly { n: number }[];
+}
+
+/** Etichetta di un tipo per i messaggi: quella del piano, altrimenti la chiave. */
+function typeLabel(dayTypes: Record<string, unknown>, key: string): string {
+  const entry = Object.prototype.hasOwnProperty.call(dayTypes, key) ? dayTypes[key] : undefined;
+  const label = entry && typeof entry === 'object' && 'label' in entry ? (entry as { label: unknown }).label : null;
+  return typeof label === 'string' && label.trim() !== '' ? label.toLowerCase() : key;
 }
 
 /** Riferimenti incrociati: prodotti, ricette e tipi di giornata citati devono esistere. */
@@ -144,20 +168,43 @@ export function checkDietReferences(plan: PayloadRefs, ctx: z.RefinementCtx): vo
     if (seenDays.has(day.weekday)) issue(`${dayName} compare due volte`);
     seenDays.add(day.weekday);
 
-    if (day.type !== null && !has(plan.dayTypes, day.type)) {
-      issue(`${dayName}: il tipo di giornata «${day.type}» non è tra i tipi di giornata`);
+    if (day.defaultType !== null && !has(plan.dayTypes, day.defaultType)) {
+      issue(`${dayName}: il tipo di giornata «${day.defaultType}» non è tra i tipi di giornata`);
     }
 
-    const mealKeys = new Set<string>();
-    for (const meal of day.meals) {
-      const where = `${dayName} › ${meal.label}`;
-      if (mealKeys.has(meal.key)) issue(`${dayName}: il pasto «${meal.key}» compare due volte`);
-      mealKeys.add(meal.key);
-      if (meal.recipe !== null && !recipeNumbers.has(meal.recipe)) {
-        issue(`${where}: la ricetta ${meal.recipe} non è tra le ricette`);
+    // Varianti (2b): tipi diversi, al massimo una senza tipo e solo se è l'unica, quella predefinita presente.
+    const types = new Set<string>();
+    for (const variant of day.variants) {
+      if (variant.type === null) {
+        if (day.variants.length > 1) issue(`${dayName}: più varianti, ma una non ha il tipo di giornata`);
+        continue;
       }
-      for (const item of meal.items) {
-        if (!has(plan.products, item.p)) issue(`${where} usa il prodotto «${item.p}» che non è nell'elenco dei prodotti`);
+      if (types.has(variant.type)) issue(`${dayName}: due varianti dello stesso tipo («${typeLabel(plan.dayTypes, variant.type)}»)`);
+      types.add(variant.type);
+      if (!has(plan.dayTypes, variant.type) && variant.type !== day.defaultType) {
+        issue(`${dayName}: il tipo di giornata «${variant.type}» non è tra i tipi di giornata`);
+      }
+    }
+    if (day.defaultType !== null && !types.has(day.defaultType)) {
+      issue(`${dayName}: manca la variante del tipo predefinito (${typeLabel(plan.dayTypes, day.defaultType)})`);
+    }
+    if (day.defaultType === null && types.size > 0) {
+      issue(`${dayName}: manca il tipo predefinito (defaultType) tra quelli delle varianti`);
+    }
+
+    for (const variant of day.variants) {
+      const variantName = day.variants.length > 1 && variant.type !== null ? ` (${typeLabel(plan.dayTypes, variant.type)})` : '';
+      const mealKeys = new Set<string>();
+      for (const meal of variant.meals) {
+        const where = `${dayName}${variantName} › ${meal.label}`;
+        if (mealKeys.has(meal.key)) issue(`${dayName}${variantName}: il pasto «${meal.key}» compare due volte`);
+        mealKeys.add(meal.key);
+        if (meal.recipe !== null && !recipeNumbers.has(meal.recipe)) {
+          issue(`${where}: la ricetta ${meal.recipe} non è tra le ricette`);
+        }
+        for (const item of meal.items) {
+          if (!has(plan.products, item.p)) issue(`${where} usa il prodotto «${item.p}» che non è nell'elenco dei prodotti`);
+        }
       }
     }
   }
@@ -166,7 +213,21 @@ export function checkDietReferences(plan: PayloadRefs, ctx: z.RefinementCtx): vo
 export const dietPayloadSchema = z.object(dietPayloadShape).superRefine(checkDietReferences);
 
 export type DietPayload = z.infer<typeof dietPayloadSchema>;
-export type DietDay = z.infer<typeof daySchema>;
+/** Giorno della settimana del piano, con le sue varianti (schema v3). */
+export type DietPlanDay = z.infer<typeof daySchema>;
+export type DietVariant = z.infer<typeof variantSchema>;
+/**
+ * Giorno "appiattito" (2b): la variante scelta per una data, nella forma che usano i calcoli (pasti, integratori,
+ * nota e tipo). Lo produce `resolveDietDay` (`diet/variants.ts`); è la forma del giorno prima del formato v3.
+ */
+export interface DietDay {
+  weekday: number;
+  /** Tipo di giornata in vigore (decide i target); `null` se non è noto. */
+  type: string | null;
+  note: string;
+  supplements: DietSupplement[];
+  meals: DietMeal[];
+}
 export type DietMeal = z.infer<typeof mealSchema>;
 export type DietProduct = z.infer<typeof productSchema>;
 export type DietRecipe = z.infer<typeof recipeSchema>;

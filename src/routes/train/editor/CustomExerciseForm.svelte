@@ -11,6 +11,8 @@
     exercise: Exercise | null;
     /** Nome proposto per uno nuovo (quello cercato). */
     suggestedName?: string;
+    /** Tipo proposto per uno nuovo (chip "Cardio" attivo → cardio). */
+    suggestedKind?: 'strength' | 'cardio';
     busy: boolean;
     /** Errori del salvataggio (vuoto = nessuno). */
     errors: readonly string[];
@@ -25,6 +27,7 @@
   let {
     exercise,
     suggestedName = '',
+    suggestedKind = 'strength',
     busy,
     errors,
     deleteWarning,
@@ -36,6 +39,8 @@
 
   const uid = $props.id();
   let name = $state(untrack(() => exercise?.name ?? suggestedName));
+  // Il tipo si sceglie solo creando: le schede che usano un esercizio ne hanno una copia del tipo giusto.
+  let kind = $state<'strength' | 'cardio'>(untrack(() => exercise?.kind ?? suggestedKind));
   let muscles = $state<string[]>(untrack(() => [...(exercise?.muscles ?? [])]));
   let equipment = $state<string>(untrack(() => exercise?.equipment || 'Macchina'));
   let videoUrl = $state(untrack(() => exercise?.videoUrl ?? ''));
@@ -46,7 +51,7 @@
 
   function submit(e: SubmitEvent) {
     e.preventDefault();
-    onsave({ name, muscles, equipment, videoUrl });
+    onsave({ name, kind, muscles, equipment, videoUrl });
   }
 </script>
 
@@ -57,7 +62,21 @@
   </div>
 
   <fieldset class="field">
-    <legend class="mono-label">Muscoli <span class="hint">· il primo scelto è il principale</span></legend>
+    <legend class="mono-label">Tipo</legend>
+    {#if exercise}
+      <p class="kind-fixed">{kind === 'cardio' ? 'Cardio · minuti, distanza, velocità…' : 'Forza · serie, ripetizioni, kg'}</p>
+    {:else}
+      <div class="chips" role="group" aria-label="Tipo di esercizio">
+        <button type="button" class="chip tap" aria-pressed={kind === 'strength'} onclick={() => (kind = 'strength')}>Forza</button>
+        <button type="button" class="chip tap" aria-pressed={kind === 'cardio'} onclick={() => (kind = 'cardio')}>Cardio</button>
+      </div>
+    {/if}
+  </fieldset>
+
+  <fieldset class="field">
+    <legend class="mono-label"
+      >Muscoli <span class="hint">· {kind === 'cardio' ? 'facoltativi' : 'il primo scelto è il principale'}</span></legend
+    >
     <div class="chips" role="group" aria-label="Muscoli">
       {#each MUSCLES as m (m)}
         {@const pos = muscles.indexOf(m)}
@@ -134,6 +153,12 @@
   legend {
     padding: 0;
     margin-bottom: var(--space-2);
+  }
+
+  .kind-fixed {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-2);
   }
 
   .hint {

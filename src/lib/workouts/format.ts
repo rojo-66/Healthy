@@ -1,6 +1,6 @@
 import { formatNumber } from '../components/stepper';
 import type { Workout } from '../data/schemas/workouts';
-import { workoutTotals } from './calc/duration';
+import { cardioSuffix, workoutTotals, type TimedItem } from './calc/duration';
 
 /** Sigle dei giorni (1 = lunedì). */
 export const WEEKDAY_SHORT = ['LUN', 'MAR', 'MER', 'GIO', 'VEN', 'SAB', 'DOM'] as const;
@@ -45,20 +45,27 @@ function range(values: readonly number[], kg = false): string {
   return min === max ? fmt(min) : `${fmt(values[0] ?? min)}–${fmt(values[values.length - 1] ?? max)}`;
 }
 
-/** Riga dei dati della card: "6 esercizi · 20 serie · ~75’". */
-export function workoutMeta(w: Pick<Workout, 'items' | 'cardio'>): string {
-  const t = workoutTotals(w);
+/** "6 esercizi · 20 serie"; una scheda solo cardio: "2 cardio". */
+function countsLabel(t: { exercises: number; sets: number; cardio: number }): string {
+  if (t.exercises === 0) return `${t.cardio} cardio`;
   const ex = t.exercises === 1 ? '1 esercizio' : `${t.exercises} esercizi`;
   const sets = t.sets === 1 ? '1 serie' : `${t.sets} serie`;
-  return `${ex} · ${sets} · ~${t.totalMin}’`;
+  return `${ex} · ${sets}`;
 }
 
-/** Riga della card "Prossimo": "5 esercizi · 18 serie · ~70’ + 12’ tapis roulant". */
-export function nextMeta(w: Pick<Workout, 'items' | 'cardio'>): string {
+/** Riga dei dati della card: "6 esercizi · 20 serie · ~75’" (cardio compreso nei minuti). */
+export function workoutMeta(w: { items: readonly TimedItem[] }): string {
   const t = workoutTotals(w);
-  const ex = t.exercises === 1 ? '1 esercizio' : `${t.exercises} esercizi`;
-  const base = `${ex} · ${t.sets} serie · ~${t.strengthMin}’`;
-  return w.cardio && w.cardio.minutes > 0 ? `${base} + ${w.cardio.minutes}’ ${w.cardio.type}` : base;
+  return `${countsLabel(t)} · ~${t.totalMin}’`;
+}
+
+/** Riga della card "Prossimo": "5 esercizi · 18 serie · ~70’ + 12’ Tapis roulant · corsa". */
+export function nextMeta(w: { items: readonly TimedItem[] }): string {
+  const t = workoutTotals(w);
+  if (t.exercises === 0) return `${countsLabel(t)} · ~${t.cardioMin}’`;
+  const base = `${countsLabel(t)} · ~${t.strengthMin}’`;
+  const cardio = cardioSuffix(w.items);
+  return cardio ? `${base} ${cardio}` : base;
 }
 
 const AUTHOR_MAX = 14;
@@ -107,7 +114,7 @@ export function addMinutesToTime(hhmm: string, minutes: number): string {
 }
 
 /** Orario della scheda con la fine stimata: "18:00–19:15"; senza orario `''`. */
-export function workoutTimeRange(w: Pick<Workout, 'time' | 'items' | 'cardio'>): string {
+export function workoutTimeRange(w: { time: string | null; items: readonly TimedItem[] }): string {
   if (!w.time) return '';
   return `${w.time}–${addMinutesToTime(w.time, workoutTotals(w).totalMin)}`;
 }

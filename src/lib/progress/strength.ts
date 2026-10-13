@@ -1,3 +1,6 @@
+import { buildCalendar } from '../calendar/occurrences';
+import type { CalendarEdit } from '../data/schemas/calendar';
+import type { Run, RunLog } from '../data/schemas/runs';
 import type { Session, SessionSet } from '../data/schemas/sessions';
 import type { Workout } from '../data/schemas/workouts';
 import { addDays } from '../diet/calc/calendar';
@@ -136,27 +139,54 @@ export function exerciseView(history: ExerciseHistory | undefined, metric: Stren
 export interface WeekBar {
   /** Lunedì della settimana. */
   monday: string;
-  /** Sessioni concluse nella settimana. */
+  /** Attività fatte nella settimana: sessioni concluse + corse (2a). */
   count: number;
+  /** Di cui sessioni in palestra. */
+  gym: number;
+  /** Di cui corse (2a). */
+  runs: number;
   /** Volume della settimana in kg (Σ kg × rip delle serie fatte). */
   volumeKg: number;
   /** Settimana in corso (parziale). */
   current: boolean;
+  /**
+   * Obiettivo della settimana (2c): attività previste quella settimana dopo gli spostamenti, saltate comprese (contano
+   * come non fatte); `null` se nessuna.
+   */
+  target: number | null;
 }
 
 export interface WeeklyWorkouts {
   weeks: WeekBar[];
-  /** Obiettivo = somma dei giorni assegnati nelle schede attuali (scelta confermata in M9); `null` se nessuno. */
-  target: number | null;
+  /** C'è un obiettivo in almeno una settimana. */
+  hasTarget: boolean;
 }
 
-/** Allenamenti per settimana (da lunedì a domenica), comprese le settimane a zero. */
-export function weeklyWorkouts(sessions: readonly Session[], workouts: readonly Pick<Workout, 'weekdays'>[], range: DateRange | null, todayIso: string): WeeklyWorkouts {
-  const assigned = workouts.reduce((sum, w) => sum + w.weekdays.length, 0);
-  const target = assigned > 0 ? assigned : null;
-  if (!range) return { weeks: [], target };
+/**
+ * Allenamenti per settimana (da lunedì a domenica), comprese le settimane a zero: sessioni concluse e corse fatte,
+ * nella settimana in cui sono state fatte. Obiettivo di ogni settimana = attività previste (occorrenze dopo spostamenti
+ * e salti, `calendar/occurrences.ts`).
+ */
+export function weeklyWorkouts(
+  sessions: readonly Session[],
+  workouts: readonly Workout[],
+  range: DateRange | null,
+  todayIso: string,
+  runs: readonly Run[] = [],
+  runLogs: readonly RunLog[] = [],
+  edits: readonly CalendarEdit[] = [],
+): WeeklyWorkouts {
+  if (!range) return { weeks: [], hasTarget: false };
   const current = mondayOf(todayIso);
-  const weeks = weeksBetween(range.from, range.to).map((monday) => ({ monday, count: 0, volumeKg: 0, current: monday === current }));
+  const mondays = weeksBetween(range.from, range.to);
+  const planned = new Map<string, number>();
+  if (mondays.length > 0) {
+    const { occurrences } = buildCalendar(mondays[0]!, addDays(mondays.at(-1)!, 6), { workouts, runs, edits, sessions: [], runLogs: [], todayIso });
+    for (const o of occurrences) planned.set(mondayOf(o.date), (planned.get(mondayOf(o.date)) ?? 0) + 1);
+  }
+  const weeks = mondays.map(
+    (monday): WeekBar => ({ monday, count: 0, gym: 0, runs: 0, volumeKg: 0, current: monday === current, target: planned.get(monday) ?? null }),
+  );
   const byMonday = new Map(weeks.map((w) => [w.monday, w]));
   for (const s of sessions) {
     if (s.endedAt === null) continue;
@@ -165,9 +195,17 @@ export function weeklyWorkouts(sessions: readonly Session[], workouts: readonly 
     const week = byMonday.get(mondayOf(date));
     if (!week) continue;
     week.count += 1;
+    week.gym += 1;
     week.volumeKg = Math.round((week.volumeKg + volume(s.sets)) * 100) / 100;
   }
-  return { weeks, target };
+  for (const log of runLogs) {
+    if (!inRange(log.date, range)) continue;
+    const week = byMonday.get(mondayOf(log.date));
+    if (!week) continue;
+    week.count += 1;
+    week.runs += 1;
+  }
+  return { weeks, hasTarget: weeks.some((w) => w.target !== null) };
 }
 
 export interface RecentRecord {

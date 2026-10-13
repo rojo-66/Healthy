@@ -8,13 +8,13 @@
   import { deliverFile } from '../../lib/data/deliver-file';
   import { ValidationError } from '../../lib/data/errors';
   import { liveState } from '../../lib/data/live.svelte';
-  import { getDietLogDay } from '../../lib/data/repo/diet-log';
   import { activateDietPlan, listDietPlans } from '../../lib/data/repo/diet-plans';
   import { getShoppingWeek } from '../../lib/data/repo/shopping';
-  import type { DietLogDay } from '../../lib/data/schemas/diet-log';
   import type { DietPlan } from '../../lib/data/schemas/diet-plans';
   import type { ShoppingWeek } from '../../lib/data/schemas/shopping';
-  import { headerDate, isoWeekday, minutesOfDay, toIsoDate, weekStartOf } from '../../lib/diet/calc/calendar';
+  import { addDays, headerDate, isoWeekday, minutesOfDay, toIsoDate, weekStartOf } from '../../lib/diet/calc/calendar';
+  import { dayInfos } from '../../lib/calendar/days';
+  import { liveCalendar } from '../../lib/calendar/live.svelte';
   import { atPercent } from '../../lib/diet/format';
   import { parseRecipeParam } from '../../lib/diet/links';
   import { route } from '../../lib/router.svelte';
@@ -44,7 +44,10 @@
   const nowMinutes = $derived(minutesOfDay(now));
 
   const plans = liveState<DietPlan[]>(listDietPlans, []);
-  const log = liveState<DietLogDay | undefined>(() => getDietLogDay(todayIso), undefined);
+  // 2c: tipo di giornata di ogni giorno della settimana (attività, spostamenti, dieta scelta).
+  const weekEnd = addDays(weekStart, 6);
+  const cal = liveCalendar(weekStart, weekEnd);
+  const week = $derived(dayInfos(weekStart, weekEnd, cal.input(todayIso), cal.diet).infos);
   const shop = liveState<ShoppingWeek | undefined>(() => getShoppingWeek(weekStart), undefined);
 
   const active = $derived(plans.current.find((p) => p.active));
@@ -246,12 +249,17 @@
               {todayIso}
               {todayWeekday}
               {nowMinutes}
-              log={log.current}
+              infos={week}
               bind:selected
               onrecipe={showRecipe}
             />
           {:else if id === 'spesa'}
-            <ShoppingTab payload={active.payload} {weekStart} checked={shop.current?.checked ?? {}} />
+            <ShoppingTab
+              payload={active.payload}
+              {weekStart}
+              types={week.map((d) => d.type.request)}
+              checked={shop.current?.checked ?? {}}
+            />
           {:else}
             <RecipesTab
               recipes={active.payload.recipes}

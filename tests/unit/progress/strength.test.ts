@@ -53,6 +53,14 @@ describe('tab Forza', () => {
     expect(index.get('name:curl manubri finto')?.points).toHaveLength(1);
   });
 
+  it('2a: i cardio (migrati dal vecchio cardio finale) non compaiono nella Forza né nei chip', () => {
+    // Le sessioni di prova hanno il cardio come ultimo esercizio.
+    expect(t.sessions.some((s) => s.snapshot?.items.some((i) => i.kind === 'cardio'))).toBe(true);
+    const cardioKeys = [...index.keys()].filter((k) => k.startsWith('id:cd-') || k.includes('tapis') || k.includes('cyclette'));
+    expect(cardioKeys).toEqual([]);
+    expect(exerciseChoices(index).every((h) => !h.key.startsWith('id:cd-'))).toBe(true);
+  });
+
   it('serie migliore e volume per sessione; record con il valore precedente', () => {
     const bench = index.get(BENCH)!;
     const last = bench.points.at(-1)!;
@@ -75,7 +83,8 @@ describe('tab Forza', () => {
       id: 'doppia',
       startedAt: '2026-10-13T16:00:00.000Z',
       endedAt: '2026-10-13T17:00:00.000Z',
-      snapshot: { items: [base.snapshot!.items[0]!, base.snapshot!.items[0]!], cardio: null },
+      snapshot: { items: [base.snapshot!.items[0]!, base.snapshot!.items[0]!] },
+      cardio: [],
       sets: [
         { exerciseId: base.snapshot!.items[0]!.exerciseId, itemIndex: 0, setIndex: 0, kg: 80, reps: 5, done: true },
         { exerciseId: base.snapshot!.items[0]!.exerciseId, itemIndex: 1, setIndex: 0, kg: 80, reps: 7, done: true },
@@ -102,8 +111,9 @@ describe('tab Forza', () => {
   });
 
   it('allenamenti per settimana: settimane a zero, settimana in corso, obiettivo dalle schede', () => {
-    const { weeks, target } = weeklyWorkouts(t.sessions, t.workouts, all, TODAY);
-    expect(target).toBe(3);
+    const { weeks, hasTarget } = weeklyWorkouts(t.sessions, t.workouts, all, TODAY);
+    expect(hasTarget).toBe(true);
+    expect(weeks.every((w) => w.target === 3)).toBe(true);
     expect(weeks).toHaveLength(14);
     expect(weeks.find((w) => w.monday === '2026-08-10')).toMatchObject({ count: 0, volumeKg: 0 });
     expect(weeks.find((w) => w.monday === '2026-09-14')?.count).toBe(2);
@@ -113,8 +123,10 @@ describe('tab Forza', () => {
   });
 
   it('senza schede con giorni niente obiettivo; senza dati nessuna settimana', () => {
-    expect(weeklyWorkouts(t.sessions, [{ weekdays: [] }], all, TODAY).target).toBeNull();
-    expect(weeklyWorkouts([], [], null, TODAY)).toEqual({ weeks: [], target: null });
+    const none = weeklyWorkouts(t.sessions, [{ ...t.workouts[0]!, weekdays: [] }], all, TODAY);
+    expect(none.hasTarget).toBe(false);
+    expect(none.weeks.every((w) => w.target === null)).toBe(true);
+    expect(weeklyWorkouts([], [], null, TODAY)).toEqual({ weeks: [], hasTarget: false });
   });
 
   it('record recenti del periodo, dal più recente, con il valore precedente', () => {

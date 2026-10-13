@@ -8,7 +8,12 @@
   import { listDietPlans } from '../../lib/data/repo/diet-plans';
   import { listMeasurementsByDate } from '../../lib/data/repo/measurements';
   import { getProfile } from '../../lib/data/repo/profile';
+  import { listRunLogs, listRuns } from '../../lib/data/repo/runs';
+  import { getCalendarStart, listCalendarEdits, listDayChoices } from '../../lib/data/repo/calendar';
+  import type { CalendarEdit, DayChoice } from '../../lib/data/schemas/calendar';
+  import type { DietCalendar } from '../../lib/progress/diet';
   import { completedSessions } from '../../lib/data/repo/sessions';
+  import type { Run, RunLog } from '../../lib/data/schemas/runs';
   import { getNextMeasurement } from '../../lib/data/repo/settings';
   import { workoutsRepo } from '../../lib/data/repo/workouts';
   import type { DietLogDay } from '../../lib/data/schemas/diet-log';
@@ -52,14 +57,33 @@
   const next = liveState(getNextMeasurement, { text: '', date: null });
   const sessions = liveState<Session[]>(completedSessions, []);
   const workouts = liveState<Workout[]>(() => workoutsRepo.list(), []);
+  const runs = liveState<Run[]>(listRuns, []);
+  const runLogs = liveState<RunLog[]>(listRunLogs, []);
   const plans = liveState<DietPlan[]>(listDietPlans, []);
   const logs = liveState<DietLogDay[]>(() => dietLogRepo.list(), []);
-  const sources = [profile, measurements, next, sessions, workouts, plans, logs];
+  // 2c: spostamenti, salti e diete scelte (obiettivo per settimana, tipo di giornata della Dieta).
+  const edits = liveState<CalendarEdit[]>(listCalendarEdits, []);
+  const choices = liveState<DayChoice[]>(listDayChoices, []);
+  const calendarStart = liveState<string | null>(getCalendarStart, null);
+  const sources = [profile, measurements, next, sessions, workouts, runs, runLogs, plans, logs, edits, choices, calendarStart];
 
   const loaded = $derived(sources.every((s) => s.loaded));
   const failed = $derived(sources.some((s) => s.error));
 
   const today = $derived(toIsoDate(now));
+  const dietCalendar = $derived<DietCalendar>({
+    input: {
+      workouts: workouts.current,
+      runs: runs.current,
+      edits: edits.current,
+      sessions: sessions.current,
+      runLogs: runLogs.current,
+      active: null,
+      todayIso: today,
+    },
+    choices: choices.current,
+    calendarStart: calendarStart.current,
+  });
   const sessionDates = $derived(sessions.current.map(sessionDate));
   const span = $derived(
     dataSpan([...measurements.current.map((m) => m.date), ...sessionDates, ...logs.current.map((l) => l.date)], today),
@@ -105,9 +129,18 @@
         {:else if id === 'corpo'}
           <BodyTab series={body} range={bodyRange} goal={profile.current?.goal ?? null} next={next.current} {today} />
         {:else if id === 'forza'}
-          <StrengthTab index={strength} sessions={sessions.current} workouts={workouts.current} range={strengthRange} {today} />
+          <StrengthTab
+            index={strength}
+            sessions={sessions.current}
+            workouts={workouts.current}
+            runs={runs.current}
+            runLogs={runLogs.current}
+            edits={edits.current}
+            range={strengthRange}
+            {today}
+          />
         {:else}
-          <DietTab plans={plans.current} logs={logs.current} {today} />
+          <DietTab plans={plans.current} logs={logs.current} {today} calendar={dietCalendar} />
         {/if}
       {/snippet}
     </Tabs>

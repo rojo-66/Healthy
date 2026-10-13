@@ -1,17 +1,21 @@
+import { dietView, type DayInfo } from '../calendar/days';
+import type { CalendarDays } from '../calendar/occurrences';
 import type { DietLogDay } from '../data/schemas/diet-log';
 import type { DietPlan } from '../data/schemas/diet-plans';
 import type { Session } from '../data/schemas/sessions';
 import type { Workout } from '../data/schemas/workouts';
-import { addDays, effectiveWeekday, fromIsoDate, isoWeekday, weekStartOf, WEEKDAY_INITIALS } from '../diet/calc/calendar';
+import { addDays, fromIsoDate, weekStartOf, WEEKDAY_INITIALS } from '../diet/calc/calendar';
 import type { Totals } from '../diet/calc/nutrients';
 import { TARGET_ORIGIN_TEXT, type DayTargets } from '../diet/calc/targets';
-import { buildDayView, findDay, type DayTypeTone, type DayView } from '../diet/view';
-import { workoutsOn } from '../workouts/calc/week';
-import { conflictText, resolveDayType, type ResolvedDayType } from './day-type';
+import type { DayTypeTone, DayView } from '../diet/view';
+import { sessionDate } from '../sessions/calendar';
+import { missingTypeText, type ResolvedDayType } from './day-type';
 import { focusMeal, type DayRelation, type MealFocus } from './meal-focus';
 import { buildTimeline, type TimelineItem } from './timeline';
 import { dailyTip, type Tip } from './tips';
-import { workoutsForDay, type WorkoutEntry } from './workout-day';
+import { runsForDay, workoutsForDay, type RunEntry, type WorkoutEntry } from './workout-day';
+
+export { logFor } from '../calendar/days';
 
 /**
  * Tutto ciò che la Home mostra per un giorno, calcolato qui (funzioni pure, testate):
@@ -19,17 +23,15 @@ import { workoutsForDay, type WorkoutEntry } from './workout-day';
  */
 
 export interface HomeInput {
-  /** Giorno mostrato, `AAAA-MM-GG` locale. */
-  date: string;
   todayIso: string;
   nowMinutes: number;
   /** Piano alimentare attivo. */
   plan: DietPlan | null;
-  /** Diario di quel giorno (vale solo se è dello stesso piano). */
-  log: DietLogDay | undefined;
+  /** Il giorno mostrato con tipo di giornata, diario e attività (`calendar/days.ts`). */
+  info: DayInfo;
+  /** Calendario del periodo (per le attività fuori programma). */
+  days: CalendarDays;
   workouts: readonly Workout[];
-  /** Sessioni del periodo (si tengono quelle di quel giorno). */
-  sessions: readonly Session[];
   /** Sessione in corso, se c'è (conta solo per oggi). */
   active: Session | null;
 }
@@ -48,19 +50,19 @@ export interface HomeDay {
   date: string;
   weekday: number;
   relation: DayRelation;
-  /** Giorno del piano seguito (diverso da `weekday` con "oggi seguo il piano di un altro giorno"). */
-  followsWeekday: number;
-  swapped: boolean;
   hasPlan: boolean;
   view: DayView | null;
   eaten: Readonly<Record<string, boolean>>;
   dayType: ResolvedDayType;
-  conflict: string;
+  /** Riga gialla: il piano non ha il tipo di giornata delle attività ("" se non serve). */
+  typeNote: string;
   calories: HomeCalories | null;
   meal: MealFocus;
   /** Il pasto si segna solo oggi (come nella Dieta). */
   canTick: boolean;
   workouts: WorkoutEntry[];
+  /** Corse del giorno (2a). */
+  runs: RunEntry[];
   timeline: TimelineItem[];
   tip: Tip;
 }
@@ -70,29 +72,14 @@ export function relationOf(date: string, todayIso: string): DayRelation {
   return date < todayIso ? 'past' : 'future';
 }
 
-/** Il diario vale solo se è del piano attivo (un piano nuovo riparte senza spunte). */
-export function logFor(plan: DietPlan | null, log: DietLogDay | undefined): DietLogDay | undefined {
-  return plan && log && log.planId === plan.id ? log : undefined;
-}
-
 export function buildHomeDay(input: HomeInput): HomeDay {
-  const { date, todayIso, nowMinutes, plan } = input;
-  const weekday = isoWeekday(fromIsoDate(date));
+  const { todayIso, nowMinutes, plan, info, days } = input;
+  const date = info.date;
   const relation = relationOf(date, todayIso);
-  const log = logFor(plan, input.log);
-  const followsWeekday = effectiveWeekday(weekday, log?.swappedFromWeekday);
+  const log: DietLogDay | undefined = info.log;
   const eaten = relation === 'future' ? {} : (log?.eaten ?? {});
-
-  const view = plan
-    ? buildDayView(plan.payload, followsWeekday, {
-        today: relation === 'today',
-        keepEaten: relation === 'past',
-        eaten,
-        nowMinutes,
-      })
-    : null;
-
-  const dayType = resolveDayType(plan?.payload ?? null, view?.day ?? null, workoutsOn(input.workouts, weekday).length);
+  const view = dietView(info, plan, { today: relation === 'today', keepEaten: relation === 'past', nowMinutes });
+  const dayType = info.type;
 
   let calories: HomeCalories | null = null;
   if (view) {
@@ -106,29 +93,38 @@ export function buildHomeDay(input: HomeInput): HomeDay {
     };
   }
 
-  const workouts = workoutsForDay(input.workouts, input.sessions, date, weekday, relation === 'today' ? input.active : null);
+  const active = relation === 'today' ? input.active : null;
+  const workouts = workoutsForDay(
+    info.occurrences,
+    days.extraSessions.filter((s) => sessionDate(s) === date),
+    active,
+    input.workouts,
+  );
+  const runs = runsForDay(
+    info.occurrences,
+    days.extraLogs.filter((l) => l.date === date),
+  );
 
   return {
     date,
-    weekday,
+    weekday: info.weekday,
     relation,
-    followsWeekday,
-    swapped: followsWeekday !== weekday,
     hasPlan: plan !== null,
     view,
     eaten,
     dayType,
-    conflict: conflictText(dayType, relation === 'today'),
+    typeNote: missingTypeText(dayType),
     calories,
     meal: focusMeal(plan !== null, view, eaten, nowMinutes, relation),
     canTick: relation === 'today' && view !== null,
     workouts,
-    timeline: buildTimeline({ view, workouts, relation, nowMinutes, eaten }),
+    runs,
+    timeline: buildTimeline({ view, workouts, runs, relation, nowMinutes, eaten }),
     tip: dailyTip(date, view?.observations ?? [], { dayTypeKey: dayType.key, hasPlan: plan !== null }),
   };
 }
 
-// --- Striscia dei 7 giorni ---
+// --- Striscia dei giorni (3 settimane, 2c) ---
 
 export interface HomeStripDay {
   date: string;
@@ -140,37 +136,23 @@ export interface HomeStripDay {
   isToday: boolean;
 }
 
-/** Le 7 date (lunedì–domenica) della settimana di oggi. */
-export function weekDates(todayIso: string): string[] {
-  const start = weekStartOf(fromIsoDate(todayIso));
+/** Le 7 date (lunedì–domenica) della settimana di una data. */
+export function weekDates(iso: string): string[] {
+  const start = weekStartOf(fromIsoDate(iso));
   return [0, 1, 2, 3, 4, 5, 6].map((i) => addDays(start, i));
 }
 
-/** Striscia L–D: tipo di giornata di ogni giorno (con lo scambio del suo diario). */
-export function homeWeek(
-  todayIso: string,
-  plan: DietPlan | null,
-  logs: readonly DietLogDay[],
-  workouts: readonly Workout[],
-): HomeStripDay[] {
-  return weekDates(todayIso).map((date, i) => {
-    const weekday = i + 1;
-    const log = logFor(
-      plan,
-      logs.find((l) => l.date === date),
-    );
-    const planDay = plan ? (findDay(plan.payload, effectiveWeekday(weekday, log?.swappedFromWeekday)) ?? null) : null;
-    const type = resolveDayType(plan?.payload ?? null, planDay, workoutsOn(workouts, weekday).length);
-    return {
-      date,
-      weekday,
-      initial: WEEKDAY_INITIALS[i] ?? '',
-      dayNumber: fromIsoDate(date).getDate(),
-      tone: type.tone,
-      typeLabel: type.label,
-      isToday: date === todayIso,
-    };
-  });
+/** Striscia: tipo di giornata di ogni giorno (dalle attività, con la scelta della dieta). */
+export function homeStrip(infos: readonly DayInfo[], todayIso: string): HomeStripDay[] {
+  return infos.map((info) => ({
+    date: info.date,
+    weekday: info.weekday,
+    initial: WEEKDAY_INITIALS[info.weekday - 1] ?? '',
+    dayNumber: fromIsoDate(info.date).getDate(),
+    tone: info.type.tone,
+    typeLabel: info.type.label,
+    isToday: info.date === todayIso,
+  }));
 }
 
 /** "Ieri", "Domani", "Tra 3 giorni", "4 giorni fa" (oggi: ""). */

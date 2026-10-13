@@ -1,3 +1,6 @@
+import { hasActivities, logFor } from '../calendar/days';
+import { buildCalendar, dayActivities, type CalendarInput } from '../calendar/occurrences';
+import type { DayChoice } from '../data/schemas/calendar';
 import type { DietLogDay } from '../data/schemas/diet-log';
 import type { DietPlan } from '../data/schemas/diet-plans';
 import { addDays, effectiveWeekday, fromIsoDate, isoWeekday, toIsoDate } from '../diet/calc/calendar';
@@ -11,8 +14,8 @@ import {
 } from '../diet/calc/observations';
 import type { DayTargets, TargetOrigin } from '../diet/calc/targets';
 import { formatInt } from '../diet/format';
-import { buildDayView } from '../diet/view';
-import { logFor } from '../today/home';
+import { buildDayView, findDay } from '../diet/view';
+import { dayTypeFor } from '../today/day-type';
 import { weeksBetween } from './period';
 
 /**
@@ -64,8 +67,23 @@ export function dietStart(plan: Pick<DietPlan, 'id' | 'validFrom' | 'importedAt'
   return own[0] ?? null;
 }
 
-/** Statistiche di ogni giorno dall'inizio del piano attivo fino a oggi compreso. */
-export function dietDays(plans: readonly DietPlan[], logs: readonly DietLogDay[], todayIso: string): DietDayStat[] {
+/** Attività, diete scelte e inizio del calendario (2c): il tipo di giornata di ogni data. */
+export interface DietCalendar {
+  input: CalendarInput;
+  choices: readonly DayChoice[];
+  calendarStart: string | null;
+}
+
+/**
+ * Statistiche di ogni giorno dall'inizio del piano attivo fino a oggi compreso. Con `calendar` (2c) ogni giorno usa la
+ * variante del suo tipo di giornata (prima di `calendarStart` quello del piano, come prima) e i pasti segnati com'erano.
+ */
+export function dietDays(
+  plans: readonly DietPlan[],
+  logs: readonly DietLogDay[],
+  todayIso: string,
+  calendar: DietCalendar | null = null,
+): DietDayStat[] {
   const active = plans.find((p) => p.active);
   if (!active) return [];
   const start = dietStart(active, logs);
@@ -73,13 +91,36 @@ export function dietDays(plans: readonly DietPlan[], logs: readonly DietLogDay[]
   const byId = new Map(plans.map((p) => [p.id, p]));
   const byDate = new Map(logs.map((l) => [l.date, l]));
   const out: DietDayStat[] = [];
+  const days = calendar ? buildCalendar(start, todayIso, calendar.input) : null;
 
   for (let date = start; date <= todayIso; date = addDays(date, 1)) {
     const row = byDate.get(date);
     const plan = (row && byId.get(row.planId)) || active;
     const log = logFor(plan, row);
-    const weekday = effectiveWeekday(isoWeekday(fromIsoDate(date)), log?.swappedFromWeekday);
-    const view = buildDayView(plan.payload, weekday, { today: false, keepEaten: true, eaten: log?.eaten ?? {}, nowMinutes: 0 });
+    const mealsFrom = log?.mealsFrom ?? null;
+    const calendarWeekday = isoWeekday(fromIsoDate(date));
+    const weekday = effectiveWeekday(calendarWeekday, mealsFrom);
+    const type =
+      calendar && days
+        ? dayTypeFor({
+            date,
+            payload: plan.payload,
+            planType: findDay(plan.payload, calendarWeekday, { mealsFrom })?.defaultType ?? null,
+            activities: dayActivities(days, date, calendar.input.active ?? null),
+            hasActivities: hasActivities(calendar.input),
+            choice: calendar.choices.find((c) => c.date === date)?.dietType ?? null,
+            calendarStart: calendar.calendarStart,
+          }).request
+        : undefined;
+    const view = buildDayView(plan.payload, calendarWeekday, {
+      today: false,
+      keepEaten: true,
+      eaten: log?.eaten ?? {},
+      nowMinutes: 0,
+      mealsFrom,
+      type,
+      mealSources: log?.mealSources,
+    });
     const meals = view?.meals ?? [];
     const eaten = meals.filter((m) => m.eaten).length;
     out.push({

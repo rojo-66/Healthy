@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { dietLogSchema, type DietLogDay } from '../../../src/lib/data/schemas/diet-log';
 import { dietPayloadSchema } from '../../../src/lib/data/schemas/diet-payload';
+import { dietPayloadV2ToV3 } from '../../../src/lib/data/migrations/diet-v3';
+import { migrateDietLogRow } from '../../../src/lib/data/migrations/diet-v3';
 import type { DietPlan } from '../../../src/lib/data/schemas/diet-plans';
 import type { Session } from '../../../src/lib/data/schemas/sessions';
 import type { Workout } from '../../../src/lib/data/schemas/workouts';
@@ -20,7 +22,8 @@ function planFrom(json: { id: string; title: string }): DietPlan {
     archived: false,
     importedAt: null,
     origin: 'file',
-    payload: dietPayloadSchema.parse(structuredClone(json)),
+    // Fixture nel formato v2 (prima del 2b): convertita come nella migrazione.
+    payload: dietPayloadSchema.parse(dietPayloadV2ToV3(structuredClone(json) as Record<string, unknown>)),
   };
 }
 
@@ -31,7 +34,7 @@ export const partialPlan = (): DietPlan => planFrom(partialJson);
 
 /** Diario finto: oggi (lun 12/10) segue mercoledì; domenica 11 colazione e pranzo; sabato 10 di un altro piano. */
 export function swapLogs(): DietLogDay[] {
-  return z.array(dietLogSchema).parse(structuredClone(logSwapJson));
+  return z.array(dietLogSchema).parse(structuredClone(logSwapJson).map(migrateDietLogRow));
 }
 
 export const TODAY = '2026-10-12';

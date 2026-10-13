@@ -76,14 +76,14 @@ describe('vista del giorno (tab Piano)', () => {
 });
 
 describe('striscia dei giorni', () => {
-  it('kcal e tipo per giorno; oggi mostra il giorno seguito', () => {
-    const strip = weekStrip(plan, 1, 1);
+  it('kcal e tipo per giorno; un giorno con lo scambio (2b) mostra il giorno seguito', () => {
+    const strip = weekStrip(plan);
     expect(strip.map((d) => d.initial).join('')).toBe('LMMGVSD');
     expect(strip.map((d) => d.typeTone)).toEqual(['training', 'training', 'muted', 'training', 'training', 'progress', 'muted']);
     expect(Math.round(strip[0]!.kcal!)).toBe(1605);
     expect(strip.every((d) => d.complete && d.inPlan)).toBe(true);
 
-    const swapped = weekStrip(plan, 1, 3);
+    const swapped = weekStrip(plan, [{ mealsFrom: { weekday: 3, type: null } }]);
     expect(Math.round(swapped[0]!.kcal!)).toBe(Math.round(strip[2]!.kcal!));
     expect(swapped[0]!.typeTone).toBe('muted');
   });
@@ -91,8 +91,8 @@ describe('striscia dei giorni', () => {
   it('senza valori: kcal sconosciute (null), giorni fuori dal piano', () => {
     const result = parseDietImport(myDietJson());
     if (!result.ok) throw new Error(result.errors.join('\n'));
-    expect(weekStrip(result.value.file, 1, 1).every((d) => d.kcal === null && !d.complete)).toBe(true);
-    const short = weekStrip({ ...plan, days: plan.days.slice(0, 2) }, 1, 1);
+    expect(weekStrip(result.value.file).every((d) => d.kcal === null && !d.complete)).toBe(true);
+    const short = weekStrip({ ...plan, days: plan.days.slice(0, 2) });
     expect(short[4]).toMatchObject({ inPlan: false, kcal: null });
   });
 });

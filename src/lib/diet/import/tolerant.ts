@@ -1,6 +1,7 @@
 import { lookup } from '../../data/errors';
 import { weekdayName } from '../../data/schemas/diet-payload';
 import { EMPTY_TEMPLATE_MESSAGE, isEmptyTemplate } from '../template/template';
+import { dietDayV2ToV3 } from '../../data/migrations/diet-v3';
 
 /**
  * Piano esteso nato dal modello per Claude: prima di zod si completano solo i "vuoti" previsti dal modello
@@ -102,33 +103,32 @@ export function normalizeExtendedDiet(input: Json, options: NormalizeOptions): N
   }
 
   if (Array.isArray(raw.days)) {
-    raw.days.forEach((day: unknown, index) => {
+    // Un giorno ancora nella forma v2 (`type` e `meals`, senza `variants`) diventa una variante sola.
+    const days: unknown[] = raw.days.map((day: unknown) => (isRecord(day) && !('variants' in day) && 'meals' in day ? dietDayV2ToV3(day) : day));
+    raw.days = days;
+    days.forEach((day: unknown, index) => {
       if (!isRecord(day)) return;
       // Tipo vuoto = mancante: lo si sceglie nel completamento guidato.
-      blankToNull(day, 'type');
-      if (!Array.isArray(day.meals)) return;
-      for (const meal of day.meals) {
-        if (!isRecord(meal)) continue;
-        blankToNull(meal, 'time');
-        blankToNull(meal, 'recipe');
-        const window = meal.window;
-        if (typeof window === 'string' && window.trim() === '') meal.window = null;
-        if (Array.isArray(window) && window.every((end) => isBlank(end) || typeof end === 'string')) {
-          const blanks = window.filter(isBlank).length;
-          if (window.length === 0 || blanks === window.length) meal.window = null;
-          else if (blanks > 0) {
-            meal.window = null;
-            const label = typeof meal.label === 'string' && meal.label.trim() !== '' ? meal.label.trim() : String(meal.key ?? 'pasto');
-            warnings.push(`${dayLabel(day, index)} › ${label}: fascia oraria incompleta, ignorata`);
-          }
-        }
+      blankToNull(day, 'defaultType');
+      if (day.defaultType === undefined) day.defaultType = null;
+      if (!Array.isArray(day.variants)) return;
+      for (const variant of day.variants) if (isRecord(variant)) blankToNull(variant, 'type');
+      // Una sola variante: il suo tipo e quello predefinito sono lo stesso (se uno manca si prende l'altro).
+      const only = day.variants.length === 1 && isRecord(day.variants[0]) ? (day.variants[0] as Json) : null;
+      if (only) {
+        if ((only.type === undefined || only.type === null) && typeof day.defaultType === 'string') only.type = day.defaultType;
+        else if (day.defaultType === null && typeof only.type === 'string') day.defaultType = only.type;
+      }
+      for (const variant of day.variants) {
+        if (!isRecord(variant) || !Array.isArray(variant.meals)) continue;
+        normalizeMeals(variant.meals, day, index, warnings);
       }
     });
 
     // Meno di 7 giorni: si importa lo stesso, ma lo si dice.
-    const present = new Set(raw.days.flatMap((day: unknown) => (isRecord(day) && typeof day.weekday === 'number' ? [day.weekday] : [])));
+    const present = new Set(days.flatMap((day: unknown) => (isRecord(day) && typeof day.weekday === 'number' ? [day.weekday] : [])));
     const missingDays = [1, 2, 3, 4, 5, 6, 7].filter((n) => !present.has(n)).map((n) => weekdayName(n).toLowerCase());
-    if (raw.days.length > 0 && raw.days.length < 7 && missingDays.length > 0) {
+    if (days.length > 0 && days.length < 7 && missingDays.length > 0) {
       warnings.push(
         missingDays.length === 1
           ? `Manca ${missingDays[0]}: quel giorno il piano sarà vuoto`
@@ -139,7 +139,13 @@ export function normalizeExtendedDiet(input: Json, options: NormalizeOptions): N
 
   if (isRecord(raw.dayTypes)) {
     const days: unknown[] = Array.isArray(raw.days) ? raw.days : [];
-    const used = new Set(days.flatMap((day) => (isRecord(day) && typeof day.type === 'string' ? [day.type] : [])));
+    const used = new Set(
+      days.flatMap((day) => {
+        if (!isRecord(day)) return [];
+        const types = Array.isArray(day.variants) ? day.variants.flatMap((v) => (isRecord(v) && typeof v.type === 'string' ? [v.type] : [])) : [];
+        return typeof day.defaultType === 'string' ? [...types, day.defaultType] : types;
+      }),
+    );
     for (const [key, dayType] of Object.entries(raw.dayTypes)) {
       if (!isRecord(dayType)) continue;
       const missing = normalizeNumbers(dayType, 'targets', ['kcal', 'protein', 'carbs', 'fat', 'fiber'], ['kcal']);
@@ -157,4 +163,24 @@ export function normalizeExtendedDiet(input: Json, options: NormalizeOptions): N
   }
 
   return { raw, warnings, errors };
+}
+
+/** Pasti di una variante: `""` = mancante per orario e ricetta, fascia oraria con un solo estremo ignorata con avviso. */
+function normalizeMeals(meals: unknown[], day: Json, index: number, warnings: string[]): void {
+  for (const meal of meals) {
+    if (!isRecord(meal)) continue;
+    blankToNull(meal, 'time');
+    blankToNull(meal, 'recipe');
+    const window = meal.window;
+    if (typeof window === 'string' && window.trim() === '') meal.window = null;
+    if (Array.isArray(window) && window.every((end) => isBlank(end) || typeof end === 'string')) {
+      const blanks = window.filter(isBlank).length;
+      if (window.length === 0 || blanks === window.length) meal.window = null;
+      else if (blanks > 0) {
+        meal.window = null;
+        const label = typeof meal.label === 'string' && meal.label.trim() !== '' ? meal.label.trim() : String(meal.key ?? 'pasto');
+        warnings.push(`${dayLabel(day, index)} › ${label}: fascia oraria incompleta, ignorata`);
+      }
+    }
+  }
 }

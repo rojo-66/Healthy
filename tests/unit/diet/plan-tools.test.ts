@@ -17,7 +17,7 @@ import { buildShoppingList, shoppingProgress, shoppingShareText } from '../../..
 import { setDayType, setProductValues, setSupplements, setTargets } from '../../../src/lib/diet/edit';
 import { formatDecimal, formatInt, formatQuantity } from '../../../src/lib/diet/format';
 import { parseDietImport } from '../../../src/lib/diet/import/detect';
-import { myDietJson, payload, PRODUCTS } from './helpers';
+import { flatDay, myDietJson, payload, PRODUCTS } from './helpers';
 
 const VALUES = { kcal: 100, protein: 10, carbs: 10, fat: 1, fiber: 1 };
 
@@ -71,7 +71,7 @@ describe('calendario e scambio del giorno', () => {
   it('oggi segue il giorno scelto, se c’è uno scambio', () => {
     expect(effectiveWeekday(1, null)).toBe(1);
     expect(effectiveWeekday(1, undefined)).toBe(1);
-    expect(effectiveWeekday(1, 4)).toBe(4);
+    expect(effectiveWeekday(1, { weekday: 4 })).toBe(4);
   });
 });
 
@@ -99,7 +99,7 @@ describe('pasto attuale', () => {
       },
     ],
   });
-  const [mon, tue] = p.days as [typeof p.days[0], typeof p.days[0]];
+  const [mon, tue] = [flatDay(p, 0), flatDay(p, 1)];
 
   it('in base alla finestra del pasto', () => {
     expect(currentMealKey(mon.meals, {}, toMinutes('12:30'))).toBe('pranzo');
@@ -242,14 +242,15 @@ describe('completamento guidato', () => {
     const p = setDayType(original, 6, 'run');
     expect(original).toEqual(before);
     expect(p.dayTypes.run).toEqual({ label: 'Corsa', targets: null, targetsSource: 'manual' });
-    expect(p.days[5]!.type).toBe('run');
-    expect(setDayType(p, 6, null).days[5]!.type).toBeNull();
+    expect(p.days[5]!.defaultType).toBe('run');
+    expect(p.days[5]!.variants[0]!.type).toBe('run');
+    expect(setDayType(p, 6, null).days[5]!.defaultType).toBeNull();
 
     const withTargets = setTargets(p, 'run', { kcal: 1700, protein: 110, carbs: null, fat: null, fiber: null }, 'estimated');
     expect(withTargets.dayTypes.run).toMatchObject({ targetsSource: 'estimated', targets: { kcal: 1700 } });
     expect(setTargets(p, 'manca', null, 'manual')).toEqual(p);
 
     const supplements = [{ name: 'Vitamina D3', when: 'cena', dose: '2.000 UI', skip: true }];
-    expect(setSupplements(p, 3, supplements).days[2]!.supplements).toEqual(supplements);
+    expect(setSupplements(p, 3, supplements).days[2]!.variants[0]!.supplements).toEqual(supplements);
   });
 });

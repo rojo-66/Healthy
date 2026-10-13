@@ -1,9 +1,11 @@
 import type { z } from 'zod';
+import { calendarEditSchema, dayChoiceSchema } from './calendar';
 import { dietLogSchema } from './diet-log';
 import { dietPlanSchema } from './diet-plans';
 import { exerciseSchema } from './exercises';
 import { measurementSchema } from './measurements';
 import { profileSchema } from './profile';
+import { runLogSchema, runSchema } from './runs';
 import { sessionSchema } from './sessions';
 import { settingSchema } from './settings';
 import { shoppingSchema } from './shopping';
@@ -16,6 +18,10 @@ export const TABLE_NAMES = [
   'exercises',
   'workouts',
   'sessions',
+  'runs',
+  'runLogs',
+  'calendarEdits',
+  'dayChoices',
   'dietPlans',
   'dietLog',
   'shopping',
@@ -31,6 +37,10 @@ export const TABLE_SCHEMAS = {
   exercises: exerciseSchema,
   workouts: workoutSchema,
   sessions: sessionSchema,
+  runs: runSchema,
+  runLogs: runLogSchema,
+  calendarEdits: calendarEditSchema,
+  dayChoices: dayChoiceSchema,
   dietPlans: dietPlanSchema,
   dietLog: dietLogSchema,
   shopping: shoppingSchema,
@@ -47,6 +57,10 @@ export const PRIMARY_KEYS = {
   exercises: 'id',
   workouts: 'id',
   sessions: 'id',
+  runs: 'id',
+  runLogs: 'id',
+  calendarEdits: 'key',
+  dayChoices: 'date',
   dietPlans: 'id',
   dietLog: 'date',
   shopping: 'weekStart',
@@ -63,6 +77,10 @@ export const TABLE_LABELS: Readonly<Record<TableName, string>> = {
   exercises: 'Esercizi',
   workouts: 'Schede',
   sessions: 'Sessioni',
+  runs: 'Corse',
+  runLogs: 'Corse fatte',
+  calendarEdits: 'Spostamenti',
+  dayChoices: 'Scelte dieta',
   dietPlans: 'Piani alimentari',
   dietLog: 'Diario dieta',
   shopping: 'Spesa',

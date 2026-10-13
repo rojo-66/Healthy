@@ -1,26 +1,30 @@
 {
   "app": "healthy-app",
   "kind": "diet",
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "_modello": true,
   "_generato": "2026-10-12",
   "_istruzioni": [
     "QUESTO È UN MODELLO VUOTO dell'app Healthy App per un piano alimentare. Va compilato con i dati della dieta allegata (PDF, foto, testo o file di MyDiet).",
     "RISULTATO: restituisci SOLO il JSON compilato e valido (virgolette doppie, nessun commento, nessuna virgola finale, numeri con il punto decimale: 2.5 e non 2,5) come file scaricabile chiamato healthy-dieta-<titolo>.json. Nel file finale ELIMINA i campi _modello, _generato, _istruzioni ed _esempio.",
     "NON INVENTARE: riporta solo ciò che è scritto nella dieta. Se un dato manca lascia null (numeri, orari, date, target, valori nutrizionali, tipo di giornata) oppure \"\" (testi). Non scrivere mai 0 al posto di un dato mancante. Poi, nel messaggio e non nel file, elenca all'utente cosa manca.",
-    "GIORNI: 'days' ha sempre 7 elementi, uno per giorno, con weekday da 1 = lunedì a 7 = domenica, ognuno una sola volta. Se la dieta è organizzata per tipo di giornata (es. 'giorni di allenamento' e 'giorni di riposo') ma non dice in quali giorni della settimana, chiedilo all'utente prima di rispondere; se non può risponderti, lascia type null e segnalalo: lo sceglierà nell'app.",
-    "TIPO DI GIORNATA: 'type' è una delle chiavi di 'dayTypes': gym (palestra), run (corsa), rest (riposo), oppure null se non si sa. Elimina da 'dayTypes' i tipi che nessun giorno usa.",
+    "GIORNI: 'days' ha sempre 7 elementi, uno per giorno, con weekday da 1 = lunedì a 7 = domenica, ognuno una sola volta. Ogni giorno ha 'defaultType' (il tipo di giornata di quel giorno nel piano: gym, run o rest) e 'variants': da 1 a 3 VARIANTI, una per tipo di giornata, ciascuna con il suo 'type', i suoi pasti ('meals'), i suoi integratori ('supplements') e la sua 'note'. Due varianti dello stesso giorno non possono avere lo stesso type.",
+    "VARIANTI, CASO 1 · menu per tipo di giornata: se la dieta ha un menu per tipo di giornata (es. 'giorno di allenamento' e 'giorno di riposo') e non per giorno della settimana, copia quel menu nella variante corrispondente di TUTTI i giorni (es. ogni giorno ha una variante gym con il menu di allenamento e una variante rest con il menu di riposo).",
+    "VARIANTI, CASO 2 · un solo menu per giorno: se la dieta ha un solo menu per ogni giorno della settimana, crea per quel giorno SOLO la variante del suo tipo di giornata (una variante per giorno).",
+    "MAI INVENTARE VARIANTI: crea una variante solo se la dieta ha davvero quel menu. Se un giorno non ha la variante di un tipo, non crearla: l'app userà quella del giorno più vicino.",
+    "TIPO PREDEFINITO: 'defaultType' viene dal documento (in quali giorni ci si allena, si corre o si riposa). Se la dieta non dice in quali giorni della settimana, chiedilo all'utente prima di rispondere; se non può risponderti, lascia defaultType null e una sola variante con type null: lo sceglierà nell'app. 'defaultType' deve essere uguale al type di una delle varianti del giorno.",
+    "TIPO DI GIORNATA: 'type' e 'defaultType' sono chiavi di 'dayTypes': gym (palestra), run (corsa), rest (riposo), oppure null se non si sa. Elimina da 'dayTypes' i tipi che nessuna variante usa.",
     "TARGET: 'dayTypes.<tipo>.targets' resta null se la dieta non indica i target giornalieri: li calcolerà l'app. Se li indica, sostituisci null con un oggetto come _esempio.dayType.targets (kcal e grammi di protein, carbs, fat, fiber): kcal è obbligatorio, gli altri possono restare null.",
-    "PASTI: ogni giorno ha sempre 5 pasti con key fissa: colazione, spuntino1, pranzo, spuntino2, cena (non cambiare key e label). Pasto non previsto o libero senza alimenti: name \"\" (o 'Pasto libero') e items []. 'time' = orario indicato, sempre con 2 cifre (08:00, non 8:00), altrimenti null. 'window' = [\"inizio\", \"fine\"] se c'è una fascia oraria, altrimenti null.",
+    "PASTI: ogni variante ha sempre 5 pasti con key fissa: colazione, spuntino1, pranzo, spuntino2, cena (non cambiare key e label). Pasto non previsto o libero senza alimenti: name \"\" (o 'Pasto libero') e items []. 'time' = orario indicato, sempre con 2 cifre (08:00, non 8:00), altrimenti null. 'window' = [\"inizio\", \"fine\"] se c'è una fascia oraria, altrimenti null.",
     "ALIMENTI: in 'items' ogni alimento è { \"p\": <chiave del prodotto>, \"q\": <quantità> }. q è in grammi se unit = g, in millilitri se unit = ml, in numero di pezzi se unit = pz. Ogni chiave usata deve esistere in 'products'.",
-    "PRODOTTI: la chiave è breve e usa solo lettere minuscole a-z, cifre, _ e - (niente spazi né accenti, massimo 40 caratteri, es. petto_pollo). Lo stesso alimento usa sempre la stessa chiave in tutti i giorni. name è obbligatorio. unit: g | ml | pz. pieceGrams = grammi di un pezzo (solo per pz, altrimenti null). shop: false per ciò che non si compra (acqua, pasto libero), true altrimenti. cat: uno dei reparti di 'categories' (aggiungine uno solo se nessuno va bene).",
+    "PRODOTTI: la chiave è breve e usa solo lettere minuscole a-z, cifre, _ e - (niente spazi né accenti, massimo 40 caratteri, es. petto_pollo). Lo stesso alimento usa sempre la stessa chiave in tutti i giorni e in tutte le varianti. name è obbligatorio. unit: g | ml | pz. pieceGrams = grammi di un pezzo (solo per pz, altrimenti null). shop: false per ciò che non si compra (acqua, pasto libero), true altrimenti. cat: uno dei reparti di 'categories' (aggiungine uno solo se nessuno va bene).",
     "VALORI NUTRIZIONALI: per100 = valori per 100 g o 100 ml, nella forma di _esempio.products.alimento_esempio.per100. Se la dieta non li riporta, per100 = null: l'app li farà completare. Se li riporta, kcal, protein, carbs e fat sono obbligatori e fiber può restare null: non compilarli a metà.",
-    "ALTERNATIVE: se un pasto ha alternative ('oppure', 'in alternativa'), metti in items la prima opzione e scrivi le altre, per esteso, nella 'note' di quel giorno.",
+    "ALTERNATIVE: se un pasto ha alternative ('oppure', 'in alternativa'), metti in items la prima opzione e scrivi le altre, per esteso, nella 'note' di quella variante.",
     "RICETTE: vanno in 'recipes' con numero n progressivo da 1 e name obbligatorio. Nel pasto 'recipe' = n della ricetta collegata, altrimenti null.",
-    "INTEGRATORI: vanno nel giorno in 'supplements' con name (obbligatorio), when (momento: es. 'colazione', 'prima di dormire'), dose e skip = true se quel giorno non va preso.",
-    "NOTE: 'note' del giorno (massimo 2.000 caratteri) contiene le indicazioni del nutrizionista per quel giorno (es. alternative). Le indicazioni generali valide per tutti i giorni (es. idratazione, condimenti, sostituzioni ammesse) vanno in 'generalNotes' (massimo 4.000 caratteri), senza ripeterle in ogni giorno.",
+    "INTEGRATORI: vanno nella variante in 'supplements' con name (obbligatorio), when (momento: es. 'colazione', 'prima di dormire'), dose e skip = true se quel giorno non va preso.",
+    "NOTE: 'note' della variante (massimo 2.000 caratteri) contiene le indicazioni del nutrizionista per quel giorno e quel tipo di giornata (es. alternative). Le indicazioni generali valide per tutti i giorni (es. idratazione, condimenti, sostituzioni ammesse) vanno in 'generalNotes' (massimo 4.000 caratteri), senza ripeterle in ogni variante.",
     "INTESTAZIONE: title breve (es. 'Ottobre 2026'); author = nome del nutrizionista se presente, altrimenti 'Nutrizionista'; validFrom = data di inizio in formato AAAA-MM-GG (null se assente). Lascia id vuoto (\"\") e version = 1: li gestisce l'app.",
-    "_esempio mostra soltanto la FORMA di un prodotto, di un tipo di giornata, di un pasto, di un integratore e di una ricetta, con valori finti: non copiarne i valori nel risultato."
+    "_esempio mostra soltanto la FORMA di un prodotto, di un tipo di giornata, di un giorno con due varianti, di un pasto, di un integratore e di una ricetta, con valori finti: non copiarne i valori nel risultato."
   ],
   "_esempio": {
     "products": {
@@ -56,6 +60,71 @@
         "fat": 60,
         "fiber": 30
       }
+    },
+    "day": {
+      "weekday": 1,
+      "defaultType": "gym",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "Nota di esempio per il giorno di allenamento.",
+          "supplements": [
+            {
+              "name": "Integratore di esempio",
+              "when": "colazione",
+              "dose": "1 compressa",
+              "skip": false
+            }
+          ],
+          "meals": [
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": [
+                "12:00",
+                "14:00"
+              ],
+              "name": "Piatto di esempio",
+              "recipe": 1,
+              "items": [
+                {
+                  "p": "alimento_esempio",
+                  "q": 120
+                },
+                {
+                  "p": "frutto_esempio",
+                  "q": 1
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": [
+                "12:00",
+                "14:00"
+              ],
+              "name": "Piatto di esempio (riposo)",
+              "recipe": null,
+              "items": [
+                {
+                  "p": "alimento_esempio",
+                  "q": 80
+                }
+              ]
+            }
+          ]
+        }
+      ]
     },
     "meal": {
       "key": "pranzo",
@@ -132,372 +201,407 @@
   "days": [
     {
       "weekday": 1,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     },
     {
       "weekday": 2,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     },
     {
       "weekday": 3,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     },
     {
       "weekday": 4,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     },
     {
       "weekday": 5,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     },
     {
       "weekday": 6,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     },
     {
       "weekday": 7,
-      "type": null,
-      "note": "",
-      "supplements": [],
-      "meals": [
+      "defaultType": null,
+      "variants": [
         {
-          "key": "colazione",
-          "label": "Colazione",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino1",
-          "label": "Spuntino mattina",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "pranzo",
-          "label": "Pranzo",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "spuntino2",
-          "label": "Spuntino pomeriggio",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
-        },
-        {
-          "key": "cena",
-          "label": "Cena",
-          "time": null,
-          "window": null,
-          "name": "",
-          "recipe": null,
-          "items": []
+          "type": null,
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            }
+          ]
         }
       ]
     }

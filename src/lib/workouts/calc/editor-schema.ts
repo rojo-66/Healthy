@@ -3,17 +3,24 @@ import { italianErrorMap } from '../../data/errors';
 import type { WorkoutDraft } from '../../data/schemas/workout-draft';
 import { workoutSchema, type Workout } from '../../data/schemas/workouts';
 import { draftToCandidate } from '../draft';
-import { REPS_MIN } from './values';
+import { CARDIO_MIN_MIN, REPS_MIN } from './values';
 
 /**
  * Regole dell'editor, più severe del database (che accetta anche schede importate con 0 ripetizioni):
- * almeno un esercizio, almeno 1 ripetizione per serie, nome dell'autore per le schede del PT.
+ * almeno un esercizio di qualsiasi tipo (2a: anche solo cardio), almeno 1 ripetizione per serie,
+ * almeno 1 minuto per il cardio, nome dell'autore per le schede del PT.
  */
 export const workoutEditorSchema = workoutSchema.superRefine((w, ctx) => {
   if (w.items.length === 0) {
     ctx.addIssue({ code: 'custom', path: ['items'], message: 'aggiungi almeno un esercizio' });
   }
   w.items.forEach((item, i) => {
+    if (item.kind === 'cardio') {
+      if (item.minutes < CARDIO_MIN_MIN) {
+        ctx.addIssue({ code: 'custom', path: ['items', i, 'minutes'], message: 'almeno 1 minuto' });
+      }
+      return;
+    }
     if (item.reps < REPS_MIN) {
       ctx.addIssue({ code: 'custom', path: ['items', i, 'reps'], message: 'almeno 1 ripetizione' });
     }

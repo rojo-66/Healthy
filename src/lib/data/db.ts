@@ -16,6 +16,10 @@ export class HealthyDb extends Dexie {
   declare exercises: HealthyTable<'exercises'>;
   declare workouts: HealthyTable<'workouts'>;
   declare sessions: HealthyTable<'sessions'>;
+  declare runs: HealthyTable<'runs'>;
+  declare runLogs: HealthyTable<'runLogs'>;
+  declare calendarEdits: HealthyTable<'calendarEdits'>;
+  declare dayChoices: HealthyTable<'dayChoices'>;
   declare dietPlans: HealthyTable<'dietPlans'>;
   declare dietLog: HealthyTable<'dietLog'>;
   declare shopping: HealthyTable<'shopping'>;

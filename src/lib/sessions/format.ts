@@ -1,10 +1,10 @@
 import { formatNumber } from '../components/stepper';
-import type { WorkoutItem } from '../data/schemas/workouts';
+import type { CardioItem, StrengthItem } from '../data/schemas/workouts';
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /** Schema dell'esercizio: "4 × 10 · rec. 90 s"; piramidale "3 serie · 10–6 rip · rec. 120 s". */
-export function schemeLabel(item: Pick<WorkoutItem, 'sets' | 'reps' | 'restSec' | 'setsDetail'>): string {
+export function schemeLabel(item: Pick<StrengthItem, 'sets' | 'reps' | 'restSec' | 'setsDetail'>): string {
   const rest = `rec. ${item.restSec} s`;
   const detail = item.setsDetail;
   if (!detail || detail.length === 0) return `${item.sets} × ${item.reps} · ${rest}`;
@@ -12,6 +12,23 @@ export function schemeLabel(item: Pick<WorkoutItem, 'sets' | 'reps' | 'restSec' 
   const last = detail[detail.length - 1]?.reps ?? item.reps;
   const reps = detail.every((d) => d.reps === first) ? String(first) : `${first}–${last}`;
   return `${item.sets} serie · ${reps} rip · ${rest}`;
+}
+
+/** Piano di un cardio: "20′ · 3 km · 6 km/h · pend. 8 % · liv. 5" (solo i campi presenti). */
+export function cardioPlanLabel(item: Pick<CardioItem, 'minutes' | 'distanceKm' | 'speedKmh' | 'inclinePct' | 'level'>): string {
+  const parts = [`${item.minutes}′`];
+  if (item.distanceKm !== null) parts.push(`${formatNumber(item.distanceKm)} km`);
+  if (item.speedKmh !== null) parts.push(`${formatNumber(item.speedKmh)} km/h`);
+  if (item.inclinePct !== null) parts.push(`pend. ${formatNumber(item.inclinePct)} %`);
+  if (item.level !== null) parts.push(`liv. ${item.level}`);
+  return parts.join(' · ');
+}
+
+/** Cardio fatto: "18′ · 2,9 km"; minuti non scritti → quelli previsti. */
+export function cardioDoneLabel(planned: number, minutes: number | null, distanceKm: number | null): string {
+  const parts = [`${formatNumber(minutes ?? planned)}′`];
+  if (distanceKm !== null) parts.push(`${formatNumber(distanceKm)} km`);
+  return parts.join(' · ');
 }
 
 /** Una serie: "57,5 × 10"; a corpo libero (0 kg) "12 rip". */

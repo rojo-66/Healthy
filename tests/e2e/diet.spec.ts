@@ -116,26 +116,10 @@ test('cambiando giorno più volte c’è sempre un solo anello, con il testo den
   await expect(strip(page).nth(0)).toHaveAttribute('aria-pressed', 'true');
 });
 
-test('"Oggi seguo il piano di un altro giorno": oggi mostra e conteggia i pasti del giorno scelto', async ({ page }) => {
+test('2c: "Oggi seguo il piano di un altro giorno" non c’è più: la Dieta segue il tipo di giornata; link al calendario', async ({ page }) => {
   await importExtended(page);
-  await meal(page, 'Colazione').getByRole('button', { name: 'Segna Colazione come mangiato' }).click();
-  await page.getByRole('button', { name: '⇄ Oggi seguo il piano di un altro giorno' }).click();
-  const sheet = page.getByRole('dialog', { name: 'Quale piano segui oggi?' });
-  await sheet.getByRole('button', { name: 'Mercoledì', exact: true }).click();
-  // C'era una spunta: si chiede conferma prima di toglierla.
-  await expect(sheet).toContainText('Le spunte di oggi verranno tolte');
-  await sheet.getByRole('button', { name: 'Segui mercoledì' }).click();
-  await expect(sheet).toBeHidden();
-
-  await expect(summary(page)).toContainText('Lunedì · oggi · piano di mercoledì');
-  await expect(summary(page)).toContainText('Riposo');
-  await expect(meal(page, 'Colazione')).toContainText('Latte e avena');
-  await expect(meal(page, 'Colazione').getByRole('button', { name: 'Segna Colazione come mangiato' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Oggi segui il piano di mercoledì/ })).toBeVisible();
-
-  // Resta dopo il ricaricamento (salvato nel diario).
-  await page.reload();
-  await expect(summary(page)).toContainText('piano di mercoledì');
+  await expect(page.getByRole('button', { name: /Oggi seguo il piano di un altro giorno/ })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Spostamenti e calendario →' })).toHaveAttribute('href', /#\/calendario\?giorno=2026-10-12/);
 });
 
 test('"Ricetta N" apre la ricetta giusta nella tab Ricette', async ({ page }) => {

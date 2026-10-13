@@ -9,7 +9,17 @@ export const KG_STEP = 2.5;
 export const KG_MAX = 500;
 export const REST_PRESETS = [60, 90, 120, 180] as const;
 export const DEFAULT_REST = 90;
+export const CARDIO_MIN_MIN = 1;
 export const CARDIO_MAX_MIN = 180;
+/** Minuti di un esercizio cardio appena aggiunto (come il vecchio "cardio finale"). */
+export const NEW_CARDIO_MIN = 10;
+/** Campi facoltativi del cardio nell'editor: etichetta, unità, passo, massimo, interi. */
+export const CARDIO_FIELD_SPECS = {
+  distance: { key: 'distanceKm', label: 'Distanza', unit: 'km', step: 0.5, max: 100, integer: false },
+  speed: { key: 'speedKmh', label: 'Velocità', unit: 'km/h', step: 0.5, max: 40, integer: false },
+  incline: { key: 'inclinePct', label: 'Pendenza', unit: '%', step: 0.5, max: 30, integer: false },
+  level: { key: 'level', label: 'Livello', unit: '', step: 1, max: 40, integer: true },
+} as const;
 /** Valori scritti a mano oltre i quali lo Stepper chiede conferma (forse un errore di battitura). */
 export const KG_CONFIRM_ABOVE = 250;
 export const REPS_CONFIRM_ABOVE = 50;

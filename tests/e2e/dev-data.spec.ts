@@ -21,16 +21,16 @@ test('carica i dati di prova, li sostituisce con conferma e svuota tutto', async
 
   // Database vuoto: i dati di prova entrano senza domande.
   await page.getByRole('button', { name: 'Carica dati di prova' }).click();
-  await expect(count(page, 'total')).toHaveText('15');
+  await expect(count(page, 'total')).toHaveText('16');
   await expect(count(page, 'sessions')).toHaveText('3');
 
   // Con dati presenti chiede conferma con l'anteprima.
   await page.getByRole('button', { name: 'Carica dati di prova' }).click();
   const sheet = page.getByRole('dialog', { name: 'Sostituire i dati?' });
-  await expect(sheet).toContainText('Dati di prova, 15 elementi');
+  await expect(sheet).toContainText('Dati di prova, 16 elementi');
   await sheet.getByRole('button', { name: 'Annulla' }).click();
   await expect(sheet).toBeHidden();
-  await expect(count(page, 'total')).toHaveText('15');
+  await expect(count(page, 'total')).toHaveText('16');
 
   await page.getByRole('button', { name: 'Svuota tutto' }).click();
   const clearSheet = page.getByRole('dialog', { name: 'Svuotare tutto?' });

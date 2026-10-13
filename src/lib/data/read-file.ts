@@ -1,7 +1,8 @@
-import type { z } from 'zod';
 import { lookup, validate, type Result } from './errors';
 import { diagnoseJsonSyntax, unwrapJson } from './json-text';
 import { MAX_BYTES } from './limits';
+import { workoutFileV1ToV2 } from './migrations/cardio';
+import { dietFileV2ToV3 } from './migrations/diet-v3';
 import { APP_ID } from './schemas/common';
 import { DIET_FILE_KIND, DIET_FILE_VERSION, dietFileSchema, type DietFile } from './schemas/diet-file';
 import { WORKOUT_FILE_KIND, WORKOUT_FILE_VERSION, workoutFileSchema, type WorkoutFile } from './schemas/workout-file';
@@ -103,22 +104,22 @@ export function checkEnvelope(raw: unknown, kind: string, current: number): Resu
   return { ok: true, value: version };
 }
 
-/** Busta + schema, per i formati che hanno una sola versione. */
-function parseSingleVersion<S extends z.ZodType>(raw: unknown, kind: string, version: number, schema: S): Result<z.output<S>> {
-  const envelope = checkEnvelope(raw, kind, version);
-  if (!envelope.ok) return envelope;
-  if (envelope.value !== version) return fail(`Formato ${envelope.value} non supportato.`);
-  return validate(schema, raw);
-}
-
-/** Scheda condivisa (SPEC § 8.1). */
+/** Scheda condivisa (SPEC § 8.1). La v1 (con il "cardio finale", prima del 2a) viene convertita nella v2. */
 export function parseWorkoutFile(raw: unknown): Result<WorkoutFile> {
-  return parseSingleVersion(raw, WORKOUT_FILE_KIND, WORKOUT_FILE_VERSION, workoutFileSchema);
+  const envelope = checkEnvelope(raw, WORKOUT_FILE_KIND, WORKOUT_FILE_VERSION);
+  if (!envelope.ok) return envelope;
+  if (envelope.value === 1) return validate(workoutFileSchema, workoutFileV1ToV2(raw as Record<string, unknown>));
+  if (envelope.value !== WORKOUT_FILE_VERSION) return fail(`Formato ${envelope.value} non supportato.`);
+  return validate(workoutFileSchema, raw);
 }
 
-/** Piano alimentare esteso (SPEC § 8.2). Il formato MyDiet (§ 8.3) arriva in M3. */
+/** Piano alimentare esteso (SPEC § 8.2). La v2 (un menu per giorno, prima del 2b) viene convertita nella v3. */
 export function parseDietFile(raw: unknown): Result<DietFile> {
-  return parseSingleVersion(raw, DIET_FILE_KIND, DIET_FILE_VERSION, dietFileSchema);
+  const envelope = checkEnvelope(raw, DIET_FILE_KIND, DIET_FILE_VERSION);
+  if (!envelope.ok) return envelope;
+  if (envelope.value === 2) return validate(dietFileSchema, dietFileV2ToV3(raw as Record<string, unknown>));
+  if (envelope.value !== DIET_FILE_VERSION) return fail(`Formato ${envelope.value} non supportato.`);
+  return validate(dietFileSchema, raw);
 }
 
 /** Legge e valida una scheda da file. */

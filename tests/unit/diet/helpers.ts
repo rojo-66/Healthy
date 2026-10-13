@@ -1,6 +1,8 @@
 import { parseDietFile } from '../../../src/lib/data/read-file';
 import type { DietFile } from '../../../src/lib/data/schemas/diet-file';
-import { dietPayloadSchema, type DietPayload } from '../../../src/lib/data/schemas/diet-payload';
+import { dietPayloadSchema, type DietDay, type DietPayload } from '../../../src/lib/data/schemas/diet-payload';
+import { findDay } from '../../../src/lib/diet/view';
+import { dietPayloadV2ToV3 } from '../../../src/lib/data/migrations/diet-v3';
 import extendedFixture from '../../fixtures/diet-extended.json';
 import myDietFixture from '../../fixtures/mydiet.json';
 
@@ -24,11 +26,21 @@ export function extendedFile(): DietFile {
   return result.value;
 }
 
-/** Piano piccolo scritto nel test, con i valori predefiniti dello schema. */
+/**
+ * Piano piccolo scritto nel test, con i valori predefiniti dello schema. I giorni si possono scrivere anche nella forma
+ * v2 (`type`, `meals`…): diventano una variante sola, come nella migrazione (2b).
+ */
 export function payload(input: unknown): DietPayload {
-  const result = dietPayloadSchema.safeParse(input);
+  const result = dietPayloadSchema.safeParse(dietPayloadV2ToV3(input as Record<string, unknown>));
   if (!result.success) throw new Error(result.error.message);
   return result.data;
+}
+
+/** Giorno appiattito (variante predefinita, 2b) del giorno in posizione `index` del piano. */
+export function flatDay(p: DietPayload, index: number): DietDay {
+  const day = p.days[index];
+  if (!day) throw new Error(`Nessun giorno in posizione ${index}`);
+  return findDay(p, day.weekday)!;
 }
 
 /** Prodotti di prova con valori semplici (per 100 g). */

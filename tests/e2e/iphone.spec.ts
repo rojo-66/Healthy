@@ -169,9 +169,12 @@ test('sessione live: swipe tra gli esercizi anche partendo da un campo; mai ment
   await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
   await drag(page, y, 370, 120); // dal bordo destro: il pollice parte spesso da lì
   await expect(exerciseName(page)).toHaveText('Plank');
+  // 2a: il vecchio cardio finale del backup è diventato l'ultimo esercizio.
+  await drag(page, y, 320, 80);
+  await expect(exerciseName(page)).toHaveText('Tapis roulant · corsa');
   await drag(page, y, 320, 40);
   await page.clock.runFor(500);
-  await expect(exerciseName(page)).toHaveText('Plank');
+  await expect(exerciseName(page)).toHaveText('Tapis roulant · corsa');
   await expect(page.getByRole('button', { name: 'Termina allenamento' })).toBeVisible();
 });
 
@@ -292,6 +295,8 @@ test('riga scheda: trascinando a sinistra compaiono Duplica ed Elimina', async (
   const row = page.getByTestId('workout-row').filter({ hasText: 'Gambe' });
   const duplicate = row.getByRole('button', { name: 'Duplica Gambe' });
   await expect(duplicate).toBeHidden();
+  // La riga va in vista (non sotto la barra di navigazione) prima di trascinarla.
+  await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
   const r = await center(row);
   await drag(page, r.y, 300, 120);
   await expect(duplicate).toBeVisible();
@@ -305,6 +310,7 @@ test('riga scheda: trascinando a sinistra compaiono Duplica ed Elimina', async (
 
   // Col dito, lento: la riga segue e si apre (dopo che la conferma si è chiusa del tutto).
   await expect(page.getByRole('dialog', { name: 'Eliminare la scheda?' })).toBeHidden();
+  await row.evaluate((el) => el.scrollIntoView({ block: 'center' }));
   const r2 = await center(row);
   await touchDrag(page, { x: 300, y: r2.y }, { x: 150, y: r2.y + 8 }, 20, 16);
   await expect(duplicate).toBeVisible();

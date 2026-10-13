@@ -28,3 +28,21 @@ export function parseReps(text: string): number | null {
 export function kgInputValue(kg: number): string {
   return formatNumber(kg).replace(/\./g, '');
 }
+
+/**
+ * Minuti o km effettivi del cardio (2a), scritti a mano: "18", "2,9" o "2.9". Campo vuoto = `null`
+ * (non scritto); `undefined` = testo non valido o oltre `max` (il valore salvato resta quello di prima).
+ */
+export function parseOptional(text: string, max: number): number | null | undefined {
+  const clean = text.trim().replace(',', '.');
+  if (clean === '') return null;
+  if (!/^\d{1,4}(\.\d*)?$|^\.\d+$/.test(clean)) return undefined;
+  const n = Number(clean);
+  if (!Number.isFinite(n) || n > max) return undefined;
+  return Math.round(n * 100) / 100;
+}
+
+/** Valore da mostrare in un campo facoltativo: "2,9"; `null` → "". */
+export function optionalInputValue(value: number | null): string {
+  return value === null ? '' : kgInputValue(value);
+}

@@ -39,10 +39,12 @@ export interface Completeness {
   missingProducts: MissingProduct[];
 }
 
-/** Chiavi dei prodotti usati nei pasti, in ordine di comparsa. */
+/** Chiavi dei prodotti usati nei pasti di tutte le varianti, in ordine di comparsa. */
 export function usedProductKeys(payload: DietPayload): string[] {
   const keys = new Set<string>();
-  for (const day of payload.days) for (const meal of day.meals) for (const item of meal.items) keys.add(item.p);
+  for (const day of payload.days) {
+    for (const variant of day.variants) for (const meal of variant.meals) for (const item of meal.items) keys.add(item.p);
+  }
   return [...keys];
 }
 
@@ -60,8 +62,11 @@ function untypedDetail(days: readonly number[]): string {
 }
 
 export function planCompleteness(payload: DietPayload): Completeness {
-  const untypedDays = payload.days.filter((day) => day.type === null).map((day) => day.weekday);
-  const usedTypes = [...new Set(payload.days.flatMap((day) => (day.type === null ? [] : [day.type])))];
+  // Senza tipo: il tipo predefinito manca, o una variante non ha tipo (2b).
+  const untypedDays = payload.days
+    .filter((day) => day.defaultType === null || day.variants.some((v) => v.type === null))
+    .map((day) => day.weekday);
+  const usedTypes = [...new Set(payload.days.flatMap((day) => day.variants.flatMap((v) => (v.type === null ? [] : [v.type]))))];
   const typesWithoutTargets = usedTypes.filter((key) => !lookup(payload.dayTypes, key)?.targets);
 
   const missingProducts: MissingProduct[] = [];
@@ -73,7 +78,7 @@ export function planCompleteness(payload: DietPayload): Completeness {
   }
 
   const recipes = payload.recipes.length;
-  const supplementDays = payload.days.filter((day) => day.supplements.length > 0).length;
+  const supplementDays = payload.days.filter((day) => day.variants.some((v) => v.supplements.length > 0)).length;
   const targetsDone = untypedDays.length === 0 && typesWithoutTargets.length === 0;
 
   const items: ChecklistItem[] = [

@@ -33,5 +33,6 @@ export function dietFile(): DietFile {
 export function smallDietFile(): DietFile {
   const full = extendedFile();
   const day = full.days[0]!;
-  return { ...full, days: [{ ...day, meals: day.meals.map((m) => ({ ...m, recipe: null })) }], recipes: [] };
+  const variants = day.variants.map((v) => ({ ...v, meals: v.meals.map((m) => ({ ...m, recipe: null })) }));
+  return { ...full, days: [{ ...day, variants }], recipes: [] };
 }

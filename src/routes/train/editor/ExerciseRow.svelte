@@ -16,7 +16,9 @@
   } from '../../../lib/workouts/calc/values';
   import type { DraftItem } from '../../../lib/data/schemas/workout-draft';
   import { drop } from '../../../lib/design/transitions';
+  import { cardioPlanLabel } from '../../../lib/sessions/format';
   import { itemSummary } from '../../../lib/workouts/format';
+  import CardioFields from './CardioFields.svelte';
 
   interface Props {
     item: DraftItem;
@@ -41,14 +43,26 @@
   const uid = $props.id();
   const hasErrors = $derived(Object.keys(errors).length > 0);
   const urlOk = $derived(/^https:\/\/[^\s]+$/.test(item.videoUrl.trim()));
+  const strength = $derived(item.kind === 'strength' ? item : null);
+  const cardio = $derived(item.kind === 'cardio' ? item : null);
+  const summary = $derived(strength ? itemSummary(strength) : cardio ? `cardio · ${cardioPlanLabel(cardio)}` : '');
 
   function togglePyramid() {
-    if (item.setsDetail) onpyramidoff();
-    else onchange(enablePyramid(item));
+    if (!strength) return;
+    if (strength.setsDetail) onpyramidoff();
+    else onchange(enablePyramid(strength));
   }
 </script>
 
-<div class="ex tone-training" class:open class:has-errors={hasErrors} data-row data-key={item.key} data-testid="exercise-row">
+<div
+  class="ex tone-training"
+  class:open
+  class:has-errors={hasErrors}
+  data-row
+  data-key={item.key}
+  data-kind={item.kind}
+  data-testid="exercise-row"
+>
   <div class="head">
     <span
       class="grip"
@@ -62,7 +76,7 @@
       <span class="num mono" aria-hidden="true">{index + 1}</span>
       <span class="text">
         <span class="name">{item.name || 'Esercizio senza nome'}</span>
-        <span class="sum mono">{itemSummary(item)}</span>
+        <span class="sum mono">{summary}</span>
       </span>
       {#if hasErrors}<span class="err-dot" aria-label="Da correggere">!</span>{/if}
       <span class="chev" aria-hidden="true"><Icon name="chevronDown" size={16} /></span>
@@ -72,108 +86,113 @@
   {#if open}
     <div class="body" id="{uid}-body" in:drop>
       {#if errors['name']}<p class="err" data-error>Nome: {errors['name']}</p>{/if}
-      <div class="steppers" class:single={!!item.setsDetail}>
-        <Stepper
-          label="Serie"
-          value={item.sets}
-          min={SETS_MIN}
-          max={SETS_MAX}
-          decLabel="Una serie in meno"
-          incLabel="Una serie in più"
-          onchange={(v) => onchange(setSetsCount(item, v))}
-        />
-        {#if !item.setsDetail}
+      {#if strength}
+        <div class="steppers" class:single={!!strength.setsDetail}>
           <Stepper
-            label="Ripetizioni"
-            value={item.reps}
-            min={REPS_MIN}
-            max={REPS_MAX}
-            confirmAbove={REPS_CONFIRM_ABOVE}
-            decLabel="Una ripetizione in meno"
-            incLabel="Una ripetizione in più"
-            onchange={(v) => onchange(setUniform(item, { reps: v }))}
+            label="Serie"
+            value={strength.sets}
+            min={SETS_MIN}
+            max={SETS_MAX}
+            decLabel="Una serie in meno"
+            incLabel="Una serie in più"
+            onchange={(v) => onchange(setSetsCount(strength, v))}
           />
-          <Stepper
-            label="Kg"
-            value={item.kg}
-            min={0}
-            max={KG_MAX}
-            step={2.5}
-            confirmAbove={KG_CONFIRM_ABOVE}
-            next={kgStep}
-            decLabel="Meno 2,5 kg"
-            incLabel="Più 2,5 kg"
-            onchange={(v) => onchange(setUniform(item, { kg: v }))}
-          />
+          {#if !strength.setsDetail}
+            <Stepper
+              label="Ripetizioni"
+              value={strength.reps}
+              min={REPS_MIN}
+              max={REPS_MAX}
+              confirmAbove={REPS_CONFIRM_ABOVE}
+              decLabel="Una ripetizione in meno"
+              incLabel="Una ripetizione in più"
+              onchange={(v) => onchange(setUniform(strength, { reps: v }))}
+            />
+            <Stepper
+              label="Kg"
+              value={strength.kg}
+              min={0}
+              max={KG_MAX}
+              step={2.5}
+              confirmAbove={KG_CONFIRM_ABOVE}
+              next={kgStep}
+              decLabel="Meno 2,5 kg"
+              incLabel="Più 2,5 kg"
+              onchange={(v) => onchange(setUniform(strength, { kg: v }))}
+            />
+          {/if}
+        </div>
+        {#if errors['sets']}<p class="err" data-error>Serie: {errors['sets']}</p>{/if}
+        {#if errors['reps']}<p class="err" data-error>Ripetizioni: {errors['reps']}</p>{/if}
+
+        <button
+          type="button"
+          class="switch tap"
+          role="switch"
+          aria-checked={!!strength.setsDetail}
+          onclick={togglePyramid}
+        >
+          <span class="knob" aria-hidden="true"><span></span></span>
+          Serie diverse tra loro (es. piramidale)
+        </button>
+
+        {#if strength.setsDetail}
+          <div class="pyramid" role="group" aria-label="Serie di {strength.name}">
+            <div class="p-head mono" aria-hidden="true"><span>Serie</span><span>Rip</span><span>Kg</span></div>
+            {#each strength.setsDetail as set, j (j)}
+              <div class="p-row">
+                <span class="p-n mono">{j + 1}</span>
+                <Stepper
+                  layout="inline"
+                  label="Serie {j + 1}, ripetizioni"
+                  value={set.reps}
+                  min={REPS_MIN}
+                  max={REPS_MAX}
+                  confirmAbove={REPS_CONFIRM_ABOVE}
+                  invalid={!!errors[`setsDetail.${j}.reps`]}
+                  onchange={(v) => onchange(updateSetDetail(strength, j, { reps: v }))}
+                />
+                <Stepper
+                  layout="inline"
+                  label="Serie {j + 1}, kg"
+                  value={set.kg}
+                  min={0}
+                  max={KG_MAX}
+                  step={2.5}
+                  confirmAbove={KG_CONFIRM_ABOVE}
+                  next={kgStep}
+                  onchange={(v) => onchange(updateSetDetail(strength, j, { kg: v }))}
+                />
+              </div>
+            {/each}
+          </div>
         {/if}
-      </div>
-      {#if errors['sets']}<p class="err" data-error>Serie: {errors['sets']}</p>{/if}
-      {#if errors['reps']}<p class="err" data-error>Ripetizioni: {errors['reps']}</p>{/if}
 
-      <button
-        type="button"
-        class="switch tap"
-        role="switch"
-        aria-checked={!!item.setsDetail}
-        onclick={togglePyramid}
-      >
-        <span class="knob" aria-hidden="true"><span></span></span>
-        Serie diverse tra loro (es. piramidale)
-      </button>
-
-      {#if item.setsDetail}
-        <div class="pyramid" role="group" aria-label="Serie di {item.name}">
-          <div class="p-head mono" aria-hidden="true"><span>Serie</span><span>Rip</span><span>Kg</span></div>
-          {#each item.setsDetail as set, j (j)}
-            <div class="p-row">
-              <span class="p-n mono">{j + 1}</span>
-              <Stepper
-                layout="inline"
-                label="Serie {j + 1}, ripetizioni"
-                value={set.reps}
-                min={REPS_MIN}
-                max={REPS_MAX}
-                confirmAbove={REPS_CONFIRM_ABOVE}
-                invalid={!!errors[`setsDetail.${j}.reps`]}
-                onchange={(v) => onchange(updateSetDetail(item, j, { reps: v }))}
-              />
-              <Stepper
-                layout="inline"
-                label="Serie {j + 1}, kg"
-                value={set.kg}
-                min={0}
-                max={KG_MAX}
-                step={2.5}
-                confirmAbove={KG_CONFIRM_ABOVE}
-                next={kgStep}
-                onchange={(v) => onchange(updateSetDetail(item, j, { kg: v }))}
-              />
-            </div>
-          {/each}
+        <div class="field">
+          <span class="mono-label sub">Recupero</span>
+          <div class="rests" role="group" aria-label="Recupero tra le serie">
+            {#each restOptions(strength.restSec) as sec (sec)}
+              <button
+                type="button"
+                class="rest tap mono"
+                aria-pressed={strength.restSec === sec}
+                aria-label="Recupero {sec} secondi"
+                onclick={() => onchange({ ...strength, restSec: sec })}>{sec} s</button
+              >
+            {/each}
+          </div>
         </div>
+
+      {:else if cardio}
+        <CardioFields item={cardio} {errors} onchange={(next) => onchange(next)} />
       {/if}
-
-      <div class="field">
-        <span class="mono-label sub">Recupero</span>
-        <div class="rests" role="group" aria-label="Recupero tra le serie">
-          {#each restOptions(item.restSec) as sec (sec)}
-            <button
-              type="button"
-              class="rest tap mono"
-              aria-pressed={item.restSec === sec}
-              aria-label="Recupero {sec} secondi"
-              onclick={() => onchange({ ...item, restSec: sec })}>{sec} s</button
-            >
-          {/each}
-        </div>
-      </div>
 
       <div class="field">
         <label class="mono-label sub note-label" for="{uid}-note">✎ Nota per il cliente</label>
         <textarea
           id="{uid}-note"
           rows="3"
-          placeholder="Esecuzione, errori da evitare, quando scalare il carico…"
+          placeholder={cardio ? 'Ritmo, sensazioni, quando aumentare velocità o livello…' : 'Esecuzione, errori da evitare, quando scalare il carico…'}
           value={item.note}
           oninput={(e) => onchange({ ...item, note: e.currentTarget.value })}
         ></textarea>

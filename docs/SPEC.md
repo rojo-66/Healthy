@@ -1,6 +1,6 @@
 # Healthy App – Specifica
 
-Versione 1.0 · 11 ottobre 2026 · stato: V1 sviluppata (M0–M9), da verificare sul telefono
+Versione 1.0 · 11 ottobre 2026 · stato: V1 sviluppata (M0–M9); in corso "Calendario attività e dieta adattiva" (passi 2a e 2b fatti, da provare sul telefono)
 
 ## 1. Obiettivo e vincoli
 
@@ -114,19 +114,22 @@ I mockup sono in `docs/mockups/` (file `.dc.html`). Nomi file tra parentesi.
 
 ### 5.1 Oggi / Home (`Main.dc.html`)
 - Riga in alto: data a sinistra, stato connessione a destra (una riga, mai a capo).
-- Titolo giorno in graffiti + badge tipo giornata (Giorno palestra / Corsa / Riposo).
-- Striscia 7 giorni (L–D), swipe per ieri/domani.
+- Titolo giorno in graffiti + badge tipo giornata (Giorno palestra / Corsa / Riposo), **dalle attività del giorno** (2c, § 6.5).
+- Striscia 7 giorni (L–D) che **scorre tra settimana scorsa, questa e prossima** (2c: swipe sulla striscia o frecce ‹ ›, si tiene il giorno della settimana; etichetta "Questa settimana"); swipe del contenuto per il giorno prima/dopo nelle 3 settimane; link **Calendario**. I giorni passati sono in sola lettura per i pasti, quelli futuri mostrano il piano.
+- Giorno con palestra **e** corsa (2c): riquadro giallo "Oggi hai palestra e corsa" con i chip **Dieta palestra** (predefinita) / **Dieta corsa**; la scelta vale per quella data.
 - Card calorie: anello kcal mangiate / target + barre proteine, carboidrati, grassi. Fonte del target indicata.
 - Card **pasto del momento** (in base all'orario): alimenti con grammi, "Segna come fatto", link ricetta.
-- Card **allenamento del giorno**: nome scheda, orario, "Avvia allenamento" → flusso sessione.
-- Timeline della giornata (pasti, palestra, integratori) con stati fatto/adesso/dopo.
+- Card **allenamento del giorno**: nome scheda, orario, "Avvia allenamento" → flusso sessione; oggi anche **Non posso oggi** → Sposta / Salta (2c); "Spostato da gio 15"; saltato = nome barrato con **Ripristina**; un giorno passato non fatto: "Recupera in un altro giorno".
+- Card **corsa del giorno** (2a, ciano): nome, orario, obiettivo, "Segna come fatta" (anche per un giorno passato non segnato); fatta: "Fatta ✓" con durata, km, passo, RPE e "Dettagli".
+- Timeline della giornata (pasti, palestra, corsa, integratori) con stati fatto/adesso/dopo.
 - Tip del giorno (giallo).
 
 ### 5.2 Allena (`Allena.dc.html`)
 - Titolo + pulsante **Importa** (link, QR, file).
-- **Settimana**: 7 giorni con sigla della scheda assegnata (PET, GAM…), stati fatto ✓ / prossimo (contorno luminoso) / riposo (tratteggiato). Tocco su un giorno → dettaglio sotto.
-- Tab **Schede**: card "Prossimo" con Avvia / Vedi scheda; elenco schede (nome, esercizi, serie, durata stimata, giorno, ultima esecuzione, etichetta origine **PT · vN** gialla o **TUA** grigia, pulsante condividi); **+ Nuova scheda**.
-- Tab **Storico**: calendario del mese (magenta palestra, ciano corsa, grigio riposo, oggi evidenziato), elenco sessioni (durata, volume o distanza/passo, readiness R, adesivo PR) → apre il Riepilogo.
+- **Settimana**: 7 giorni dalle occorrenze (2c) con sigla della prima attività (PET, GAM… o della corsa in ciano; "→" se spostata qui), stati fatto ✓ / in parte / prossimo (contorno luminoso) / non fatto / saltato (sigla barrata) / riposo (tratteggiato). Tocco su un giorno → dettaglio sotto con le attività ("da mer 14", "fatto ✓") e il pulsante **Sposta**/**Modifica** (menu Sposta, Salta, Ripristina); link **Calendario · 3 settimane →**. La card "Prossimo" segue gli spostamenti.
+- Tab **Schede**: card "Prossimo" con Avvia / Vedi scheda; elenco schede (nome, esercizi, serie, durata stimata, giorno, ultima esecuzione, etichetta origine **PT · vN** gialla o **TUA** grigia, pulsante condividi); sezione **Le tue corse** (2a: card ciano con obiettivo, giorni, ultima corsa e "Segna fatta"; tocco → Segna come fatta / Modifica); **+ Nuova** → foglio **Scheda** / **Corsa**.
+- Tab **Storico**: calendario del mese (magenta palestra, ciano corsa, metà e metà se entrambe, grigio riposo, oggi evidenziato), elenco sessioni e corse del mese (sessione: durata, volume, readiness R, adesivo PR → Riepilogo; corsa: durata · km · passo · RPE, giorno in ciano → dettaglio con Modifica ed Elimina).
+- **Corsa** (`#/allena/corsa`, `?id=` per modificare, 2a): nome, giorni, orario facoltativo, obiettivo in minuti e/o km (almeno uno), nota; indietro con modifiche chiede conferma; "Elimina corsa" lascia nello storico le corse fatte. **Segna come fatta** (foglio dal basso): data (oggi, mai nel futuro), durata min:s, distanza facoltativa, **passo calcolato dal vivo**, RPE 1–10 obbligatorio, nota. Niente Readiness né cronometro.
 
 ### 5.3 Crea / modifica scheda (`Editor.dc.html`)
 Stessa schermata per creare e modificare. Deve essere **semplice per il PT**: tutto con il pollice.
@@ -134,10 +137,10 @@ Stessa schermata per creare e modificare. Deve essere **semplice per il PT**: tu
 - Giorni assegnati (multi-selezione).
 - **Introduzione** per il cliente (testo) + lista **Riscaldamento e mobilità** (nome, suggerimento, dose).
 - **Esercizi**: righe compatte riassuntive; tocco → apertura con stepper grandi **Serie / Ripetizioni / Kg (passo 2,5)**, **Recupero** 60/90/120/180 s, "Serie diverse tra loro" (piramidali), **Nota per il cliente**, **Link video**, Su/Giù/Duplica/Elimina. Riordino anche con pressione lunga sulla maniglia ⠿.
-- **+ Aggiungi esercizio** → libreria dal basso: ricerca, filtri per muscolo, "+" per aggiungere, ✓ se già presente, "Crea esercizio personalizzato".
-- Cardio finale.
+- **Esercizi cardio** (2a, al posto del vecchio "cardio finale"): si aggiungono dalla libreria dove si vuole nella scheda. Riga chiusa "cardio · 20′ · 3 km · pend. 8 %"; aperta: stepper **Minuti** (1–180, conferma oltre 120) e i campi della voce (Distanza 0,5 km, Velocità 0,5 km/h, Pendenza 0,5 %, Livello 1; 0 = non indicato), "+ Altri campi" per gli altri, Nota per il cliente, Link video, Su/Giù/Duplica/Elimina. Niente serie, ripetizioni, kg né recupero.
+- **+ Aggiungi esercizio** → libreria dal basso: ricerca, chip **Cardio** e filtri per muscolo, "+" per aggiungere, ✓ se già presente, "Crea esercizio personalizzato" (tipo Forza o Cardio).
 - Banner inferiore fisso: **Anteprima** (come la vedrà il cliente) + **Salva e invia** (incrementa versione, apre condivisione).
-- Durata stimata = Σ(serie × (recupero + 45 s)) + cardio.
+- Durata stimata = Σ(serie × (recupero + 45 s)) degli esercizi di forza + Σ minuti dei cardio. Una scheda può essere anche solo cardio.
 - V2: "note salvate" riutilizzabili per il PT.
 
 ### 5.4 Flusso sessione
@@ -145,7 +148,7 @@ Avvio da Home ("Avvia allenamento") o da Allena ("Avvia"). Ordine fisso:
 
 **1. Readiness survey** (`Readiness.dc.html`): 5 voci con punteggio 1–5, **5 = meglio per tutte** (Sonno, Umore, Energia, Stress 5 = rilassato, Affaticamento muscolare 5 = nessun dolore). Totale /25. "Avanti" attivo solo con tutte le risposte. Indicatore passi Readiness → Intro PT → Esercizi.
 
-**2. Introduzione del PT** (`IntroPT.dc.html`): riepilogo (esercizi, serie, cardio), messaggio del PT, lista riscaldamento spuntabile, **Inizia allenamento**.
+**2. Introduzione del PT** (`IntroPT.dc.html`): riepilogo (esercizi, serie, "+ N′ cardio"), messaggio del PT, lista riscaldamento spuntabile, **Inizia allenamento**.
 
 **3. Sessione live** (`Allenamento.dc.html`), **un esercizio per volta**:
 - **Banner superiore fisso**: freccia sottile (senza sfondo) per tornare alla scheda; **nome scheda su una sola riga** che si rimpicciolisce se lungo (mai a capo); **tempo della sessione**; **barra a segmenti** (uno per esercizio) riempita in proporzione alle serie fatte: pieno = completo, parziale = magenta + `--partial`, grigio = non iniziato, contorno luminoso = esercizio corrente.
@@ -155,6 +158,7 @@ Avvio da Home ("Avvia allenamento") o da Allena ("Avvia"). Ordine fisso:
 - Tocco sul cerchio → pannello dal basso: tempo grande, preset 60/90/120/180 s, ±15 s, Pausa/Riprendi, Salta, recupero predefinito del PT.
 - Fine recupero: suono breve + animazione (su iPhone niente vibrazione; l'audio va "sbloccato" dal primo tocco della sessione).
 - Schermo sempre acceso (Wake Lock) durante la sessione.
+- **Esercizio cardio** (2a): al posto della tabella delle serie un blocco con PREVISTO (minuti e campi del PT), "Ultima volta", **cronometro** grande (Avvia / Pausa / Riprendi, a istanti come il recupero: resta giusto dopo una sospensione di iOS), campi **Minuti fatti** e **Km** e la spunta **Fatto**. Il cronometro sale senza fermarsi; al tempo previsto suono breve + impulso + annuncio, una volta sola e mai in ritardo dopo il background. "Fatto" ferma il cronometro e, se i minuti non sono scritti, li prende dal cronometro. La spunta del cardio **non** avvia il recupero; il segmento del cardio è pieno quando è fatto.
 - Il contenuto non visibile (altri esercizi) **non** è in questa schermata.
 
 **4. Riepilogo** (`Riepilogo.dc.html`), sempre riapribile dallo Storico:
@@ -162,23 +166,32 @@ Avvio da Home ("Avvia allenamento") o da Allena ("Avvia"). Ordine fisso:
 - Numeri: durata, volume (Σ kg × rip), serie fatte/previste, record; adesivo "Fatto!".
 - Readiness pre-allenamento (5 barre + totale).
 - Esercizi: badge serie fatte (stesso riempimento della barra), serie migliore, volume, confronto con l'ultima volta (ciano se meglio, giallo se mancano serie), adesivo **PR**; tocco → dettaglio serie (anche "saltata") + nota scritta per il PT.
-- Cardio.
+- Cardio al loro posto tra gli esercizi: "Cardio · nome  18′ · 2,9 km ✓" oppure "12′ · non fatto". Serie e volume contano solo la forza. "Termina allenamento" chiede solo l'RPE (avvisa di serie e cardio non segnati).
 - **Sforzo percepito RPE 1–10**.
 - Collegamento alla dieta: prossimo pasto (es. post-workout).
 - Banner inferiore fisso: **Invia al PT** (foglio di condivisione iOS, file/link) + **Fine** (Home).
+
+### 5.2b Calendario (`#/calendario`, 2c)
+- Aperto dalla Home (link "Calendario", sul giorno mostrato) e da Allena (`?da=allena`: indietro torna lì). Nessun mockup: stile della striscia di Allena e del calendario dei Progressi.
+- **Griglia 3 × 7**: settimana scorsa, questa, prossima. In ogni giorno: sigle delle attività (magenta palestra, ciano corsa; "→" spostata, "✓" fatta, barrata saltata, attenuata non fatta), rombo del tipo di dieta e, nei giorni passati e oggi, **% dei pasti segnati**. Legenda sotto.
+- **Dettaglio** del giorno toccato: tipo di dieta, kcal mangiate / target e pasti segnati (passati e oggi) o kcal del piano (futuri), riga gialla se il piano non conosce il tipo, scelta della dieta se ci sono palestra e corsa, attività con **Sposta**, **Salta**, **Ripristina**; le attività fuori programma (fatto ✓). In fondo **Ripristina la settimana del lun N**.
+- **Sposta** (foglio dal basso, uguale da Home, Allena e calendario): griglia dei giorni da oggi a domenica prossima (giorno di partenza ●, occupato ◆, già usato × e disattivati) → se il giorno ha già un'attività, **conflitto** con *Scambia i due giorni*, *Sposta l'altra* (la catena continua con l'altra attività), *Salta l'altra*, *Fai entrambe nello stesso giorno*, *Annulla* (si torna alla scelta del giorno); le opzioni non possibili sono grigie con il motivo → **riepilogo** ("Petto → mer 14 · Corsa lenta → lun 12 · Spalle saltato") con **Cambia la dieta** ("lun 12: palestra → riposo (2.450 → 1.900 kcal) · i pasti già segnati restano") → Conferma. Dopo: avviso **"Spostamenti salvati · Annulla"** per 6 secondi. Salta, Ripristina e Ripristina la settimana passano dallo stesso riepilogo.
 
 ### 5.5 Dieta (`Dieta.dc.html`)
 - Titolo + pulsante col nome del **piano attivo** (es. "Ottobre 2026") → pannello: stato completezza (target, macro per alimento, ricette, integratori), **Importa** (JSON), **Modello per Claude** (§ 8.2), **Esporta**, **Modifica**, **Condividi** (link, QR, file), archivio piani precedenti con "Ripristina".
 - Stato vuoto: "Importa il tuo piano" e, sotto, "Non hai un piano? **Fallo preparare a Claude**" (foglio "Prepara il piano con Claude", § 8.2).
 - Tab **Piano**:
-  - 7 giorni con kcal e rombo del tipo giornata (magenta palestra, ciano corsa, grigio riposo); oggi con bordo verde.
+  - 7 giorni con kcal e rombo del tipo giornata della variante in uso (magenta palestra, ciano corsa, grigio riposo); oggi con bordo verde. La variante in uso è quella del **tipo di giornata della data** (2c, § 6.5); con palestra e corsa nello stesso giorno compare la scelta della dieta; tipo che il piano non conosce → riga gialla.
+  - **Varianti** (2b): se il giorno ha più varianti, sotto la striscia i chip "◆ Palestra · in uso · ◆ Riposo". Toccando un'altra variante la si consulta in sola lettura (pasti, kcal, target nel riepilogo) con la scritta "Variante riposo · non è quella di oggi"; le spunte restano sulla variante in uso; cambiando giorno si torna a quella in uso.
+  - Ripiego della variante: riquadro giallo "Pasti di giovedì" quando il giorno non ha la variante del tipo richiesto, oppure "Variante corsa assente" (pasti del giorno, target del tipo richiesto).
   - Card riepilogo: **un solo anello per giorno** (il testo dentro l'anello non deve mai uscire dal cerchio). Oggi: kcal mangiate / target; altri giorni: kcal del piano / target. Barre P/C/G. Riga "PIANO xxxx kcal · FIBRE xx g · TARGET: NUTRIZIONISTA".
   - Pasti: orario, nome, alimenti con grammi, macro, **Ricetta N** (apre la ricetta nella tab Ricette), spunta "mangiato" (solo oggi). Pasto attuale evidenziato.
   - Integratori del giorno (anche quelli "non serve oggi", barrati).
   - **Nota del nutrizionista** del giorno.
   - **Osservazione dell'app** (gialla): confronto piano/target, segnala lo scarto maggiore se ≥ 5%. "L'app non modifica il piano: segnala soltanto."
-  - "Oggi seguo il piano di un altro giorno".
-- Tab **Spesa**: lista della settimana calcolata sommando il piano, raggruppata per reparto, spuntabile, barra di avanzamento, esclusi i prodotti con `spesa: false`. **Spesa finita ✓** azzera tutte le spunte. Condividi lista.
+  - Link **Spostamenti e calendario →** (2c). "Oggi seguo il piano di un altro giorno" **non c'è più**: lo sostituisce il tipo di giornata dalle attività (uno scambio già salvato si legge ancora, "piano di mercoledì").
+  - Pasti già segnati: restano com'erano anche se il tipo di giornata cambia dopo (spostamento, scelta, scheda modificata); cambiano solo quelli non segnati, i target seguono il tipo nuovo.
+- Tab **Spesa**: lista della settimana calcolata sommando il piano (per ogni data la variante del suo tipo di giornata, dopo spostamenti e salti, 2c; le spunte sono per prodotto e restano), raggruppata per reparto, spuntabile, barra di avanzamento, esclusi i prodotti con `spesa: false`. **Spesa finita ✓** azzera tutte le spunte. Condividi lista.
 - Tab **Ricette**: elenco a fisarmonica (numero, nome, tempi/attrezzatura, quantità totali, passaggi, consiglio).
 
 ### 5.6 Profilo (`Profilo.dc.html`)
@@ -213,7 +226,9 @@ Schermata in sola lettura: legge i dati di Profilo (misure), sessioni e dieta e 
 - Scelta esercizio (chip scorrevoli, solo esercizi con almeno 2 sessioni) e interruttore **Carico / Volume**.
 - Grafico dell'esercizio: carico migliore per sessione (valore = serie col carico più alto, con le ripetizioni) oppure volume (Σ kg × ripetizioni delle serie fatte). I **record personali** sono rombi pieni e nel tooltip mostrano l'adesivo giallo "PR". Regola dei PR: quella decisa in M5.
 - Tre numeri: sessioni, record, valore migliore.
-- Allenamenti a settimana: barre (sessioni fatte) con linea tratteggiata "obiettivo" = somma dei giorni assegnati nelle schede attuali; la settimana in corso è tratteggiata; tooltip con volume della settimana in tonnellate.
+- Allenamenti a settimana: barre (sessioni e corse fatte, nella settimana in cui sono state fatte) con una **tacca tratteggiata per barra** = obiettivo di quella settimana (2c: attività previste dopo gli spostamenti; le saltate contano nell'obiettivo come non fatte); la settimana in corso è tratteggiata; tooltip con "N su M", "N palestra · N corse" e volume della settimana in tonnellate.
+- Tab Dieta: ogni giorno con la variante del suo tipo di giornata (2c); prima dell'aggiornamento al 2c (`calendarStart`) il tipo resta quello del piano, quindi le statistiche già viste non cambiano.
+- Gli esercizi cardio non entrano mai nella Forza: niente chip, carico, volume o record.
 - Record recenti: elenco con adesivo PR, esercizio, data, valore precedente (record del periodo scelto, al massimo 5).
 
 **Tab Dieta**
@@ -256,6 +271,14 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 - **PR**: carico più alto a parità o superiore di ripetizioni rispetto allo storico dell'esercizio (in alternativa 1RM stimato con Epley; da decidere in sviluppo).
 - "Ultima volta" = serie corrispondenti dell'ultima sessione con la stessa scheda.
 - Recupero predefinito per esercizio, avvio automatico alla spunta.
+- **Cardio** (2a): esercizio della scheda con minuti previsti (e facoltativi distanza, velocità, pendenza o livello); niente serie, ripetizioni, kg, volume né PR. In sessione: minuti e km effettivi, fatto/non fatto, cronometro a istanti.
+- **Corsa** (2a): attività a parte con giorni e obiettivo (minuti e/o km). Passo = durata / km (calcolato, mai salvato); durata prevista per orari e timeline = obiettivo in minuti, altrimenti ~6 min/km, altrimenti 30 minuti.
+
+### 6.5 Calendario e tipo di giornata (2c)
+- **Occorrenze** (calcolate, mai salvate, `src/lib/calendar/occurrences.ts`): ricorrenza settimanale (`weekdays` di schede e corse) + eccezioni della data. Chiave `workout:<id>:<data originale>`. Stati: da fare, non fatta (passata), in corso, fatta, saltata.
+- **Collegamento**: una sessione (o una corsa fatta) completa l'occorrenza della stessa attività nello **stesso giorno effettivo** (dopo lo spostamento); altrimenti è "fuori programma" e l'occorrenza resta da fare. Le sessioni e le corse fatte non cambiano.
+- **Spostare** vale solo per quella data (la scheda non cambia). Finestra: settimana scorsa, questa, prossima; arrivo da oggi a domenica prossima; partenza: qualsiasi attività non fatta né in corso della finestra (anche passata: recupero). Riportarla al giorno originale toglie l'eccezione. Regole del conflitto: § 5.2b; "Scambia" non si può se il giorno di partenza è passato o occupato; sopra un'attività già fatta resta solo "Fai entrambe"; i giorni usati nella catena non si riscelgono (niente cicli). **Ripristina la settimana**: toglie spostamenti e salti con data originale o di arrivo in quella settimana e le diete scelte; un'attività già fatta dove era stata spostata resta lì.
+- **Tipo di giornata** (`src/lib/today/day-type.ts` `dayTypeFor`, unico punto): attività del giorno (occorrenze non saltate + fatte fuori programma) → scheda = palestra, corsa = corsa, niente = riposo; palestra **e** corsa → la dieta scelta per la data (senza scelta palestra). Decide il piano (come prima) se non ci sono né schede né corse, o per le date prima di `calendarStart`. Se il piano non ha quel tipo in `dayTypes`, restano pasti e target del giorno del piano con una riga gialla. La variante si sceglie col resolver del 2b (ripiego "pasti di giovedì").
 
 ## 7. Modello dati (IndexedDB, Dexie)
 
@@ -263,13 +286,17 @@ Limiti di sicurezza (solo per target stimati): calorie minime, deficit massimo, 
 |---|---|
 | `profile` | id, name, birthYear, sex, heightCm, goal, activityLevel (M7) |
 | `measurements` | id, date, weightKg, fmKg, fmPct, ffmKg, bcmKg, tbwL, ecwL, phaDeg, bmrKcal, chestCm, waistCm, abdomenCm, hipsCm, thighCm, armCm, calfCm, notes |
-| `exercises` | id, name, muscles[], equipment, videoUrl, custom |
-| `workouts` (schede) | id (uuid), version, author, source ('pt' \| 'own'), name, weekdays[], time (HH:MM \| null, M6), intro, warmup[], items[{exerciseId, name, sets, reps, kg, restSec, note, videoUrl, setsDetail?}], cardio, updatedAt, received ({version, hash, at} \| null, M8), previousVersions[] (ultime 3 sostituite, M8) |
-| `sessions` | id, workoutId, workoutVersion, startedAt, endedAt, readiness{sleep,mood,energy,stress,soreness}, sets[{exerciseId, setIndex, kg, reps, done}], userNotes{exerciseId: text}, rpe, cardioDone |
+| `exercises` | id, name, muscles[], equipment, videoUrl, custom, kind (`strength` \| `cardio`, 2a), cardioFields[] (`distance`/`speed`/`incline`/`level` mostrati subito, 2a) |
+| `workouts` (schede) | id (uuid), version, author, source ('pt' \| 'own'), name, weekdays[], time (HH:MM \| null, M6), intro, warmup[], items[] (forza: {kind: 'strength', exerciseId, name, muscles, sets, reps, kg, restSec, note, videoUrl, setsDetail}; cardio, 2a: {kind: 'cardio', exerciseId, name, minutes, distanceKm, speedKmh, inclinePct, level, note, videoUrl}), updatedAt, received ({version, hash, at} \| null, M8), previousVersions[] (ultime 3 sostituite, M8). Niente più `cardio` (2a). |
+| `sessions` | id, workoutId, workoutVersion, startedAt, endedAt, readiness{sleep,mood,energy,stress,soreness}, sets[{exerciseId, setIndex, kg, reps, done}] (solo esercizi di forza), userNotes{exerciseId: text}, rpe, cardio[{itemIndex, minutes, distanceKm, done, clock{runningSince, elapsedMs}}] (2a, ex `cardioDone`) |
+| `runs` (2a) | id, name, weekdays[], time (HH:MM \| null), targetMinutes, targetKm, note, createdAt, updatedAt |
+| `runLogs` (2a) | id, runId (\| null: fuori programma o corsa eliminata), runName, date, loggedAt, durationSec, distanceKm, rpe, note |
 | `dietPlans` | id, version, title, author, validFrom, active, archived, importedAt, origin (`file` \| `mydiet`), payload (formato § 8.2) |
-| `dietLog` | date, planId, mealKey, eaten, swappedFromWeekday |
+| `dietLog` | date, planId, eaten, mealsFrom (`{ weekday, type \| null } \| null`, 2b: scambio di un altro giorno già salvato, ora solo in lettura; ex `swappedFromWeekday`), mealSources (`{ mealKey: { weekday, type \| null } }`, 2c: fonte di ogni pasto segnato, così resta com'era se il tipo cambia) |
+| `calendarEdits` (2c) | key (`workout:<id>:<data originale>`), kind (`workout` \| `run`), refId, originalDate, action (`move` \| `skip`), toDate (giorno di arrivo; per `skip` dove era, o `null`), createdAt. Indici `originalDate`, `toDate`. Mai condivisa. |
+| `dayChoices` (2c) | date, dietType (`gym` \| `run`): dieta scelta nei giorni con palestra e corsa. Mai condivisa. |
 | `shopping` | weekStart, checked{productKey: bool} |
-| `settings` | key, value (es. ultimo backup, autore delle schede, prossima bioimpedenza) |
+| `settings` | key, value (es. ultimo backup, autore delle schede, prossima bioimpedenza, `calendarStart` = primo giorno con il tipo dalle attività, 2c) |
 
 ## 8. Formati di file
 
@@ -278,16 +305,18 @@ Tutti i file condivisi hanno `app`, `kind`, `schemaVersion`. Validazione con zod
 ### 8.1 Scheda
 ```json
 {
-  "app": "healthy-app", "kind": "workout", "schemaVersion": 1,
+  "app": "healthy-app", "kind": "workout", "schemaVersion": 2,
   "id": "uuid", "version": 4, "author": "Nome PT",
   "name": "Petto + Schiena", "weekdays": [1], "time": "18:00",
   "intro": "testo", "warmup": [{ "name": "...", "hint": "...", "dose": "2 × 15" }],
-  "items": [{ "name": "Lat machine presa larga", "muscles": ["Dorsali","Bicipiti"],
+  "items": [{ "kind": "strength", "name": "Lat machine presa larga", "muscles": ["Dorsali","Bicipiti"],
               "sets": 4, "reps": 10, "kg": 57.5, "restSec": 90,
-              "note": "testo PT", "videoUrl": "https://..." }],
-  "cardio": { "type": "tapis roulant", "minutes": 12 }
+              "note": "testo PT", "videoUrl": "https://..." },
+            { "kind": "cardio", "name": "Tapis roulant · corsa", "minutes": 12,
+              "distanceKm": null, "speedKmh": 6.5, "inclinePct": 8, "level": null, "note": "", "videoUrl": null }]
 }
 ```
+**schemaVersion 2** (2a): `items[]` con `kind` (`strength` o `cardio`), niente `cardio` finale. L'import accetta ancora la **v1**: il vecchio `cardio { type, minutes }` diventa un esercizio cardio in fondo, collegato alla libreria per nome se lo trova (`workoutFileV1ToV2`). Un'app vecchia che riceve una v2 dice "aggiorna Healthy".
 `time` (orario abituale, uno per scheda) è facoltativo (M6, `schemaVersion` invariata).
 `source` (`pt` \| `own`) è facoltativo (M8, `schemaVersion` invariata): come l'ha creata chi la manda ("Come PT" o scheda personale di un amico); senza il campo vale `pt`. Decide il colore dell'etichetta di chi la riceve.
 Import di una scheda con lo stesso `id`: se `version` è maggiore chiedere **Sostituisci / Salva come copia** (dettagli in § 8.4).
@@ -295,29 +324,34 @@ Import di una scheda con lo stesso `id`: se `version` è maggiore chiedere **Sos
 ### 8.2 Piano alimentare (esteso)
 ```json
 {
-  "app": "healthy-app", "kind": "diet", "schemaVersion": 2,
+  "app": "healthy-app", "kind": "diet", "schemaVersion": 3,
   "id": "uuid", "version": 1, "title": "Ottobre 2026", "author": "Nutrizionista", "validFrom": "2026-10-01",
-  "dayTypes": { "gym": { "label": "Palestra", "targets": { "kcal": 1819, "protein": 141, "carbs": 227, "fat": 39, "fiber": 27 } } },
+  "dayTypes": { "gym": { "label": "Palestra", "targets": { "kcal": 1819, "protein": 141, "carbs": 227, "fat": 39, "fiber": 27 } },
+                "rest": { "label": "Riposo", "targets": null } },
   "categories": ["Carne e pesce", "..."],
   "products": { "pollo": { "name": "Petto di pollo", "cat": "Carne e pesce", "unit": "g", "shop": true,
                            "per100": { "kcal": 110, "protein": 22, "carbs": 0, "fat": 2.5, "fiber": 0 }, "pieceGrams": null } },
-  "days": [{ "weekday": 1, "type": "gym", "note": "...",
-             "supplements": [{ "name": "Vitamina D3", "when": "cena", "dose": "2.000 UI", "skip": false }],
-             "meals": [{ "key": "pranzo", "label": "Pranzo", "time": "13:00", "window": ["12:00","13:30"],
-                         "name": "Pollo e patate", "recipe": 5, "items": [{ "p": "pollo", "q": 185 }] }] }],
+  "days": [{ "weekday": 1, "defaultType": "gym",
+             "variants": [
+               { "type": "gym", "note": "...",
+                 "supplements": [{ "name": "Vitamina D3", "when": "cena", "dose": "2.000 UI", "skip": false }],
+                 "meals": [{ "key": "pranzo", "label": "Pranzo", "time": "13:00", "window": ["12:00","13:30"],
+                             "name": "Pollo e patate", "recipe": 5, "items": [{ "p": "pollo", "q": 185 }] }] },
+               { "type": "rest", "note": "", "supplements": [], "meals": [ "..." ] } ] }],
   "recipes": [{ "n": 5, "name": "...", "meta": "35 min · friggitrice", "dose": "...", "steps": ["..."], "tip": "..." }]
 }
 ```
+**schemaVersion 3** (2b): ogni giorno ha `defaultType` (tipo del piano originale) e 1–3 `variants` (una per tipo di giornata: pasti, integratori, nota). Regole: tipi diversi tra le varianti di un giorno; `type: null` solo se la variante è una sola (e allora `defaultType` è `null`); `defaultType` deve avere la sua variante; i tipi devono esistere in `dayTypes`. Quale variante si segue in una data lo decide `resolveDietDay` (`src/lib/diet/variants.ts`): quella del tipo richiesto (in 2b sempre il predefinito, con lo scambio il giorno seguito); se il giorno non ce l'ha, la stessa variante del giorno più vicino che ce l'ha (settimana circolare, a parità il successivo: "pasti di giovedì"); se nessun giorno ce l'ha, i pasti predefiniti con i target del tipo richiesto e un avviso giallo. L'import accetta ancora la **v2** (un menu per giorno: ogni giorno diventa una variante sola, `defaultType` = il suo tipo) e il file di MyDiet; un'app vecchia che riceve una v3 dice "aggiorna Healthy".
 Facoltativo in `dayTypes[x]`: `targetsSource` (`plan` \| `manual` \| `estimated`, predefinito `plan`): i target vengono dal piano (nutrizionista), sono inseriti a mano o sono una stima accettata nel completamento guidato (M3).
 Facoltativo: `generalNotes` (testo, massimo 4.000 caratteri, predefinito `""`): indicazioni del nutrizionista valide per tutti i giorni, mostrate nella tab Piano come "Indicazioni generali del nutrizionista" (`schemaVersion` invariata; DB v6 mette `""` ai piani già salvati).
-Valori mancanti: `targets` è `null` oppure ha `kcal` (gli altri possono essere `null`); `per100` è `null` oppure ha `kcal`, `protein`, `carbs`, `fat` (`fiber` può essere `null`); `type` di un giorno può essere `null` (lo si sceglie nel completamento guidato).
+Valori mancanti: `targets` è `null` oppure ha `kcal` (gli altri possono essere `null`); `per100` è `null` oppure ha `kcal`, `protein`, `carbs`, `fat` (`fiber` può essere `null`); `defaultType` di un giorno (e il `type` della sua unica variante) può essere `null` (lo si sceglie nel completamento guidato).
 
-**Modello per Claude** (`src/lib/diet/template/healthy-dieta-modello.json`): il piano esteso vuoto, con `_modello: true`, `_generato` (data del download), `_istruzioni` (rivolte a Claude: non inventare, `null` per i dati mancanti, 7 giorni, 5 pasti fissi, chiavi dei prodotti, alternative nella `note`, `generalNotes`…) ed `_esempio` (forma di prodotto, tipo di giornata, pasto, integratore, ricetta con valori finti). Non contiene e non deve mai contenere dati reali; è importato nel codice, quindi si scarica anche offline. Un test controlla che campi ed esempi combacino con lo schema zod.
+**Modello per Claude** (`src/lib/diet/template/healthy-dieta-modello.json`): il piano esteso vuoto, con `_modello: true`, `_generato` (data del download), `_istruzioni` (rivolte a Claude: non inventare, `null` per i dati mancanti, 7 giorni, varianti per tipo di giornata, 5 pasti fissi, chiavi dei prodotti, alternative nella `note`, `generalNotes`…) ed `_esempio` (forma di prodotto, tipo di giornata, giorno con due varianti, pasto, integratore, ricetta con valori finti). **v3** (2b), istruzioni sulle varianti: menu per tipo di giornata ("giorno di allenamento" / "giorno di riposo") → copiato nella variante corrispondente di TUTTI i giorni; un solo menu per giorno → solo la variante del tipo di quel giorno; `defaultType` dal documento, altrimenti chiedilo all'utente; mai inventare varianti mancanti. Non contiene e non deve mai contenere dati reali; è importato nel codice, quindi si scarica anche offline. Un test controlla che campi ed esempi combacino con lo schema zod.
 - **Flusso "Prepara il piano con Claude"** (foglio dallo stato vuoto della Dieta, da "Modello per Claude" nel pannello del piano e da Importa se si carica il modello vuoto): 1. **Scarica il modello** (`healthy-dieta-modello.json`, Web Share con file, altrimenti download); 2. "Apri una chat con Claude, allega la tua dieta (PDF o foto) e il modello, e invia questo messaggio:" + testo da **Copia**re (appunti, altrimenti testo da copiare a mano); 3. "Scarica il file che ti restituisce e importalo qui" → Importa. Nota: "La dieta la invii tu a Claude: l'app non manda niente da sola. Controlla sempre i numeri con il piano originale." Nessun link esterno.
-- **Import tollerante** (solo piano esteso, prima di zod; il resto è segnalato, mai indovinato): campi che iniziano con `_` ignorati; modello ancora vuoto (`_modello: true`, nessun prodotto, pasti tutti vuoti) → "Questo è il modello vuoto: compilalo prima con Claude" + "Apri la guida"; `id` vuoto → uuid nuovo; `version` assente → 1; `title` vuoto → "Piano del GG/MM/AAAA"; `""` = mancante per `validFrom`, `time`, `window`, `recipe`, `pieceGrams`, `type` e per i numeri di `targets`/`per100`; `targets`/`per100` con tutti i valori `null` → `null` (completamento guidato), compilati a metà → errore ("Petto di pollo: valori per 100 g incompleti (mancano kcal e grassi)…", "Palestra: target senza kcal…"); fascia oraria con un solo estremo → ignorata con avviso; tipi di giornata non usati da nessun giorno e senza target → tolti (con i target del nutrizionista restano: servono quando il tipo si assegna nel completamento); meno di 7 giorni → avviso "Mancano giovedì e domenica: in quei giorni il piano sarà vuoto". Errori con messaggio dedicato: giorno duplicato, weekday fuori 1–7, prodotto assente da `products`, numero scritto con la virgola, virgole finali e commenti (con la riga).
+- **Import tollerante** (solo piano esteso, prima di zod; il resto è segnalato, mai indovinato): campi che iniziano con `_` ignorati; modello ancora vuoto (`_modello: true`, nessun prodotto, pasti tutti vuoti) → "Questo è il modello vuoto: compilalo prima con Claude" + "Apri la guida"; `id` vuoto → uuid nuovo; `version` assente → 1; `title` vuoto → "Piano del GG/MM/AAAA"; `""` = mancante per `validFrom`, `time`, `window`, `recipe`, `pieceGrams`, `defaultType`, `type` e per i numeri di `targets`/`per100`; `targets`/`per100` con tutti i valori `null` → `null` (completamento guidato), compilati a metà → errore ("Petto di pollo: valori per 100 g incompleti (mancano kcal e grassi)…", "Palestra: target senza kcal…"); fascia oraria con un solo estremo → ignorata con avviso; tipi di giornata non usati da nessun giorno e senza target → tolti (con i target del nutrizionista restano: servono quando il tipo si assegna nel completamento); meno di 7 giorni → avviso "Mancano giovedì e domenica: in quei giorni il piano sarà vuoto". v3 (2b): un file v2 (o un giorno scritto ancora nella forma v2) diventa v3; una sola variante senza tipo prende il `defaultType` e viceversa; i tipi usati si contano su tutte le varianti; errori dedicati per varianti doppie o senza tipo. Errori con messaggio dedicato: giorno duplicato, weekday fuori 1–7, prodotto assente da `products`, numero scritto con la virgola, virgole finali e commenti (con la riga).
 
 ### 8.3 Compatibilità MyDiet (schemaVersion 1)
-Importare anche il file di MyDiet (`"app": "dieta-e-spesa"`): `giorni[i]` → `days` (indice 0 = lunedì), `pasti.{colazione,spuntino1,pranzo,spuntino2,cena}` → `meals`, `abilita`/`fine` → `window`, `nota` → `note`, `prodotti` → `products` (`unita`, `spesa`, `cat`). Tollerare categorie non elencate (es. Integratori, Pasto libero) e pasti vuoti (`nome: ""`, `items: []`). Dopo l'import parte il completamento guidato (mancano valori nutrizionali e target).
+Importare anche il file di MyDiet (`"app": "dieta-e-spesa"`): `giorni[i]` → `days` (indice 0 = lunedì; dal 2b una sola variante per giorno, senza tipo), `pasti.{colazione,spuntino1,pranzo,spuntino2,cena}` → `meals`, `abilita`/`fine` → `window`, `nota` → `note`, `prodotti` → `products` (`unita`, `spesa`, `cat`). Tollerare categorie non elencate (es. Integratori, Pasto libero) e pasti vuoti (`nome: ""`, `items: []`). Dopo l'import parte il completamento guidato (mancano valori nutrizionali e target).
 
 ### 8.4 Condivisione
 Si condividono **solo schede e diete**: mai sessioni, progressi, misure, diario, note personali o dati in tempo reale. Nessun server: il contenuto viaggia nel link, nel QR o nel file.
@@ -326,7 +360,7 @@ Si condividono **solo schede e diete**: mai sessioni, progressi, misure, diario,
 - **Soglie** (`src/lib/share/limits.ts`): link intero **≤ 4.000 caratteri**, QR **≤ 1.500 caratteri** (correzione d'errore L, al massimo ≈ versione 28–30). Sopra la soglia il metodo resta visibile con il motivo ("Troppo lungo per un link (N caratteri, massimo 4.000): nei messaggi verrebbe tagliato. Usa il file."). Misurato: scheda tipica del PT (6 esercizi con note) ≈ 1.300 caratteri → link e QR; scheda da 30 esercizi → solo link e file; piano di esempio ≈ 6.200 → solo file.
 - **QR** del link, generato sul telefono (`uqr`): scuro su bianco, margine di 4 moduli, largo fino a 340 px; "Alza la luminosità…". Si legge **dall'app** (Importa › Scansiona QR): la fotocamera di iPhone aprirebbe Safari.
 - **File** `.json` (`healthy-scheda-<nome>-v<N>.json`, `healthy-dieta-<titolo>.json`, nomi normalizzati) con Web Share API (`navigator.share({ files })`), alternativa "Scarica". Chiudere il foglio di condivisione di iOS non è un errore.
-- **Lista bianca** dei campi: scheda = app, kind, schemaVersion, id, version, author, source, name, weekdays, time, intro, warmup[name, hint, dose], items[name, muscles, sets, reps, kg, restSec, note, videoUrl, setsDetail], cardio; dieta = § 8.2. Niente `exerciseId`, `updatedAt`, `received`, `previousVersions`, stato del piano (attivo, archivio, importazione). Per una **mia scheda personale** `author` è il mio nome del Profilo (se c'è).
+- **Lista bianca** dei campi: scheda = app, kind, schemaVersion, id, version, author, source, name, weekdays, time, intro, warmup[name, hint, dose], items[kind + forza: name, muscles, sets, reps, kg, restSec, note, videoUrl, setsDetail · cardio: name, minutes, distanceKm, speedKmh, inclinePct, level, note, videoUrl]; dieta = § 8.2. Corse pianificate e fatte (`runs`, `runLogs`, 2a) non si condividono mai; nemmeno spostamenti, salti, diete scelte, fonti dei pasti e `calendarStart` (2c). Niente `exerciseId`, `updatedAt`, `received`, `previousVersions`, stato del piano (attivo, archivio, importazione). Per una **mia scheda personale** `author` è il mio nome del Profilo (se c'è).
 - **Pannello Condividi** unico (riga della scheda e menu in Allena, "Salva e invia" nell'Editor, "Condividi" nel pannello del piano): Link (Copia + Condividi), QR (Mostra il QR), File (Scarica + Condividi), dimensioni. Per le diete prima un avviso: "Questo piano può contenere target personali…" con Continua / Annulla.
 - **Import**: schermata `#/importa` (da Allena, dal pannello piano e dallo stato vuoto della Dieta) con tre ingressi verso la stessa anteprima: **incolla** link, codice o JSON; **scansiona QR** con la fotocamera dell'app (`getUserMedia`, jsQR); **scegli file** (`<input type="file">`: su iPhone le PWA non si registrano per aprire file). Il tipo si riconosce dal contenuto (`app`, `kind`, `schemaVersion`; anche il file MyDiet). Da file e testo incollato si toglie **solo** il contorno del JSON (blocco ```` ```json ````, frasi prima e dopo: risposte copiate da una chat); se il JSON non è valido, virgole finali, decimali con la virgola e commenti sono spiegati con la riga. Backup e resoconti di sessione sono rifiutati con un messaggio che dice cosa sono e dove si usano. Dopo il salvataggio si va in Allena o in Dieta.
 - **Decodifica difensiva**: payload ≤ 6.000 caratteri prima di decomprimere → solo caratteri dell'alfabeto URL di lz-string → decompressione con **tetto** (1 MB, si ferma appena lo supera: protezione dalle "bombe" di espansione) → `JSON.parse` senza `__proto__` → zod con messaggi in italiano. Nessun salvataggio parziale. Link tagliato: "Il link è incompleto: probabilmente è stato tagliato dal messaggio. Chiedi di rimandarlo o usa il file."
@@ -338,6 +372,7 @@ Si condividono **solo schede e diete**: mai sessioni, progressi, misure, diario,
 
 ### 8.5 Backup
 Esporta/importa tutto il database in un unico file JSON. Promemoria se l'ultimo backup ha più di 14 giorni.
+**Formato 4** (2c): tabelle `calendarEdits` e `dayChoices`, `dietLog.mealSources`; un backup più vecchio riceve tabelle vuote, la fonte dei pasti segnati e `calendarStart` = giorno del backup (il suo storico resta con il tipo del piano). **Formato 3** (2b): piani alimentari v3 e diario con `mealsFrom` (migrati dal formato 2 con le stesse funzioni del database). **Formato 2** (2a): tabelle `runs` e `runLogs` in più. Un backup del formato 1 si ripristina ancora: viene migrato con le stesse funzioni del database (cardio come esercizio, esercizi con tipo, bozza dell'editor) prima della validazione.
 
 ## 9. Video degli esercizi
 V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e note. Il modello dati resta predisposto per un futuro download dei video della scheda (V3).
@@ -375,6 +410,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 | M7 | Profilo e misurazioni | Inserisco due misure e vedo il confronto |
 | M8 | Condivisione link/QR/file + gestione versioni | Il PT mi manda una scheda e la importo |
 | M9 | Progressi: corpo, forza, dieta nel tempo | Dai dati inseriti vedo gli andamenti, anche offline; schermate vuote o con pochi dati senza grafici rotti |
+| CA | **Calendario attività e dieta adattiva**, in tre passi: **2a** cardio come esercizio + corsa come attività · **2b** dieta v3 con varianti per tipo di giornata · **2c** occorrenze, spostamenti/salti/conflitti, tipo di giornata automatico, calendario di 3 settimane | Sposto o salto un allenamento o una corsa e la dieta di quei giorni cambia da sola; conflitti risolti con le opzioni previste; calendario di 3 settimane; tutti i dati già salvati funzionano come prima |
 
 ## 13. Punti aperti
 - Readiness: confermare con il PT la scala "5 = meglio" per stress e affaticamento.
@@ -386,6 +422,7 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - [x] M0 · [x] M1 · [x] M2 · [x] M3 · [x] M4 · [x] M5 · [x] M6 · [x] M7 · [x] M8 · [x] M9 → **V1 completa**
 - [x] Dopo V1: **modello del piano per Claude** e import tollerante (note in fondo)
 - [x] **Rifinitura iPhone 1**: barra in fondo, niente zoom involontario, titoli di Nuova misura, Stepper scritti a mano, più gesti (note in fondo)
+- Calendario attività e dieta adattiva: [x] **2a** cardio come esercizio + corsa · [x] **2b** dieta v3 con varianti · [x] **2c** occorrenze, spostamenti e conflitti, tipo di giornata automatico, calendario di 3 settimane (note in fondo, da provare sul telefono)
 
 ### Note M1 · design system
 - **Pagina di prova** `#/showcase`, collegata dalla Home provvisoria con "Componenti (prova)" (il link sparisce in M6). È un chunk caricato a richiesta, ma è nel precache: funziona offline.
@@ -705,3 +742,76 @@ V1: **solo link**. Online si apre il video; offline riquadro con nome, muscoli e
 - **Decisioni confermate**: in Dieta › Piano vince il giorno; kg scritti fuori passo proseguono col passo; link "Strumenti tecnici" nel Profilo; swipe riga scheda e indietro dal bordo ovunque; niente swipe sulle voci della Spesa. In Schede lo swipe ← su una riga apre le sue azioni: per passare a Storico col dito si trascina fuori dalle righe o sulla barra delle tab.
 - **Test**: **Vitest** `tests/unit/stepper.test.ts` (parsing con virgola, limiti, conferma, interi, passo dopo valore libero, ripetizione accelerata con orologio simulato), `tests/unit/swipe.test.ts` (asse, direzioni, bordi, soglie, zone annidate, azioni della riga, indicatore frazionario), `tests/unit/viewport.test.ts`, `tests/unit/update-guard.test.ts`; **Playwright** `tests/e2e/iphone.spec.ts` (Stepper scritto a mano e pressione lunga, swipe nella sessione live col mouse e col dito (eventi touch di Chromium: lento, medio, veloce, il contenuto segue, scroll verticale intatto anche nelle zone annidate), swipe tra tab e Piano, riga scheda (anche col dito), pannello che entra dal fondo senza scorrere, titoli dentro i riquadri, barra in fondo e nascosta con la tastiera simulata, nessun campo sotto i 16 px su tutte le pagine principali).
 - **Da verificare su iPhone dopo il deploy** (barra di navigazione, a mano): 1) Oggi, blocca il telefono 10 s e sblocca: barra al fondo, nessuna fascia vuota; 2) app in background per un minuto e riaperta, su Oggi, Allena e Dieta; 3) Profilo › dati del profilo, scrivi e tocca "Fine": la barra sparisce con la tastiera e ricompare al fondo; 4) Importa › campo del link, chiudi la tastiera trascinandola giù o toccando fuori; 5) ruota e torna in verticale; 6) dopo ogni prova in Strumenti tecnici: innerHeight = altezza dello schermo, scrollY 0, `--app-h` = innerHeight, display-mode standalone. Poi: swipe tra esercizi con il pollice (anche mentre si scorre), doppio tocco rapido su +, tocco su un campo (niente zoom).
+
+### Note 2a · Cardio come esercizio e corsa come attività
+- **Codice**:
+  - **dati**: `schemas/{exercises,workouts,workout-draft,sessions,workout-file,session-file,backup}.ts` aggiornati, nuovo `schemas/runs.ts`, `repo/runs.ts`; **migrazioni** in un solo modulo puro `src/lib/data/migrations/cardio.ts` (`migrateWorkoutRow`, `migrateSessionRow`, `migrateSettingRow`/`migrateSavedDraft`, `migrateExerciseRow`, `workoutFileV1ToV2`, `backupV1ToV2`, `legacyContentHashV1`), idempotenti, usate da DB v7, backup 1 → 2 e file scheda v1 → v2;
+  - **contenuto condivisibile** e impronta delle schede spostati in `src/lib/share/workout-content.ts` (leggero, senza database; `canonical.ts` lo riesporta);
+  - **libreria**: `src/lib/workouts/library/cardio.ts` (18 voci scritte a mano, id `cd-…`, campi della voce, alias del vecchio cardio finale, `findCardioEntry`), unita in `libraryExercises()`; `searchExercises` ha il filtro per tipo;
+  - **sessione**: `sessions/stopwatch.ts` (cronometro a istanti), `sessions/cardio.ts` (voci cardio, Fatto, valori, "ultima volta"); componenti `session/CardioBlock.svelte`, `FinishSheet` solo RPE;
+  - **editor**: `ExerciseRow` gestisce i due tipi, nuovo `editor/CardioFields.svelte`; eliminato `CardioField.svelte`; `CustomExerciseForm` con il tipo;
+  - **corsa**: `src/lib/runs/{format,form}.ts`, rotta `#/allena/corsa` (`src/routes/RunEditor.svelte`), `train/{RunRow,RunLogSheet,NewChoiceSheet}.svelte`; `weekPlan`, `monthGrid`, `runsForDay`, `resolveDayType`, `buildTimeline`, `weeklyWorkouts` con le corse.
+- **Schema e migrazioni** (DB **v7**): nuove tabelle `runs` (`id, updatedAt, *weekdays`) e `runLogs` (`id, date, [runId+date]`). L'`upgrade`:
+  - **esercizi**: `kind: 'strength'`, `cardioFields: []` (la libreria si risincronizza con i cardio);
+  - **schede** (anche `previousVersions`): esercizi con `kind`; il vecchio `cardio { type, minutes }` diventa l'ultimo esercizio cardio, collegato alla libreria per nome normalizzato (`tapis roulant` → `cd-tapis-corsa`, `corsa` → `cd-corsa-aperto`, `cyclette`, `ellittica`, `vogatore`…); tipo sconosciuto: resta il nome scritto, `exerciseId: null`; 0 minuti conservati (l'editor ne chiede almeno 1 al prossimo salvataggio);
+  - **impronta delle schede ricevute** (M8): se coincide con quella calcolata sul formato vecchio viene ricalcolata sul nuovo (la scheda resta "intatta"); se no resta com'è e la scheda resta "modificata qui";
+  - **sessioni**: il cardio della copia della scheda va in fondo a `snapshot.items` e `cardioDone` diventa la sua voce in `cardio` (fatto, minuti, km); sessioni senza copia (prima di M5) con `cardioDone`: copia ricostruita dalle serie come `sessionItems()`, poi il cardio; dati incoerenti (fatto ma non previsto) non perdono il cardio; sessione in corso: `live.itemIndex` invariato;
+  - **bozza dell'editor** (`settings.workoutDraft`): righe con `kind`, il cardio diventa una riga.
+  Se l'upgrade fallisce resta la v6 con i dati intatti (testato).
+- **Formati**: file scheda **v2** (la v1 si legge e si converte); file sessione ("Invia al PT") **v2**; backup **formato 2** (`BACKUP_MIGRATIONS[1]`): il ripristino non fa girare le `upgrade` di Dexie, quindi la migrazione delle righe è ripetuta qui con le stesse funzioni (senza, zod scarterebbe il cardio in silenzio).
+- **Regole decise** (confermate prima dello sviluppo):
+  - libreria cardio con 18 voci (tapis corsa e camminata in salita, corsa all'aperto, camminata veloce, camminata, cyclette, bici, spinning, ellittica, vogatore, stair climber, step, corda, nuoto, air bike, ski erg, ergometro per braccia, circuito/HIIT); ogni voce mostra subito i suoi campi;
+  - schede **solo cardio** permesse (almeno 1 esercizio di qualsiasi tipo); un cardio aggiunto parte da 10′;
+  - cronometro: sale senza fermarsi, avviso al tempo previsto (suono, impulso, annuncio), "Fatto" ferma e riempie i minuti non scritti; la spunta del cardio non avvia il recupero;
+  - corsa: registrazione rapida (niente Readiness né cronometro), RPE obbligatorio, data mai nel futuro, orario facoltativo come le schede, almeno un obiettivo; le corse **non si condividono** (né pianificate né fatte);
+  - Allena: sezione "Le tue corse" sotto le schede, "+ Nuova" → Scheda / Corsa;
+  - Home: senza piano (o senza tipo) una corsa fa "Corsa"; piano "riposo" con una corsa = riga gialla come per le schede. Il tipo di giornata automatico arriva in 2c;
+  - Progressi: corse contate negli allenamenti a settimana, obiettivo = giorni di schede + corse (provvisorio fino a 2c); i cardio non entrano mai nella Forza;
+  - calendario di 3 settimane (2c): solo tocco, niente trascinamento.
+- **Scostamenti dal mockup**: il cardio del Riepilogo non è più una riga a parte in fondo ma sta al suo posto tra gli esercizi (stesso stile tratteggiato); l'Intro mostra "+ N′ cardio" invece del tipo; nessun mockup per corsa e foglio della corsa (ciano, stessi componenti di Allena).
+- **Test**:
+  - **fixture**: quelle con `cardio`/`cardioDone` convertite al formato nuovo; gli originali in `tests/fixtures/legacy/` per le migrazioni; i backup restano nel formato 1 (gli e2e provano anche la migrazione del ripristino);
+  - **Vitest**: `data/migrations-cardio.test.ts`, migrazioni v6 → v7 in `db.test.ts` (schede, cronologia, impronta intatta/modificata, sessioni fatte/non fatte/senza copia/in corso, bozza, esercizi, rollback), backup formato 1 → 2 e corse andata e ritorno, `sessions/cardio.test.ts` (cronometro con orologio simulato, sospensione, avviso una volta sola, Fatto, ultima volta, schema), `runs/runs.test.ts` (passo, moduli, settimana, Home, timeline, Storico, Progressi, archivio), libreria cardio e ricerca, editor (cardio, solo cardio, personalizzato cardio), Forza senza cardio, condivisione (v1 → v2, lista bianca, corse mai condivise);
+  - **Playwright** `tests/e2e/cardio-run.spec.ts`: cardio dalla libreria (chip Cardio), campi, riordino, sessione offline con cronometro e avviso, Fatto, ricarica, riepilogo; corsa creata, segnata dalla Home e da Allena, Storico ciano, modifica ed elimina, offline; backup vecchio con cardio finale e scheda v1 importata. Aggiornati `session`, `train`, `iphone`. Con troppi worker in parallelo alcuni test offline possono andare in timeout aspettando il service worker (carico della macchina): la suite è verde con `--workers=4`.
+- **Versione** `0.10.0`. Guida `docs/condivisione.md`: "aggiorna Healthy" per le schede v2 e corse mai condivise.
+- **Da verificare su iPhone dopo il deploy**: aggiornare l'app con dati veri (le schede con cardio finale devono avere il cardio come ultimo esercizio, storico e "ultima volta" come prima, nessuna scheda ricevuta che risulti "modificata"); cronometro del cardio con il telefono bloccato e riaperto (tempo giusto, niente suono in ritardo), suono al tempo previsto (anche col tasto silenzioso: resta muto come il recupero); tastiera sui campi minuti/km; creare una corsa e segnarla dalla Home; modalità aereo.
+
+### Note 2b · Piano alimentare v3 con varianti per tipo di giornata
+- **Codice**:
+  - **schema** (`schemas/diet-payload.ts`): `daySchema` = `{ weekday, defaultType, variants[1–3] }`, `variantSchema` = `{ type, note, supplements, meals }`; `DietPlanDay` è il giorno del piano, `DietDay` il giorno "appiattito" (la variante scelta, stessa forma di prima: i calcoli di nutrienti, target, osservazioni, pasto del momento, timeline non sono cambiati). Regole delle varianti in `checkDietReferences`. `MAX_ITEMS.variantsPerDay = 3`;
+  - **resolver** `src/lib/diet/variants.ts` (`resolveDietDay`, `defaultVariant`, `nearestWeekdays`): unico punto di scelta, usato da `findDay`/`buildDayView`/`weekStrip` (`diet/view.ts`), Home, prossimo pasto, Progressi, spesa;
+  - **diario**: `dietLog.mealsFrom` al posto di `swappedFromWeekday`; `setMealsFrom` (e `setSwap` che lo usa per lo scambio, fino a 2c);
+  - **migrazioni** `src/lib/data/migrations/diet-v3.ts` (`dietDayV2ToV3`, `dietPayloadV2ToV3`, `migrateDietPlanRow`, `migrateDietLogRow`, `dietFileV2ToV3`, `backupV2ToV3`), idempotenti;
+  - **interfaccia**: `diet/VariantChips.svelte` e `PlanTab` (chip, consultazione in sola lettura, avvisi di ripiego), `DietComplete` (tipo predefinito per giorno: con più varianti si sceglie tra i loro tipi; integratori per variante), anteprima d'importazione con la riga "Varianti".
+- **Schema e migrazioni** (DB **v8**, indici invariati): piani (anche archiviati) v2 → v3, una variante per giorno con il tipo, la nota, gli integratori e i pasti di prima; diario `swappedFromWeekday: X` → `mealsFrom: { weekday: X, type: null }` (la variante predefinita di quel giorno: stessi pasti di prima). Se l'upgrade fallisce resta la v7 (testato). **Backup formato 3** (`BACKUP_MIGRATIONS[2]`), un backup del formato 1 passa 1 → 2 → 3. **File piano v3**, la v2 e MyDiet si leggono ancora.
+- **Regole decise** (confermate prima dello sviluppo):
+  - "Oggi seguo il piano di un altro giorno" resta fino a 2c (scrive `mealsFrom`), poi sparisce;
+  - varianti da consultare con i chip, in sola lettura, spunte solo sulla variante in uso;
+  - ripiego: giorno più vicino che ha la variante, settimana circolare, a parità il successivo;
+  - tipo predefinito per giorno, integratori per variante; le varianti non si aggiungono né si tolgono a mano (arrivano solo dal file);
+  - spesa: variante predefinita di ogni giorno (gli spostamenti in 2c);
+  - in 2b il tipo di una data è sempre il predefinito: la Dieta resta quella di prima.
+- **Test**:
+  - **fixture finte** `tests/fixtures/diet-variants.json` (lunedì e venerdì palestra + riposo, mercoledì corsa, domenica senza palestra) e `diet-claude-filled-v3.json` (modello v3 compilato da una dieta "allenamento / riposo"); le fixture v2 restano e provano l'import compatibile (gli helper dei test le convertono con la funzione di migrazione);
+  - **Vitest** `diet/variants.test.ts` (scelta della variante e ripiego, regole dello schema, import v3/v2/MyDiet/giorno v2 in file v3/v4 rifiutato, modello per Claude v3, tipo e integratori per variante, spesa, completezza, esportazione e reimport, non regressione dei piani v2), `data/migrations-diet-v3.test.ts` (funzioni, scambio con gli stessi pasti, backup 1 → 3 e 2 → 3, DB v7 → v8 con rollback); aggiornati i test di dieta, Home, prossimo pasto, Progressi e condivisione (`mealsFrom` mai nei file condivisi);
+  - **Playwright** `tests/e2e/diet-variants.spec.ts`: import con la riga "Varianti", chip e consultazione in sola lettura con le spunte che restano, offline, 44 px; scambio del giorno ancora funzionante; backup vecchio con la stessa Dieta; modello v3 compilato.
+- **Versione** `0.11.0`.
+- **Da verificare su iPhone dopo il deploy**: aggiornare con il piano vero (Dieta, spesa, Home e Progressi invariati, eventuale scambio di oggi conservato); far compilare il modello v3 a Claude con una dieta "giorno di allenamento / giorno di riposo" e controllare che le varianti siano copiate su tutti i giorni e che il tipo predefinito sia giusto; chip delle varianti col pollice; modalità aereo.
+
+### Note 2c · Calendario delle attività e dieta adattiva
+- **Codice**:
+  - `src/lib/calendar/`: `occurrences.ts` (finestra di 3 settimane, `buildCalendar`, collegamento con sessioni e corse fatte, `dayActivities`), `move.ts` (macchina a stati pura: `startMove`, `destinations`, `chooseDay`, `conflictOptions`, `resolveConflict`, `summaryLines`, `moveChange`, `skipChange`, `restoreChange`, `restoreWeekChange`, `applyChange`), `days.ts` (`dayInfo`/`dayInfos`: tipo di giornata, diario, attività; `dietView`; `dietImpact` per il riepilogo), `grid.ts` (celle del calendario), `live.svelte.ts` (tutti i dati del calendario dal database);
+  - `today/day-type.ts` riscritto (`dayTypeFor`, `missingTypeText`): sparisce il "conflitto piano/scheda" del 2a;
+  - `diet/view.ts`: `buildDayView` con `mealSources` (`withEatenMeals`: i pasti segnati restano com'erano), `weekStrip` con un tipo per giorno; `diet/calc/shopping.ts` con i tipi della settimana;
+  - `workouts/calc/week.ts` `weekPlan(input)` dalle occorrenze (stati `partial` e `skipped`); `today/workout-day.ts` e `today/home.ts` (`homeStrip` su 3 settimane); `progress/strength.ts` (obiettivo per settimana), `progress/diet.ts` (`dietDays` con il calendario);
+  - repository `data/repo/calendar.ts` (`applyCalendarChange` in una transazione con le righe di prima per "Annulla", `undoCalendarChange`, `setDayChoice`); `setMealEaten` salva la fonte del pasto; `setSwap`/`setMealsFrom` rimossi;
+  - interfaccia: `routes/calendar/` (`CalendarScreen`, `CalendarGrid`, `DayDetail`, `CalendarActions` con menu, Sposta, conflitti, riepilogo e avviso; `DietChoice`), `lib/components/UndoToast.svelte`, Home (striscia a 3 settimane, "Non posso oggi"), Allena (azioni nel dettaglio del giorno), Dieta (niente scambio), Progressi (tacche dell'obiettivo in `BarChart`), Riepilogo (prossimo pasto col tipo di oggi).
+- **Schema e migrazioni** (DB **v9**): tabelle `calendarEdits` (`key, originalDate, toDate`) e `dayChoices` (`date`); `dietLog.mealSources` (ai pasti già segnati la fonte di prima: lo scambio o la variante predefinita del giorno, quindi stesse kcal); `calendarStart` = giorno dell'aggiornamento. Modulo puro `data/migrations/calendar-v4.ts` (`migrateDietLogRowV4`, `backupV3ToV4`), idempotente; se l'upgrade fallisce resta la v8 (testato). **Backup formato 4**, un backup del formato 1 passa 1 → 2 → 3 → 4.
+- **Regole decise** (confermate prima dello sviluppo): collegamento "stessa attività, stesso giorno effettivo"; calendario a griglia 3 × 7 con dettaglio sotto; storico prima dell'aggiornamento con il tipo del piano (`calendarStart`); Annulla per 6 secondi; Ripristina la settimana come in § 6.5; più attività sul giorno di arrivo: le opzioni valgono per tutte; tipi del piano che non esistono → pasti e target del piano con riga gialla; "Non posso oggi" solo sulle card di oggi (più "Recupera" sui giorni passati non fatti); la striscia di Allena e quella della Dieta restano sulla settimana corrente.
+- **Effetto da sapere**: con schede o corse, dal giorno dell'aggiornamento il tipo di giornata viene dalle attività e non più dal piano. Se i giorni del piano non coincidono con quelli delle schede (es. piano "mercoledì riposo" ma scheda di mercoledì), quel giorno diventa palestra e la Dieta usa la variante palestra (o il ripiego "pasti di …"). È il comportamento voluto dal 2c; lo storico non cambia.
+- **Test**:
+  - **fixture finte** `tests/fixtures/calendar/backup-calendar.json` (backup del formato 1 con un piano v3 a varianti, Petto lun, Corsa lenta mer, Spalle ven, un giorno di diario della settimana scorsa: prova anche la migrazione 1 → 4);
+  - **Vitest** `calendar/occurrences.test.ts` (ricorrenza, spostamenti anche tra settimane, salti, eccezioni orfane, collegamento, settimana di Allena), `calendar/move.test.ts` (spostamento semplice, le 5 opzioni, catena senza cicli, più attività, recupero, attività fatte, salta/ripristina/ripristina la settimana), `calendar/diet.test.ts` (tipo dalle attività, `calendarStart`, doppia attività e scelta, tipo assente, oggi con pasti segnati, spesa ricalcolata, celle, Progressi), `data/migrations-calendar-v4.test.ts` (funzioni, non regressione, backup 3 → 4 e 1 → 4, DB v8 → v9 con rollback, repository con Annulla), `calendar/fixture.test.ts`; condivisione senza dati del calendario (`share/no-progress.test.ts`, anche il grafo degli import); aggiornati i test di Home, Allena, corse, Progressi, Dieta e backup;
+  - **Playwright** `tests/e2e/calendar.spec.ts`: allenamento di oggi a domani con la Dieta che diventa riposo e i pasti segnati che restano, Annulla; Scambia e Sposta l'altra in catena, Ripristina la settimana; salto di una corsa e Ripristina; dieta scelta con palestra e corsa ("pasti di mercoledì"); calendario da Home e Allena con % dei pasti; swipe della settimana nella Home; tutto offline; 44 px e niente scroll orizzontale. Aggiornati `home`, `diet`, `diet-variants`, `iphone`, `dev-data`, `profile`, `progress`.
+- **Versione** `0.12.0`.
+- **Da verificare su iPhone dopo il deploy**: aggiornare con i dati veri (giorni passati e Progressi invariati, spunte di oggi conservate); spostare l'allenamento di oggi con pasti già segnati; una catena di conflitti; Annulla nell'avviso; swipe della settimana col pollice nella Home; modalità aereo.

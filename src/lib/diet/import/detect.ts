@@ -7,6 +7,7 @@ import type { DietPlanOrigin } from '../../data/schemas/diet-plans';
 import { convertMyDiet } from './mydiet-adapter';
 import { MYDIET_APP, MYDIET_VERSION, myDietFileSchema } from './mydiet-schema';
 import { normalizeExtendedDiet, type NormalizeOptions } from './tolerant';
+import { dietFileV2ToV3 } from '../../data/migrations/diet-v3';
 
 /** Piano letto da un file, già validato e nel formato esteso. */
 export interface DietImport {
@@ -49,7 +50,10 @@ export function parseDietImport(raw: unknown, options: NormalizeOptions = defaul
   if (raw.app !== APP_ID) return fail(['Questo file non è un piano alimentare di Healthy né di MyDiet.']);
   const envelope = checkEnvelope(raw, DIET_FILE_KIND, DIET_FILE_VERSION);
   if (!envelope.ok) return envelope;
-  const normalized = normalizeExtendedDiet(raw, options);
+  if (envelope.value < 2) return fail([`Formato ${envelope.value} non supportato.`]);
+  // v2 (un menu per giorno, prima del 2b): ogni giorno diventa una variante sola.
+  const current = envelope.value === 2 ? dietFileV2ToV3(raw) : raw;
+  const normalized = normalizeExtendedDiet(current, options);
   if (normalized.errors.length > 0) return fail(normalized.errors);
   const extended = parseDietFile(normalized.raw);
   if (!extended.ok) return extended;

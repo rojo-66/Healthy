@@ -15,7 +15,10 @@
   let { days, selected, nextInDays, onselect }: Props = $props();
 
   function aria(d: WeekDay): string {
-    const names = d.workouts.map((w) => w.name).join(', ') || 'riposo';
+    const names =
+      d.occurrences
+        .map((o) => `${o.kind === 'run' ? 'corsa ' : ''}${o.name}${o.moved ? ' (spostata qui)' : ''}${o.skipped ? ' (saltata)' : ''}`)
+        .join(', ') || 'riposo';
     const today = d.isToday ? ', oggi' : '';
     return `${weekdayName(d.weekday)} ${fromIsoDate(d.date).getDate()}${today}: ${names} · ${dayStateLabel(d.state, nextInDays).toLowerCase()}`;
   }
@@ -26,6 +29,7 @@
     <button
       type="button"
       class="day tap {d.state}"
+      class:tone-progress={d.tagKind === 'run'}
       class:on={d.weekday === selected}
       aria-pressed={d.weekday === selected}
       aria-label={aria(d)}
@@ -33,7 +37,7 @@
     >
       <span class="letter">{WEEKDAY_INITIALS[d.weekday - 1]}</span>
       <span class="mark mono">{d.state === 'done' ? '✓' : fromIsoDate(d.date).getDate()}</span>
-      <span class="tag mono">{d.tag}</span>
+      <span class="tag mono">{d.movedIn ? '→' : ''}{d.tag}</span>
     </button>
   {/each}
 </div>
@@ -88,6 +92,20 @@
   .next {
     border-color: var(--tone);
     box-shadow: 0 0 12px var(--tone-glow);
+  }
+
+  /* Fatto in parte: contorno pieno, sfondo tenue. */
+  .partial {
+    border-color: var(--tone);
+    background: var(--tone-tint);
+  }
+
+  /* Saltato: sigla barrata. */
+  .skipped {
+    color: var(--muted);
+  }
+  .skipped .tag {
+    text-decoration: line-through;
   }
 
   /* Non fatto: grigio attenuato. */

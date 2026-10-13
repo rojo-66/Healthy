@@ -7,12 +7,78 @@
   "endedAt": "2026-10-05T17:05:00.000Z",
   "readiness": { "sleep": 4, "mood": 4, "energy": 3, "stress": 4, "soreness": 5 },
   "sets": [
-    { "exerciseId": "lat-machine", "itemIndex": 0, "setIndex": 0, "kg": 57.5, "reps": 10, "done": true },
-    { "exerciseId": "lat-machine", "itemIndex": 0, "setIndex": 1, "kg": 57.5, "reps": 9, "done": true },
+    {
+      "exerciseId": "lat-machine",
+      "itemIndex": 0,
+      "setIndex": 0,
+      "kg": 57.5,
+      "reps": 10,
+      "done": true
+    },
+    {
+      "exerciseId": "lat-machine",
+      "itemIndex": 0,
+      "setIndex": 1,
+      "kg": 57.5,
+      "reps": 9,
+      "done": true
+    },
     { "exerciseId": null, "itemIndex": 1, "setIndex": 0, "kg": 55, "reps": 10, "done": true },
     { "exerciseId": null, "itemIndex": 1, "setIndex": 1, "kg": 60, "reps": 0, "done": false }
   ],
-  "userNotes": [{ "itemIndex": 1, "exerciseId": null, "text": "Ultima serie saltata, ero senza energie." }],
+  "userNotes": [
+    { "itemIndex": 1, "exerciseId": null, "text": "Ultima serie saltata, ero senza energie." }
+  ],
   "rpe": 7,
-  "cardioDone": { "type": "tapis roulant", "minutes": 12, "distanceKm": null }
+  "cardio": [
+    {
+      "itemIndex": 2,
+      "minutes": 12,
+      "distanceKm": null,
+      "done": true,
+      "clock": { "runningSince": null, "elapsedMs": 0 }
+    }
+  ],
+  "snapshot": {
+    "items": [
+      {
+        "kind": "strength",
+        "exerciseId": "lat-machine",
+        "name": "Esercizio 1",
+        "muscles": [],
+        "sets": 2,
+        "reps": 10,
+        "kg": 57.5,
+        "restSec": 90,
+        "note": "",
+        "videoUrl": null,
+        "setsDetail": null
+      },
+      {
+        "kind": "strength",
+        "exerciseId": null,
+        "name": "Esercizio 2",
+        "muscles": [],
+        "sets": 2,
+        "reps": 10,
+        "kg": 55,
+        "restSec": 90,
+        "note": "",
+        "videoUrl": null,
+        "setsDetail": null
+      },
+      {
+        "kind": "cardio",
+        "exerciseId": "cd-tapis-corsa",
+        "name": "Tapis roulant · corsa",
+        "minutes": 12,
+        "distanceKm": null,
+        "speedKmh": null,
+        "inclinePct": null,
+        "level": null,
+        "note": "",
+        "videoUrl": null
+      }
+    ]
+  }
 }

@@ -40,10 +40,16 @@ function isEmptyMeal(meal: unknown): boolean {
   return name === '' && items.length === 0;
 }
 
+/** Pasti di un giorno del modello: quelli delle varianti (v3) o del giorno (modello v2, prima del 2b). */
+function dayMeals(day: Record<string, unknown>): unknown[] {
+  if (Array.isArray(day.variants)) return day.variants.flatMap((v) => (isRecord(v) && Array.isArray(v.meals) ? v.meals : []));
+  return Array.isArray(day.meals) ? day.meals : [];
+}
+
 /** Ancora il modello vuoto: `_modello: true`, nessun prodotto e tutti i pasti senza nome e senza alimenti. */
 export function isEmptyTemplate(raw: Record<string, unknown>): boolean {
   if (raw._modello !== true) return false;
   if (isRecord(raw.products) && Object.keys(raw.products).length > 0) return false;
   const days = Array.isArray(raw.days) ? raw.days : [];
-  return days.every((day) => !isRecord(day) || !Array.isArray(day.meals) || day.meals.every(isEmptyMeal));
+  return days.every((day) => !isRecord(day) || dayMeals(day).every(isEmptyMeal));
 }

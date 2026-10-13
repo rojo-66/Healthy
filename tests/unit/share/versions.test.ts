@@ -36,14 +36,18 @@ describe('file ricevuto → scheda', () => {
   it('tiene id, versione, autore e origine; ricorda versione e impronta; collega la libreria per nome', () => {
     const file = typicalWorkoutFile();
     const library = exerciseIndex([
-      { id: 'fx-panca', name: 'Panca piana con BILANCIERE' },
-      { id: 'it-lat', name: 'Lat machìne presa  larga' },
+      { id: 'fx-panca', name: 'Panca piana con BILANCIERE', kind: 'strength' },
+      { id: 'it-lat', name: 'Lat machìne presa  larga', kind: 'strength' },
+      // Un cardio con lo stesso nome di un esercizio di forza non si collega (2a).
+      { id: 'cd-panca', name: 'Panca piana con bilanciere', kind: 'cardio' },
+      { id: 'cd-tapis-corsa', name: 'Tapis roulant · corsa', kind: 'cardio' },
     ]);
     const w = fileToWorkout(file, library, 'new', NOW);
     expect(workoutSchema.safeParse(w).success).toBe(true);
     expect(w).toMatchObject({ id: file.id, version: 3, author: 'Coach Finto', source: 'pt', previousVersions: [] });
     expect(w.received).toEqual({ version: 3, hash: contentHash(file), at: NOW.toISOString() });
-    expect(w.items.map((i) => i.exerciseId)).toEqual(['fx-panca', 'it-lat', null, null, null, null]);
+    expect(w.items.map((i) => i.exerciseId)).toEqual(['fx-panca', 'it-lat', null, null, null, null, 'cd-tapis-corsa']);
+    expect(w.items.at(-1)?.kind).toBe('cardio');
     expect(isLocallyEdited(w)).toBe(false);
   });
 
@@ -146,7 +150,7 @@ describe('salvataggio (database)', () => {
       sets: [],
       userNotes: [],
       rpe: null,
-      cardioDone: null,
+      cardio: [],
       snapshot: null,
       live: null,
     });

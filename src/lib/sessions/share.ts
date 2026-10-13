@@ -6,7 +6,7 @@ import { SESSION_FILE_KIND, SESSION_FILE_VERSION, sessionFileSchema, type Sessio
 import type { Session } from '../data/schemas/sessions';
 import { headerDate, toIsoDate } from '../diet/calc/calendar';
 import { safeSlug } from '../share/file-name';
-import { setLabel, timeRange, volumeLabel } from './format';
+import { cardioDoneLabel, setLabel, timeRange, volumeLabel } from './format';
 import { READINESS_ITEMS } from './readiness';
 import type { SessionSummary } from './summary';
 
@@ -28,20 +28,24 @@ export function sessionText(session: Session, summary: SessionSummary): string {
     lines.push(`Readiness ${summary.readinessTotal}/25 (${parts.join(', ')})`);
   }
   const head = [`Volume ${volumeLabel(summary.volume)}`, `Serie ${summary.done}/${summary.planned}`];
+  if (summary.cardioTotal > 0) head.push(`Cardio ${summary.cardioDone}/${summary.cardioTotal}`);
   if (summary.records > 0) head.push(`Record ${summary.records}`);
   if (session.rpe !== null) head.push(`RPE ${session.rpe}/10`);
   lines.push(head.join(' · '));
 
   for (const e of summary.exercises) {
     lines.push('');
+    if (e.cardio) {
+      const c = e.cardio;
+      const result = c.done ? `${cardioDoneLabel(c.plannedMin, c.minutes, c.distanceKm)} ✓` : `non fatto (previsti ${c.plannedMin}’)`;
+      lines.push(`${e.index + 1}. ${e.name} — cardio ${result}`);
+      if (e.note) lines.push(`   Nota: ${e.note}`);
+      continue;
+    }
     const best = e.best ? ` · top ${setLabel(e.best.kg, e.best.reps)}` : '';
     lines.push(`${e.index + 1}. ${e.name} — ${e.done}/${e.planned}${best}${e.pr ? ' · PR' : ''}`);
     if (e.sets.length > 0) lines.push(`   ${e.sets.map((s) => (s.extra ? `${s.text} (in più)` : s.text)).join(' · ')}`);
     if (e.note) lines.push(`   Nota: ${e.note}`);
-  }
-  if (summary.cardio) {
-    lines.push('');
-    lines.push(`Cardio: ${summary.cardio.type} ${summary.cardio.minutes}’ ${summary.cardio.done ? '✓' : '· non fatto'}`);
   }
   return lines.join('\n');
 }

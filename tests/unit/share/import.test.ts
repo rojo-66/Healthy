@@ -83,7 +83,7 @@ describe('riconoscimento dal contenuto', () => {
     const { items: _items, ...noItems } = file;
     expect(errorsOf(detectShared(noItems))).toContain('elementi: campo obbligatorio mancante');
     expect(errorsOf(detectShared({ ...file, intro: 'x'.repeat(5000) }))).toContain('introduzione: testo troppo lungo: massimo 4000 caratteri');
-    expect(errorsOf(detectShared({ ...file, items: [{ name: 'X', sets: 3, reps: 1, kg: 0, restSec: 60, videoUrl: 'javascript:alert(1)' }] }))[0]).toMatch(
+    expect(errorsOf(detectShared({ ...file, items: [{ kind: 'strength', name: 'X', sets: 3, reps: 1, kg: 0, restSec: 60, videoUrl: 'javascript:alert(1)' }] }))[0]).toMatch(
       /link video/,
     );
     expect(errorsOf(detectShared([1, 2]))[0]).toMatch(/non è una scheda/);
@@ -123,9 +123,12 @@ describe('lista bianca dei campi', () => {
       expect(json).not.toContain(forbidden);
     }
     expect(Object.keys(file)).toEqual([
-      'app', 'kind', 'schemaVersion', 'id', 'version', 'author', 'source', 'name', 'weekdays', 'time', 'intro', 'warmup', 'items', 'cardio',
+      'app', 'kind', 'schemaVersion', 'id', 'version', 'author', 'source', 'name', 'weekdays', 'time', 'intro', 'warmup', 'items',
     ]);
-    expect(Object.keys(file.items[0]!)).toEqual(['name', 'muscles', 'sets', 'reps', 'kg', 'restSec', 'note', 'videoUrl', 'setsDetail']);
+    expect(Object.keys(file.items[0]!)).toEqual(['kind', 'name', 'muscles', 'sets', 'reps', 'kg', 'restSec', 'note', 'videoUrl', 'setsDetail']);
+    // 2a: il cardio è un esercizio con i suoi campi, senza serie né kg.
+    const cardio = file.items.find((i) => i.kind === 'cardio');
+    expect(cardio && Object.keys(cardio)).toEqual(['kind', 'name', 'minutes', 'distanceKm', 'speedKmh', 'inclinePct', 'level', 'note', 'videoUrl']);
   });
 
   it('dieta: niente stato del telefono (attivo, archivio, import) né campi annidati in più', () => {

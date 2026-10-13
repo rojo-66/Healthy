@@ -83,9 +83,9 @@ export function minutesOfDay(date: Date): number {
 }
 
 /**
- * Giorno del piano da seguire: quello del calendario, oppure quello scelto con
- * "Oggi seguo il piano di un altro giorno" (`swappedFromWeekday` nel diario).
+ * Giorno del piano da cui arrivano i pasti: quello del calendario, oppure quello fissato nel diario
+ * (`mealsFrom`, 2b: "Oggi seguo il piano di un altro giorno").
  */
-export function effectiveWeekday(calendarWeekday: number, swappedFromWeekday: number | null | undefined): number {
-  return swappedFromWeekday ?? calendarWeekday;
+export function effectiveWeekday(calendarWeekday: number, mealsFrom: { weekday: number } | null | undefined): number {
+  return mealsFrom?.weekday ?? calendarWeekday;
 }

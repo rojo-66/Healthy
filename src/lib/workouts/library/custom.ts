@@ -2,26 +2,35 @@ import { z } from 'zod';
 import { validate, type Result } from '../../data/errors';
 import { MAX_ITEMS, MAX_TEXT } from '../../data/limits';
 import { httpsUrl, requiredText, uniqueArray } from '../../data/schemas/common';
-import type { Exercise } from '../../data/schemas/exercises';
+import { CARDIO_FIELDS, exerciseKindSchema, type Exercise } from '../../data/schemas/exercises';
 import type { Workout } from '../../data/schemas/workouts';
 import { EQUIPMENT, MUSCLES } from './muscles';
 
-/** Esercizio personalizzato: muscoli e attrezzo dalle liste chiuse, almeno un muscolo (il primo è il principale). */
-export const customExerciseInputSchema = z.object({
-  name: requiredText(MAX_TEXT.name),
-  muscles: uniqueArray(z.enum(MUSCLES), MAX_ITEMS.muscles, 'muscoli ripetuti').refine(
-    (list) => list.length > 0,
-    'scegli almeno un muscolo',
-  ),
-  equipment: z.enum(EQUIPMENT),
-  videoUrl: httpsUrl.nullable(),
-});
+/**
+ * Esercizio personalizzato: tipo (forza o cardio, 2a), muscoli e attrezzo dalle liste chiuse.
+ * Forza: almeno un muscolo (il primo è il principale). Cardio: muscoli facoltativi, l'editor mostra tutti i campi.
+ */
+export const customExerciseInputSchema = z
+  .object({
+    name: requiredText(MAX_TEXT.name),
+    kind: exerciseKindSchema,
+    muscles: uniqueArray(z.enum(MUSCLES), MAX_ITEMS.muscles, 'muscoli ripetuti'),
+    equipment: z.enum(EQUIPMENT),
+    videoUrl: httpsUrl.nullable(),
+  })
+  .superRefine((input, ctx) => {
+    if (input.kind === 'strength' && input.muscles.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['muscles'], message: 'scegli almeno un muscolo' });
+    }
+  })
+  .transform((input) => ({ ...input, cardioFields: input.kind === 'cardio' ? [...CARDIO_FIELDS] : [] }));
 
 export type CustomExerciseInput = z.input<typeof customExerciseInputSchema>;
 
 /** Valida i campi del modulo (link vuoto = nessun link). */
 export function validateCustomExercise(input: {
   name: string;
+  kind: 'strength' | 'cardio';
   muscles: readonly string[];
   equipment: string;
   videoUrl: string;

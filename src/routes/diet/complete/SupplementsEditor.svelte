@@ -6,18 +6,20 @@
 
   interface Props {
     weekday: number;
+    /** Variante del giorno (2b), solo se il giorno ne ha più di una: "palestra". */
+    variantLabel?: string;
     supplements: readonly DietSupplement[];
     busy: boolean;
     onsave: (list: DietSupplement[]) => Promise<readonly string[]>;
   }
 
-  let { weekday, supplements, busy, onsave }: Props = $props();
+  let { weekday, variantLabel, supplements, busy, onsave }: Props = $props();
 
   let name = $state('');
   let when = $state('');
   let dose = $state('');
   let errors = $state<readonly string[]>([]);
-  const dayName = $derived(weekdayName(weekday));
+  const dayName = $derived(variantLabel ? `${weekdayName(weekday)} · ${variantLabel}` : weekdayName(weekday));
   const uid = $props.id();
 
   async function save(list: DietSupplement[]) {

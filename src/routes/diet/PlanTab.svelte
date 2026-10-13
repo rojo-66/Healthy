@@ -1,44 +1,65 @@
 <script lang="ts">
-  import BottomSheet from '../../lib/components/BottomSheet.svelte';
-  import Button from '../../lib/components/Button.svelte';
   import NoteBox from '../../lib/components/NoteBox.svelte';
-  import { ValidationError } from '../../lib/data/errors';
-  import { setMealEaten, setSwap } from '../../lib/data/repo/diet-log';
-  import type { DietLogDay } from '../../lib/data/schemas/diet-log';
+  import { lookup, ValidationError } from '../../lib/data/errors';
+  import { setMealEaten } from '../../lib/data/repo/diet-log';
   import { weekdayName } from '../../lib/data/schemas/diet-payload';
   import type { DietPlan } from '../../lib/data/schemas/diet-plans';
-  import { effectiveWeekday } from '../../lib/diet/calc/calendar';
+  import { dietView, sourceOf, type DayInfo } from '../../lib/calendar/days';
   import { OBSERVATION_DISCLAIMER } from '../../lib/diet/calc/observations';
   import { swipe } from '../../lib/design/swipe-action';
   import { rise } from '../../lib/design/transitions';
   import { buildDayView, findDay, weekStrip } from '../../lib/diet/view';
+  import { routeHref } from '../../lib/routes';
+  import { missingTypeText } from '../../lib/today/day-type';
+  import DietChoice from '../calendar/DietChoice.svelte';
   import DayStrip from './DayStrip.svelte';
   import DaySummary from './DaySummary.svelte';
   import MealCard from './MealCard.svelte';
+  import VariantChips from './VariantChips.svelte';
 
   interface Props {
     plan: DietPlan;
     todayIso: string;
     todayWeekday: number;
     nowMinutes: number;
-    /** Diario di oggi (solo se è dello stesso piano). */
-    log: DietLogDay | undefined;
+    /**
+     * I 7 giorni della settimana (lunedì = 0) con il tipo di giornata dalle attività, il diario e la dieta scelta
+     * (2c, `calendar/days.ts`): la Dieta usa da sola la variante giusta.
+     */
+    infos: readonly DayInfo[];
     /** Giorno del calendario selezionato nella striscia. */
     selected: number;
     onrecipe: (n: number) => void;
   }
 
-  let { plan, todayIso, todayWeekday, nowMinutes, log, selected = $bindable(), onrecipe }: Props = $props();
+  let { plan, todayIso, todayWeekday, nowMinutes, infos, selected = $bindable(), onrecipe }: Props = $props();
 
   const payload = $derived(plan.payload);
-  const todayLog = $derived(log && log.planId === plan.id ? log : undefined);
-  const follows = $derived(effectiveWeekday(todayWeekday, todayLog?.swappedFromWeekday));
   const isToday = $derived(selected === todayWeekday);
-  const shownWeekday = $derived(isToday ? follows : selected);
-  const eaten = $derived(todayLog?.eaten ?? {});
+  const info = $derived(infos[selected - 1]);
 
-  const strip = $derived(weekStrip(payload, todayWeekday, follows));
-  const view = $derived(buildDayView(payload, shownWeekday, { today: isToday, eaten, nowMinutes }));
+  const strip = $derived(weekStrip(payload, infos.map((i) => ({ type: i.type.request, mealsFrom: i.mealsFrom }))));
+  const inUse = $derived(info ? dietView(info, plan, { today: isToday, nowMinutes }) : null);
+  const typeNote = $derived(info ? missingTypeText(info.type) : '');
+
+  // --- Varianti del giorno (2b): si consultano in sola lettura, le spunte restano sulla variante in uso ---
+  /** Variante consultata; `undefined` = quella in uso. Si azzera cambiando giorno. */
+  let peekType = $state<string | null | undefined>(undefined);
+  $effect(() => {
+    void selected;
+    peekType = undefined;
+  });
+  const peeking = $derived(peekType !== undefined && inUse !== null && peekType !== inUse.typeKey);
+  const view = $derived(
+    peeking
+      ? buildDayView(payload, selected, { today: false, eaten: {}, nowMinutes, mealsFrom: info?.mealsFrom ?? null, type: peekType })
+      : inUse,
+  );
+
+  function typeLabel(type: string | null): string {
+    if (type === null) return 'Senza tipo';
+    return lookup(payload.dayTypes, type)?.label ?? type;
+  }
 
   let error = $state<readonly string[]>([]);
   let dayTarget = $state<HTMLDivElement>();
@@ -53,31 +74,14 @@
   }
 
   function tick(mealKey: string, value: boolean) {
-    void write(() => setMealEaten(todayIso, plan.id, mealKey, value));
-  }
-
-  // --- Scambio del giorno ---
-  let swapOpen = $state(false);
-  /** Scelta in attesa di conferma (ci sono spunte che verranno tolte). */
-  let pendingSwap = $state<number | null>(null);
-  const hasTicks = $derived(Object.values(eaten).some(Boolean));
-
-  function chooseSwap(weekday: number) {
-    if (weekday === follows) {
-      swapOpen = false;
-      return;
-    }
-    if (hasTicks && pendingSwap !== weekday) {
-      pendingSwap = weekday;
-      return;
-    }
-    pendingSwap = null;
-    swapOpen = false;
-    void write(() => setSwap(todayIso, plan.id, weekday === todayWeekday ? null : weekday));
+    const view = inUse;
+    if (!view) return;
+    // La fonte del pasto (giorno e variante di adesso): se poi il tipo di giornata cambia, resta com'era.
+    void write(() => setMealEaten(todayIso, plan.id, mealKey, value, sourceOf(view)));
   }
 
   // --- Swipe tra i giorni (§ 4): il contenuto segue il dito ---
-  const inPlan = (weekday: number) => findDay(payload, weekday === todayWeekday ? follows : weekday) !== undefined;
+  const inPlan = (weekday: number) => findDay(payload, weekday) !== undefined;
   const neighbour = (dir: -1 | 1) => {
     for (let d = selected + dir; d >= 1 && d <= 7; d += dir) if (inPlan(d)) return d;
     return null;
@@ -107,14 +111,53 @@
 
     {#if view}
       <div class="day" bind:this={dayTarget}>
+        <!-- Varianti del giorno (2b): sopra il riepilogo, che segue la variante mostrata. -->
+        {#if inUse && inUse.variantTypes.length > 1}
+          <VariantChips
+            types={inUse.variantTypes}
+            inUse={inUse.typeKey}
+            shown={view.typeKey}
+            labelOf={typeLabel}
+            onselect={(type) => (peekType = type === inUse?.typeKey ? undefined : type)}
+          />
+        {/if}
+
+        <!-- 2c: palestra e corsa nello stesso giorno → quale dieta; tipo che il piano non conosce → riga gialla. -->
+        {#if info?.type.double}
+          <DietChoice date={info.date} {todayIso} current={info.type.key} />
+        {/if}
+        {#if typeNote}
+          <p class="type-note" data-testid="type-note">{typeNote}</p>
+        {/if}
+
         <!-- Il riepilogo (con l'unico anello) resta montato: cambiano solo i valori. -->
         <DaySummary {view} today={isToday} calendarWeekday={selected} />
 
         <!-- Solo l'elenco del giorno si ricrea, con sola entrata: il vecchio sparisce subito, niente doppioni. -->
-        {#key `${selected}-${shownWeekday}`}
+
+        {#key `${selected}-${inUse?.typeKey ?? ''}-${peeking ? peekType : ''}`}
           <div class="day-content" in:rise>
+            {#if peeking}
+              <p class="peek" data-testid="variant-peek">
+                Variante {typeLabel(view.typeKey).toLowerCase()} · non è quella {isToday ? 'di oggi' : 'di questo giorno'}. Sola
+                lettura: le spunte restano sulla variante in uso.
+              </p>
+            {/if}
+            {#if view.fallback === 'other-day'}
+              <NoteBox
+                title="Pasti di {weekdayName(view.sourceWeekday).toLowerCase()}"
+                mark="!"
+                text="Questo giorno non ha la variante {typeLabel(view.typeKey).toLowerCase()}: si usano i pasti di {weekdayName(view.sourceWeekday).toLowerCase()}."
+              />
+            {:else if view.fallback === 'no-variant'}
+              <NoteBox
+                title="Variante {typeLabel(view.typeKey).toLowerCase()} assente"
+                mark="!"
+                text="Il piano non ha la variante {typeLabel(view.typeKey).toLowerCase()} per nessun giorno: restano i pasti del giorno, con i target da {typeLabel(view.typeKey).toLowerCase()}."
+              />
+            {/if}
             {#each view.meals as meal (meal.key)}
-              <MealCard {meal} canTick={isToday} ontick={(v) => tick(meal.key, v)} {onrecipe} />
+              <MealCard {meal} canTick={isToday && !peeking} ontick={(v) => tick(meal.key, v)} {onrecipe} />
             {:else}
               <p class="empty">Nessun pasto in programma.</p>
             {/each}
@@ -163,34 +206,8 @@
     <NoteBox title="Non salvato" mark="!" text={error.join('\n')} />
   {/if}
 
-  {#if isToday}
-    <button type="button" class="swap tap" onclick={() => ((pendingSwap = null), (swapOpen = true))}>
-      ⇄ {follows === todayWeekday
-        ? 'Oggi seguo il piano di un altro giorno'
-        : `Oggi segui il piano di ${weekdayName(follows).toLowerCase()} · cambia`}
-    </button>
-  {/if}
+  <a class="cal-link tap" href={routeHref('/calendario', { giorno: info?.date ?? todayIso })}>Spostamenti e calendario →</a>
 </div>
-
-<BottomSheet bind:open={swapOpen} title="Quale piano segui oggi?" tone="food" onclose={() => (pendingSwap = null)}>
-  <p class="sheet-text">Oggi mostro e conteggio i pasti del giorno che scegli.</p>
-  <div class="swap-list">
-    {#each [1, 2, 3, 4, 5, 6, 7] as d (d)}
-      {#if findDay(payload, d)}
-        <Button variant="secondary" tone="food" block pressed={d === follows} onclick={() => chooseSwap(d)}>
-          {weekdayName(d)}{d === todayWeekday ? ' (quello di oggi)' : ''}
-        </Button>
-      {/if}
-    {/each}
-  </div>
-  {#if pendingSwap !== null}
-    <NoteBox title="Attenzione" mark="!" text="Le spunte di oggi verranno tolte, perché cambiano i pasti." />
-    <div class="grid2">
-      <Button variant="ghost" onclick={() => (pendingSwap = null)}>Annulla</Button>
-      <Button tone="food" onclick={() => chooseSwap(pendingSwap!)}>Segui {weekdayName(pendingSwap).toLowerCase()}</Button>
-    </div>
-  {/if}
-</BottomSheet>
 
 <style>
   .plan {
@@ -217,6 +234,15 @@
     margin: 0;
     color: var(--muted);
     font-size: 14px;
+  }
+
+  .peek {
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px dashed var(--line-strong);
+    color: var(--text-2);
+    font-size: 13px;
+    line-height: 1.4;
   }
 
   .supps {
@@ -265,30 +291,24 @@
     color: var(--muted);
   }
 
-  .swap {
-    min-height: 48px;
-    padding: 0 var(--space-3);
-    border: 1px dashed var(--line-strong);
-    background: transparent;
-    color: var(--text-2);
+  /* Spostamenti e salti si fanno nel calendario: la Dieta segue da sola. */
+  .cal-link {
+    align-self: center;
+    display: inline-flex;
+    align-items: center;
+    min-height: var(--touch);
+    color: var(--progress);
     font-size: 14px;
+    text-decoration: none;
   }
 
-  .sheet-text {
+  .type-note {
     margin: 0;
-    font-size: 14px;
-    color: var(--text-2);
-  }
-
-  .swap-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--space-2);
-  }
-
-  .grid2 {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
+    padding: 10px 12px;
+    border: 1px dashed var(--tip-edge);
+    background: var(--tip-tint);
+    color: var(--tip);
+    font-size: 13px;
+    line-height: 1.4;
   }
 </style>

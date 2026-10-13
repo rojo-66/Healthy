@@ -17,12 +17,14 @@
     payload: DietPayload;
     /** Lunedì della settimana corrente. */
     weekStart: string;
+    /** Tipo di giornata di ogni giorno (lunedì = 0), dopo spostamenti e salti (2c). */
+    types?: readonly (string | undefined)[];
     checked: Readonly<Record<string, boolean>>;
   }
 
-  let { payload, weekStart, checked }: Props = $props();
+  let { payload, weekStart, types = [], checked }: Props = $props();
 
-  const list = $derived(buildShoppingList(payload));
+  const list = $derived(buildShoppingList(payload, types.map((type) => ({ type }))));
   const done = $derived(shoppingProgress(list, checked));
   const weekLabel = $derived(weekRangeLabel(weekStart));
   const isChecked = (key: string) => Object.hasOwn(checked, key) && checked[key] === true;

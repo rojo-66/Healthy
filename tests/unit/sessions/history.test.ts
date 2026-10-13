@@ -89,7 +89,13 @@ describe('riepilogo della sessione', () => {
     expect(s3.skipped).toBe(3);
     expect(s3.volume).toBe(57.5 * 10 + 60 * 8 + 52.5 * 10 + 52.5 * 8);
     expect(s3.readinessTotal).toBe(13);
-    expect(s3.cardio).toEqual({ type: 'tapis roulant', minutes: 12, done: false });
+    // 2a: il cardio è un esercizio del riepilogo (qui non fatto); non conta nelle serie.
+    expect([s3.cardioDone, s3.cardioTotal]).toEqual([0, 1]);
+    expect(s3.exercises[3]).toMatchObject({
+      kind: 'cardio',
+      name: 'Tapis roulant · corsa',
+      cardio: { plannedMin: 12, minutes: null, distanceKm: null, done: false },
+    });
     expect(s3.exercises[0]?.sets.map((x) => x.text)).toEqual(['57,5 × 10', '60 × 8', 'saltata']);
     expect(s3.exercises[2]?.note).toBe('Croci saltate: spalla stanca.');
 
@@ -102,6 +108,8 @@ describe('riepilogo della sessione', () => {
     const s5 = summarize(byId(all, 5), byId(all, 4), all);
     expect([s5.done, s5.planned, s5.skipped]).toEqual([8, 7, 0]);
     expect(s5.exercises[1]?.sets.at(-1)).toMatchObject({ text: '50 × 12', extra: true });
+    // Cardio fatto (migrato da `cardioDone`): minuti del piano, segnato fatto.
+    expect(s5.exercises[3]?.cardio).toMatchObject({ plannedMin: 12, done: true });
   });
 });
 
@@ -166,8 +174,9 @@ describe('Invia al PT', () => {
   it('file kind "session" valido, senza stato in corso; sessione in corso rifiutata', () => {
     const s = history()[3]!;
     const file = sessionToFile(s, new Date('2026-10-12T17:00:00.000Z'));
-    expect(file).toMatchObject({ app: 'healthy-app', kind: 'session', schemaVersion: 1, exportedAt: '2026-10-12T17:00:00.000Z' });
-    expect(file.session.snapshot?.items).toHaveLength(3);
+    expect(file).toMatchObject({ app: 'healthy-app', kind: 'session', schemaVersion: 2, exportedAt: '2026-10-12T17:00:00.000Z' });
+    expect(file.session.snapshot?.items).toHaveLength(4);
+    expect(file.session).not.toHaveProperty('cardioDone');
     expect(validate(sessionFileSchema, JSON.parse(JSON.stringify(file))).ok).toBe(true);
     expect(sessionFileName(s)).toBe('healthy-sessione-spinta-finta-2026-09-28.json');
 
@@ -185,12 +194,12 @@ describe('Invia al PT', () => {
       'Spinta finta · v2',
       expect.stringMatching(/^Lun 21 set 2026 · \d\d:\d\d → \d\d:\d\d \(1:06:00\)$/),
       'Readiness 13/25 (sonno 2, umore 3, energia 2, stress 3, affaticamento 3)',
-      'Volume 2.000 kg · Serie 4/7 · RPE 9/10',
+      'Volume 2.000 kg · Serie 4/7 · Cardio 0/1 · RPE 9/10',
     ]);
     expect(text).toContain('1. Panca piana con bilanciere — 2/3 · top 60 × 8');
     expect(text).toContain('   57,5 × 10 · 60 × 8 · saltata');
     expect(text).toContain('   Nota: Croci saltate: spalla stanca.');
-    expect(text).toContain('Cardio: tapis roulant 12’ · non fatto');
+    expect(text).toContain('4. Tapis roulant · corsa — cardio non fatto (previsti 12’)');
     expect(text).not.toMatch(/[<>]/);
   });
 

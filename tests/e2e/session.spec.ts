@@ -22,7 +22,10 @@ async function addFromLibrary(page: Page, search: string, name: string) {
   await expect(lib).toBeHidden();
 }
 
-/** Scheda di lunedì con intro, un riscaldamento, panca piana + lat machine (3 × 10, 0 kg, 90 s) e tapis 10'. */
+/**
+ * Scheda di lunedì con intro, un riscaldamento, panca piana + lat machine (3 × 10, 0 kg, 90 s).
+ * Il cardio come esercizio (2a) è provato in `cardio-run.spec.ts`.
+ */
 async function createWorkout(page: Page, name = 'Spinta finta') {
   await page.goto('./#/allena/editor');
   await page.getByLabel('Nome della scheda').fill(name);
@@ -37,7 +40,6 @@ async function createWorkout(page: Page, name = 'Spinta finta') {
   await expect(warm).toBeHidden();
   await addFromLibrary(page, 'panca piana', 'Panca piana con bilanciere');
   await addFromLibrary(page, 'lat machine', 'Lat machine presa larga');
-  await page.getByRole('button', { name: /Cardio finale/ }).click();
   await page.getByRole('button', { name: 'Salva e invia' }).click();
   // "Salva e invia" (M8) apre il pannello Condividi: si chiude e si torna alle schede.
   const share = page.getByRole('dialog', { name: /^Condividi «/ });
@@ -103,7 +105,7 @@ test('sessione completa offline: readiness, intro, serie, recupero, PREC/SUCC, r
   await expect(page.getByRole('list', { name: 'Passo 2 di 3' })).toBeVisible();
   await expect(page.getByTestId('intro-chips')).toContainText('2 esercizi');
   await expect(page.getByTestId('intro-chips')).toContainText('6 serie');
-  await expect(page.getByTestId('intro-chips')).toContainText('+ 10’ tapis roulant');
+  await expect(page.getByTestId('intro-chips')).not.toContainText('cardio');
   await expect(page.getByRole('complementary', { name: 'Dal tuo PT' })).toContainText('Oggi si spinge.');
   const warm = page.getByRole('button', { name: /Rotazioni spalle/ });
   await warm.click();
@@ -190,12 +192,11 @@ test('sessione completa offline: readiness, intro, serie, recupero, PREC/SUCC, r
   await resume.getByRole('link', { name: 'Riprendi allenamento' }).click();
   await expect(exerciseName(page)).toHaveText('Lat machine presa larga');
 
-  // --- Termina: avviso serie mancanti, cardio, RPE ---
+  // --- Termina: avviso serie mancanti, RPE (il cardio si segna nel suo esercizio, 2a) ---
   await page.getByRole('button', { name: 'Termina allenamento' }).click();
   const finish = page.getByRole('dialog', { name: 'Termina allenamento' });
   await expect(finish).toContainText('Mancano 2 serie');
-  await finish.getByRole('button', { name: 'Fatto', exact: true }).click();
-  await finish.getByRole('button', { name: 'Avanti' }).click();
+  await expect(finish.getByRole('button', { name: 'Fatto', exact: true })).toHaveCount(0);
   await expect(finish.getByRole('button', { name: 'Concludi' })).toBeDisabled();
   await finish.getByRole('button', { name: 'Sforzo 8 su 10' }).click();
   await finish.getByRole('button', { name: 'Concludi' }).click();
@@ -208,7 +209,7 @@ test('sessione completa offline: readiness, intro, serie, recupero, PREC/SUCC, r
   await expect(page.getByTestId('stat-volume')).toHaveText('460 kg'); // 57,5 × 8; le altre serie a 0 kg
   await expect(page.getByTestId('stat-records')).toHaveText('0');
   await expect(page.getByRole('img', { name: 'Affaticamento muscolare: 5 su 5' })).toBeVisible();
-  await expect(page.getByTestId('summary-cardio')).toContainText('10’ ✓');
+  await expect(page.getByTestId('summary-cardio')).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Sforzo 8 su 10' })).toHaveAttribute('aria-pressed', 'true');
   const lat = page.getByTestId('exercise-summary').nth(1);
   await expect(lat).toContainText('1/3');
@@ -248,7 +249,7 @@ test('sessione completa offline: readiness, intro, serie, recupero, PREC/SUCC, r
   await expect(row).toContainText('460 kg · R20');
   await page.getByRole('button', { name: 'Mese precedente' }).click();
   await expect(page.getByRole('heading', { name: 'Settembre' })).toBeVisible();
-  await expect(page.getByText('Nessuna sessione a settembre.')).toBeVisible();
+  await expect(page.getByText('Nessuna attività a settembre.')).toBeVisible();
   await page.getByRole('button', { name: 'Mese successivo' }).click();
   await expect(page.getByRole('button', { name: 'Mese successivo' })).toBeDisabled();
 
@@ -282,11 +283,8 @@ test('la seconda volta: "ultima volta", kg precompilati, PR e confronto nel riep
   await page.getByRole('button', { name: 'Esercizio successivo' }).click();
   await page.getByRole('button', { name: 'Termina allenamento' }).click();
   const finish = page.getByRole('dialog', { name: 'Termina allenamento' });
-  await finish.getByRole('button', { name: 'Non fatto' }).click();
-  await finish.getByRole('button', { name: 'Avanti' }).click();
   await finish.getByRole('button', { name: 'Sforzo 6 su 10' }).click();
   await finish.getByRole('button', { name: 'Concludi' }).click();
-  await expect(page.getByTestId('summary-cardio')).toContainText('non fatto');
   await expect(page.getByTestId('exercise-summary').nth(0)).toContainText('−2 serie'); // mancano serie: l'avviso ha la precedenza
   await page.goto('./#/allena');
 
@@ -304,8 +302,6 @@ test('la seconda volta: "ultima volta", kg precompilati, PR e confronto nel riep
   await page.getByRole('button', { name: 'Spunta tutte le serie' }).click(); // 3/3: nessun avviso, conta il confronto
   await page.getByRole('button', { name: 'Esercizio successivo' }).click();
   await page.getByRole('button', { name: 'Termina allenamento' }).click();
-  await finish.getByRole('button', { name: 'Fatto', exact: true }).click();
-  await finish.getByRole('button', { name: 'Avanti' }).click();
   await finish.getByRole('button', { name: 'Sforzo 7 su 10' }).click();
   await finish.getByRole('button', { name: 'Concludi' }).click();
   await expect(page.getByTestId('stat-records')).toHaveText('1');

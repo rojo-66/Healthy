@@ -11,6 +11,8 @@ export type RoutePath =
   | '/allena'
   | '/allena/editor'
   | '/allena/vedi'
+  | '/allena/corsa'
+  | '/calendario'
   | '/sessione/readiness'
   | '/sessione/intro'
   | '/sessione/live'
@@ -29,6 +31,8 @@ const KNOWN: readonly string[] = [
   '/allena',
   '/allena/editor',
   '/allena/vedi',
+  '/allena/corsa',
+  '/calendario',
   '/sessione/readiness',
   '/sessione/intro',
   '/sessione/live',

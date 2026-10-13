@@ -5,8 +5,11 @@ import { checkDietReferences, dietPayloadShape } from './diet-payload';
 import { versionSchema } from './workouts';
 
 export const DIET_FILE_KIND = 'diet';
-/** 1 è il formato di MyDiet (§ 8.3, conversione in M3); 2 è il formato esteso. */
-export const DIET_FILE_VERSION = 2;
+/**
+ * 1 è il formato di MyDiet (§ 8.3, conversione in M3); 2 è il formato esteso con un menu per giorno;
+ * 3 (2b) ha le varianti per tipo di giornata. La v2 si legge ancora (`dietFileV2ToV3`).
+ */
+export const DIET_FILE_VERSION = 3;
 
 /** File di un piano alimentare esteso (SPEC § 8.2). */
 export const dietFileSchema = z

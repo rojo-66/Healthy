@@ -8,7 +8,6 @@ import {
   finish,
   goToItem,
   noteFor,
-  setCardioDone,
   setUserNote,
   toggleAll,
   toggleSet,
@@ -27,7 +26,9 @@ import {
   volume,
 } from '../../../src/lib/sessions/stats';
 import { kgInputValue, parseKg, parseReps } from '../../../src/lib/sessions/input';
-import { check, newSession, READY, sessionWorkout, START, valid } from './helpers';
+import { toggleCardioDone } from '../../../src/lib/sessions/cardio';
+import type { StrengthItem } from '../../../src/lib/data/schemas/workouts';
+import { check, newSession, READY, sessionWorkout, START, strengthItems, valid } from './helpers';
 
 describe('readiness', () => {
   it('5 voci, 5 = meglio, totale su 25', () => {
@@ -60,8 +61,11 @@ describe('nuova sessione', () => {
     expect(s.startedAt).toBe(START.toISOString());
     expect(s.endedAt).toBeNull();
     expect(s.live).toEqual({ itemIndex: 0, rest: null });
-    expect(s.snapshot?.items).toHaveLength(3);
-    expect(s.snapshot?.cardio).toEqual({ type: 'tapis roulant', minutes: 12 });
+    expect(s.snapshot?.items).toHaveLength(4);
+    // 2a: il cardio è l'ultimo esercizio, con la sua voce vuota (niente serie).
+    expect(s.snapshot?.items[3]).toMatchObject({ kind: 'cardio', name: 'Tapis roulant · corsa', minutes: 12 });
+    expect(s.cardio).toEqual([{ itemIndex: 3, minutes: null, distanceKm: null, done: false, clock: { runningSince: null, elapsedMs: 0 } }]);
+    expect(setsOf(s, 3)).toEqual([]);
     expect(setsOf(s, 0).map((x) => [x.kg, x.reps, x.done])).toEqual([
       [55, 10, false],
       [60, 8, false],
@@ -76,10 +80,11 @@ describe('nuova sessione', () => {
   it('la copia non cambia se la scheda viene modificata dopo', () => {
     const workout = sessionWorkout();
     const s = newSession({ workout });
-    workout.items[0]!.name = 'Cambiato';
-    workout.items[0]!.muscles.push('Spalle');
+    const first = workout.items[0] as StrengthItem;
+    first.name = 'Cambiato';
+    first.muscles.push('Spalle');
     expect(s.snapshot?.items[0]?.name).toBe('Panca piana con bilanciere');
-    expect(s.snapshot?.items[0]?.muscles).toEqual(['Petto', 'Tricipiti']);
+    expect((s.snapshot?.items[0] as StrengthItem).muscles).toEqual(['Petto', 'Tricipiti']);
   });
 });
 
@@ -117,9 +122,9 @@ describe('ultima volta e precompilazione', () => {
   it('scheda riordinata: si abbinano per esercizio (id o nome) e occorrenza', () => {
     const prev = previousSession();
     const workout = sessionWorkout();
-    workout.items.reverse();
-    workout.items[0]!.name = 'croci  AI cavi'; // stesso esercizio senza id: confronto per nome normalizzato
-    const table = lastTimeTable(workout.items, prev);
+    const items = strengthItems(workout).reverse();
+    items[0]!.name = 'croci  AI cavi'; // stesso esercizio senza id: confronto per nome normalizzato
+    const table = lastTimeTable(items, prev);
     expect(table[2]?.[0]).toEqual({ kg: 57.5, reps: 10, done: true });
     expect(table[1]?.[1]).toEqual({ kg: 52.5, reps: 9, done: true });
     expect(table[0]?.[0]?.done).toBe(true);
@@ -134,7 +139,7 @@ describe('ultima volta e precompilazione', () => {
   });
 
   it('nessuna sessione precedente o sessione senza copia della scheda', () => {
-    expect(lastTimeTable(sessionWorkout().items, null)).toEqual([[], [], []]);
+    expect(lastTimeTable(sessionWorkout().items, null)).toEqual([[], [], [], []]);
     const legacy = { snapshot: null, sets: [{ exerciseId: 'fx-wide-grip-lat-pulldown', itemIndex: 0, setIndex: 0, kg: 40, reps: 12, done: true }] };
     const table = lastTimeTable(sessionWorkout().items, legacy);
     expect(table[1]?.[0]).toEqual({ kg: 40, reps: 12, done: true });
@@ -143,7 +148,7 @@ describe('ultima volta e precompilazione', () => {
   });
 
   it('prefill: piano uniforme e piramidale', () => {
-    const [panca, lat] = sessionWorkout().items;
+    const [panca, lat] = strengthItems();
     expect(prefill(lat!, 1)).toEqual({ kg: 50, reps: 10 });
     expect(prefill(panca!, 2)).toEqual({ kg: 65, reps: 6 });
     expect(prefill(panca!, 2, { kg: 70, reps: 5, done: true })).toEqual({ kg: 70, reps: 5 });
@@ -195,11 +200,10 @@ describe('modifiche', () => {
     expect(s.userNotes).toEqual([]);
 
     expect(goToItem(s, 2).live?.itemIndex).toBe(2);
-    expect(goToItem(s, 9).live?.itemIndex).toBe(2);
+    expect(goToItem(s, 9).live?.itemIndex).toBe(3);
     expect(goToItem(s, -1).live?.itemIndex).toBe(0);
-
-    expect(setCardioDone(s, true).cardioDone).toEqual({ type: 'tapis roulant', minutes: 12, distanceKm: null });
-    expect(setCardioDone(s, false).cardioDone).toBeNull();
+    // Nota anche sul cardio.
+    expect(noteFor(setUserNote(s, 3, 'Fiato corto'), 3)).toBe('Fiato corto');
 
     const ended = finish(s, new Date(START.getTime() + 3_600_000));
     expect(ended.live).toBeNull();
@@ -261,8 +265,11 @@ describe('barra a segmenti', () => {
       { done: 1, total: 3 },
       { done: 2, total: 2 },
       { done: 0, total: 2 },
+      { done: 0, total: 1 },
     ]);
-    expect(segs.map((x) => segmentState(x).kind)).toEqual(['partial', 'full', 'empty']);
+    expect(segs.map((x) => segmentState(x).kind)).toEqual(['partial', 'full', 'empty', 'empty']);
+    // 2a: il cardio è un segmento pieno quando è fatto.
+    expect(segmentsFor(toggleCardioDone(s, 3, START.getTime()))[3]).toEqual({ done: 1, total: 1 });
     expect(segmentState(segs[0]!).fraction).toBeCloseTo(1 / 3);
   });
 });

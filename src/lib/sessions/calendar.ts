@@ -3,10 +3,10 @@ import { addDays, fromIsoDate, isoWeekday, toIsoDate } from '../diet/calc/calend
 
 /**
  * Calendario del mese nello Storico. `gym` = almeno una sessione conclusa quel giorno (magenta),
- * `rest` = giorno passato senza sessioni (grigio), `future` = non ancora arrivato.
- * La corsa (ciano) non esiste ancora nel modello dati: arriverà con una versione successiva.
+ * `run` = almeno una corsa fatta (ciano, 2a), `both` = tutte e due, `rest` = giorno passato senza attività (grigio),
+ * `future` = non ancora arrivato.
  */
-export type CalendarKind = 'gym' | 'rest' | 'future';
+export type CalendarKind = 'gym' | 'run' | 'both' | 'rest' | 'future';
 
 export interface CalendarCell {
   /** `null` per le caselle vuote prima del primo giorno (il mese parte di lunedì). */
@@ -15,6 +15,8 @@ export interface CalendarCell {
   kind: CalendarKind;
   isToday: boolean;
   sessions: number;
+  /** Corse fatte quel giorno (2a). */
+  runs: number;
 }
 
 export interface MonthRef {
@@ -49,7 +51,8 @@ export function inMonth(date: string, { year, month }: MonthRef): boolean {
   return d.getFullYear() === year && d.getMonth() === month;
 }
 
-export function monthGrid(ref: MonthRef, sessions: readonly Dated[], today: Date): CalendarCell[] {
+/** `runDates`: giorni (`AAAA-MM-GG`) delle corse fatte, uno per corsa. */
+export function monthGrid(ref: MonthRef, sessions: readonly Dated[], today: Date, runDates: readonly string[] = []): CalendarCell[] {
   const todayIso = toIsoDate(today);
   const perDay = new Map<string, number>();
   for (const s of sessions) {
@@ -57,19 +60,23 @@ export function monthGrid(ref: MonthRef, sessions: readonly Dated[], today: Date
     const date = sessionDate(s);
     perDay.set(date, (perDay.get(date) ?? 0) + 1);
   }
+  const runsPerDay = new Map<string, number>();
+  for (const date of runDates) runsPerDay.set(date, (runsPerDay.get(date) ?? 0) + 1);
   const first = toIsoDate(new Date(ref.year, ref.month, 1));
   const cells: CalendarCell[] = [];
   for (let i = 1; i < isoWeekday(fromIsoDate(first)); i++) {
-    cells.push({ date: null, day: 0, kind: 'future', isToday: false, sessions: 0 });
+    cells.push({ date: null, day: 0, kind: 'future', isToday: false, sessions: 0, runs: 0 });
   }
   for (let date = first; inMonth(date, ref); date = addDays(date, 1)) {
     const count = perDay.get(date) ?? 0;
+    const runs = runsPerDay.get(date) ?? 0;
     cells.push({
       date,
       day: fromIsoDate(date).getDate(),
-      kind: count > 0 ? 'gym' : date <= todayIso ? 'rest' : 'future',
+      kind: count > 0 && runs > 0 ? 'both' : count > 0 ? 'gym' : runs > 0 ? 'run' : date <= todayIso ? 'rest' : 'future',
       isToday: date === todayIso,
       sessions: count,
+      runs,
     });
   }
   return cells;

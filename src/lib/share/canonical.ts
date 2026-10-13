@@ -6,56 +6,17 @@ import type { WorkoutAuthor } from '../data/schemas/workout-draft';
 import { WORKOUT_FILE_KIND, WORKOUT_FILE_VERSION, workoutFileSchema, type WorkoutFile } from '../data/schemas/workout-file';
 import type { WorkoutVersion } from '../data/schemas/workouts';
 import { planToDietFile } from '../diet/import/export';
-import { fnv1a } from '../hash';
 import type { z } from 'zod';
+import { canonicalJson, shareableContent } from './workout-content';
 
 /**
  * File di condivisione costruiti da una **lista bianca** di campi (SPEC § 8.4): niente note personali,
  * cronologia, id interni o campi che il database dovesse avere in più. Ogni file è validato prima di uscire.
  */
+export { canonicalJson, contentHash, shareableContent, type ShareableWorkoutContent } from './workout-content';
 
-/** Ciò che una scheda contiene davvero (stesso calcolo per una scheda salvata e per un file ricevuto). */
-export interface ShareableWorkoutContent {
-  name: string;
-  weekdays: readonly number[];
-  time: string | null;
-  intro: string;
-  warmup: readonly { name: string; hint: string; dose: string }[];
-  items: readonly {
-    name: string;
-    muscles: readonly string[];
-    sets: number;
-    reps: number;
-    kg: number;
-    restSec: number;
-    note: string;
-    videoUrl: string | null;
-    setsDetail: readonly { reps: number; kg: number }[] | null;
-  }[];
-  cardio: { type: string; minutes: number } | null;
-}
-
-/** Contenuto della scheda, campo per campo (lista bianca). */
-export function shareableContent(w: ShareableWorkoutContent): ShareableWorkoutContent {
-  return {
-    name: w.name,
-    weekdays: [...w.weekdays].sort((a, b) => a - b),
-    time: w.time,
-    intro: w.intro,
-    warmup: w.warmup.map((x) => ({ name: x.name, hint: x.hint, dose: x.dose })),
-    items: w.items.map((i) => ({
-      name: i.name,
-      muscles: [...i.muscles],
-      sets: i.sets,
-      reps: i.reps,
-      kg: i.kg,
-      restSec: i.restSec,
-      note: i.note,
-      videoUrl: i.videoUrl,
-      setsDetail: i.setsDetail ? i.setsDetail.map((s) => ({ reps: s.reps, kg: s.kg })) : null,
-    })),
-    cardio: w.cardio ? { type: w.cardio.type, minutes: w.cardio.minutes } : null,
-  };
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 /**
@@ -85,28 +46,6 @@ export function workoutToShareFile(w: WorkoutVersion, me: WorkoutAuthor): Workou
 /** Piano → file § 8.2 (lista bianca in `planToDietFile`). */
 export function dietToShareFile(plan: DietPlan): DietFile {
   return planToDietFile(plan);
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function sortKeys(value: unknown): unknown {
-  if (Array.isArray(value)) return value.map(sortKeys);
-  if (!isRecord(value)) return value;
-  const out: Record<string, unknown> = {};
-  for (const key of Object.keys(value).sort()) out[key] = sortKeys(value[key]);
-  return out;
-}
-
-/** JSON canonico: chiavi in ordine alfabetico a ogni livello, nessuno spazio. Stesso contenuto → stesso testo. */
-export function canonicalJson(value: unknown): string {
-  return JSON.stringify(sortKeys(value));
-}
-
-/** Impronta del contenuto di una scheda (8 cifre esadecimali): rileva le modifiche fatte dopo l'import. */
-export function contentHash(w: ShareableWorkoutContent): string {
-  return fnv1a(canonicalJson(shareableContent(w))).toString(16).padStart(8, '0');
 }
 
 function isEmptyValue(value: unknown): boolean {

@@ -3,7 +3,7 @@ import { currentMealKey, isEmptyMeal, mealStartMinutes, toMinutes } from '../die
 import type { DayView } from '../diet/view';
 import type { DayRelation } from './meal-focus';
 import { normalize } from '../workouts/library/search';
-import type { WorkoutEntry } from './workout-day';
+import type { RunEntry, WorkoutEntry } from './workout-day';
 
 /**
  * Timeline della giornata (Home): pasti, allenamento e integratori in ordine di orario.
@@ -11,7 +11,7 @@ import type { WorkoutEntry } from './workout-day';
  * `skipped` integratore "non serve oggi" (barrato).
  */
 export type TimelineState = 'done' | 'now' | 'next' | 'missed' | 'skipped';
-export type TimelineKind = 'meal' | 'workout' | 'supplement';
+export type TimelineKind = 'meal' | 'workout' | 'run' | 'supplement';
 
 export interface TimelineItem {
   /** Chiave stabile (`meal:pranzo`, `workout:<id>`, `supp:0`): niente doppioni con `{#each}`. */
@@ -26,6 +26,8 @@ export interface TimelineItem {
 export interface TimelineInput {
   view: DayView | null;
   workouts: readonly WorkoutEntry[];
+  /** Corse del giorno (2a), in ciano. */
+  runs?: readonly RunEntry[];
   relation: DayRelation;
   nowMinutes: number;
   eaten: Readonly<Record<string, boolean>>;
@@ -62,8 +64,13 @@ function mealEnd(meal: DietMeal, later: readonly DietMeal[]): number | null {
   return later.map(mealStartMinutes).find((m): m is number => m !== null && m > start) ?? DAY_END;
 }
 
-function workoutState(e: WorkoutEntry, relation: DayRelation, now: number): TimelineState {
+function workoutState(
+  e: Pick<WorkoutEntry, 'status' | 'startMinutes' | 'durationMin'> | Pick<RunEntry, 'status' | 'startMinutes' | 'durationMin'>,
+  relation: DayRelation,
+  now: number,
+): TimelineState {
   if (e.status === 'done') return 'done';
+  if (e.status === 'skipped') return 'skipped';
   if (e.status === 'in-progress') return 'now';
   if (relation === 'past') return 'missed';
   if (relation === 'future' || e.startMinutes === null) return 'next';
@@ -71,7 +78,10 @@ function workoutState(e: WorkoutEntry, relation: DayRelation, now: number): Time
   return now < e.startMinutes + (e.durationMin ?? 0) ? 'now' : 'missed';
 }
 
-export function buildTimeline({ view, workouts, relation, nowMinutes, eaten }: TimelineInput): TimelineItem[] {
+export function buildTimeline({ view, workouts: allWorkouts, runs: allRuns = [], relation, nowMinutes, eaten }: TimelineInput): TimelineItem[] {
+  // Le attività saltate (2c) non entrano nella giornata.
+  const workouts = allWorkouts.filter((e) => e.status !== 'skipped');
+  const runs = allRuns.filter((e) => e.status !== 'skipped');
   const placed: Placed[] = [];
   let seq = 0;
   const add = (item: TimelineItem, sort: number) => placed.push({ item, sort, seq: seq++ });
@@ -126,6 +136,20 @@ export function buildTimeline({ view, workouts, relation, nowMinutes, eaten }: T
         state: workoutState(e, relation, nowMinutes),
       },
       sort,
+    );
+  });
+
+  // --- Corse (2a): all'orario della corsa, altrimenti in fondo dopo gli allenamenti ---
+  runs.forEach((e, i) => {
+    add(
+      {
+        id: `run:${e.id}`,
+        kind: 'run',
+        label: `Corsa · ${e.name}`,
+        time: e.startMinutes === null ? '' : clock(e.startMinutes),
+        state: workoutState(e, relation, nowMinutes),
+      },
+      e.startMinutes ?? NO_TIME_WORKOUT + 5_000 + i * 10,
     );
   });
 

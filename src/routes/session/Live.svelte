@@ -20,7 +20,6 @@
     finish,
     goToItem,
     noteFor,
-    setCardioDone,
     setRest,
     setRpe,
     setUserNote,
@@ -28,7 +27,17 @@
     toggleSet,
     updateSet,
   } from '../../lib/sessions/edit';
+  import {
+    cardioCounts,
+    cardioEntry,
+    lastCardioTable,
+    pauseCardioClock,
+    setCardioValues,
+    startCardioClock,
+    toggleCardioDone,
+  } from '../../lib/sessions/cardio';
   import { schemeLabel } from '../../lib/sessions/format';
+  import { crossedTarget } from '../../lib/sessions/stopwatch';
   import { sessionItems } from '../../lib/sessions/items';
   import { lastTimeTable } from '../../lib/sessions/last-time';
   import { replaceTo, summaryHref } from '../../lib/sessions/nav';
@@ -38,6 +47,7 @@
   import { createSessionWriter } from '../../lib/sessions/writer';
   import { keepFocusedVisible, keyboardState } from '../../lib/workouts/keyboard.svelte';
   import ConfirmSheet, { type ConfirmAction } from '../train/ConfirmSheet.svelte';
+  import CardioBlock from './CardioBlock.svelte';
   import FinishSheet from './FinishSheet.svelte';
   import RestButton from './RestButton.svelte';
   import RestSheet from './RestSheet.svelte';
@@ -131,13 +141,14 @@
   const item = $derived(items[index]);
   const sets = $derived(session ? setsOf(session, index) : []);
   const last = $derived(lastTimeTable(items, previous));
+  const lastCardio = $derived(lastCardioTable(items, previous));
   const rest = $derived(session?.live?.rest ?? null);
   const isLast = $derived(index === items.length - 1);
   const everyDone = $derived(session ? allDone(session, index) : false);
 
   // --- Serie ---
   function withRest(next: Session, start: boolean): Session {
-    return start && item ? setRest(next, startRest(item.restSec, Date.now())) : next;
+    return start && item?.kind === 'strength' ? setRest(next, startRest(item.restSec, Date.now())) : next;
   }
 
   function toggle(setIndex: number) {
@@ -180,6 +191,27 @@
     pulseTimer = setTimeout(() => (pulse = false), 1200);
   });
 
+  // --- Cardio (2a): cronometro e avviso al tempo previsto ---
+  let cardioAlert = $state(false);
+  let cardioAlertTimer: ReturnType<typeof setTimeout> | undefined;
+  let lastTick = Date.now();
+
+  $effect(() => {
+    const t = now;
+    const prev = lastTick;
+    lastTick = t;
+    if (!session || item?.kind !== 'cardio') return;
+    const entry = cardioEntry(session, index);
+    if (!entry || !crossedTarget(entry.clock, item.minutes, prev, t)) return;
+    // Arrivato al tempo previsto con la pagina visibile: suono breve + impulso + annuncio (il cronometro continua).
+    announce = 'Tempo previsto raggiunto';
+    if (document.visibilityState !== 'visible') return;
+    beeper.beep();
+    clearTimeout(cardioAlertTimer);
+    cardioAlert = true;
+    cardioAlertTimer = setTimeout(() => (cardioAlert = false), 1200);
+  });
+
   // --- Esercizi ---
   /** Cambio fatto con lo swipe: entra già con il movimento dello swipe, senza la sua transizione. */
   let viaSwipe = $state(false);
@@ -218,11 +250,9 @@
 
   // --- Fine ---
   let finishOpen = $state(false);
-  let cardioAnswer = $state<boolean | null>(null);
   let finishing = $state(false);
 
   function openFinish() {
-    if (session) cardioAnswer = session.cardioDone ? true : null;
     finishOpen = true;
   }
 
@@ -281,12 +311,14 @@
               <Card tone="training" label="Esercizio in corso">
                 <div class="ex-head">
                   <span class="mono-label kicker">Esercizio {index + 1} / {items.length}</span>
-                  <span class="mono scheme">{schemeLabel(it)}</span>
+                  <span class="mono scheme">{it.kind === 'strength' ? schemeLabel(it) : 'cardio'}</span>
                 </div>
                 <h2 class="ex-name">{it.name}</h2>
                 <div class="ex-meta">
                   <div class="muscles">
-                    {#each it.muscles as m (m)}<span>{m}</span>{/each}
+                    {#if it.kind === 'strength'}
+                      {#each it.muscles as m (m)}<span>{m}</span>{/each}
+                    {/if}
                   </div>
                   {#if it.videoUrl}
                     {#if online}
@@ -309,6 +341,20 @@
                   <NoteBox title="Nota del PT" text={it.note} />
                 {/if}
     
+                {#if it.kind === 'cardio'}
+                  <CardioBlock
+                    item={it}
+                    entry={cardioEntry(s, index)}
+                    last={lastCardio[index] ?? null}
+                    {now}
+                    alerting={cardioAlert}
+                    onstart={() => session && commit(startCardioClock(session, index, Date.now()))}
+                    onpause={() => session && commit(pauseCardioClock(session, index, Date.now()))}
+                    ontoggle={() => session && commit(toggleCardioDone(session, index, Date.now()))}
+                    onminutes={(minutes) => session && commit(setCardioValues(session, index, { minutes }), true)}
+                    onkm={(distanceKm) => session && commit(setCardioValues(session, index, { distanceKm }), true)}
+                  />
+                {:else}
                 <div class="table" role="table" aria-label="Serie di {it.name}">
                   <div class="thead mono" role="row">
                     <span role="columnheader">SET</span>
@@ -346,6 +392,7 @@
                   disabled={!canAddSet(s, index)}
                   onclick={() => session && commit(addSet(session, index))}>+ Aggiungi serie</button
                 >
+                {/if}
               </Card>
     
               <section class="notes">
@@ -397,7 +444,7 @@
   bind:open={restOpen}
   {rest}
   {now}
-  defaultSec={item?.restSec ?? 90}
+  defaultSec={item?.kind === 'strength' ? item.restSec : 90}
   onstart={(sec) => changeRest(startRest(sec, Date.now()))}
   onadjust={(delta) => changeRest(adjustRest(rest, delta, Date.now()))}
   ontogglepause={() => changeRest(isPaused(rest) ? resumeRest(rest, Date.now()) : pauseRest(rest, Date.now()))}
@@ -408,14 +455,9 @@
   <FinishSheet
     bind:open={finishOpen}
     missing={missingSets(session)}
-    cardio={session.snapshot?.cardio ?? null}
-    cardioDone={cardioAnswer}
+    cardioMissing={cardioCounts(session).total - cardioCounts(session).done}
     rpe={session.rpe}
     busy={finishing}
-    oncardio={(done) => {
-      cardioAnswer = done;
-      if (session) commit(setCardioDone(session, done));
-    }}
     onrpe={(rpe) => session && commit(setRpe(session, rpe))}
     onfinish={() => void conclude()}
   />

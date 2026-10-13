@@ -4,5 +4,7 @@
   "muscles": ["Addominali"],
   "equipment": "Altro",
   "videoUrl": null,
-  "custom": true
+  "custom": true,
+  "kind": "strength",
+  "cardioFields": []
 }

@@ -2,6 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { formatIssues, validate, type Result } from '../../../src/lib/data/errors';
+import { backupV1ToV2 } from '../../../src/lib/data/migrations/cardio';
+import { backupV2ToV3 } from '../../../src/lib/data/migrations/diet-v3';
+import { backupV3ToV4 } from '../../../src/lib/data/migrations/calendar-v4';
 import { parseDietFile, parseWorkoutFile } from '../../../src/lib/data/read-file';
 import { TABLE_SCHEMAS } from '../../../src/lib/data/schemas';
 import { dietPayloadSchema } from '../../../src/lib/data/schemas/diet-payload';
@@ -14,6 +17,7 @@ import missingField from '../../fixtures/invalid/missing-field.json';
 import wrongType from '../../fixtures/invalid/wrong-type.json';
 import measurementsFixture from '../../fixtures/measurements.json';
 import sessionFixture from '../../fixtures/session.json';
+import legacyWorkoutFixture from '../../fixtures/legacy/workout.json';
 import workoutFixture from '../../fixtures/workout.json';
 import { clone, validBackupJson } from './helpers';
 
@@ -49,9 +53,37 @@ describe('file scheda (§ 8.1)', () => {
     const result = parseWorkoutFile(workoutFixture);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.value.items).toHaveLength(3);
+    expect(result.value.items).toHaveLength(4);
     expect(result.value.warmup[1]).toEqual({ name: 'Cyclette', hint: '', dose: '' });
-    expect(result.value.items[2]).toMatchObject({ muscles: [], note: '', videoUrl: null, setsDetail: null });
+    expect(result.value.items[2]).toMatchObject({ kind: 'strength', muscles: [], note: '', videoUrl: null, setsDetail: null });
+    // 2a: il cardio è un esercizio con i suoi campi (quelli facoltativi a null).
+    expect(result.value.items[3]).toEqual({
+      kind: 'cardio',
+      name: 'Tapis roulant · corsa',
+      minutes: 12,
+      distanceKm: null,
+      speedKmh: null,
+      inclinePct: null,
+      level: null,
+      note: '',
+      videoUrl: null,
+    });
+  });
+
+  it('2a: la scheda v1 (con il cardio finale) si legge ancora e diventa v2 con il cardio in fondo', () => {
+    const result = parseWorkoutFile(legacyWorkoutFixture);
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.schemaVersion).toBe(2);
+    expect(result.value).not.toHaveProperty('cardio');
+    expect(result.value.items.map((i) => i.kind)).toEqual(['strength', 'strength', 'strength', 'cardio']);
+    expect(result.value.items[3]).toMatchObject({ kind: 'cardio', name: 'Tapis roulant · corsa', minutes: 12 });
+  });
+
+  it('2a: un cardio senza minuti o con serie e kg è rifiutato', () => {
+    const file = clone(workoutFixture) as unknown as { items: Record<string, unknown>[] };
+    file.items[3] = { kind: 'cardio', name: 'Cyclette' };
+    expect(errorsOf(parseWorkoutFile(file))).toEqual(['elementi › n. 4 › minuti: campo obbligatorio mancante']);
   });
 
   it('campo mancante → nome del campo e motivo', () => {
@@ -92,7 +124,7 @@ describe('file scheda (§ 8.1)', () => {
       'Questo file non è stato creato da Healthy.',
     ]);
     expect(errorsOf(parseWorkoutFile(validBackupJson()))).toEqual(['Questo file è un backup, non una scheda.']);
-    expect(errorsOf(parseWorkoutFile({ ...workoutFixture, schemaVersion: 2 }))[0]).toMatch(
+    expect(errorsOf(parseWorkoutFile({ ...workoutFixture, schemaVersion: 3 }))[0]).toMatch(
       /versione più recente dell'app.*aggiorna Healthy/,
     );
     expect(errorsOf(parseWorkoutFile({ app: 'dieta-e-spesa', schemaVersion: 1 }))).toEqual([
@@ -113,7 +145,7 @@ describe('file piano alimentare (§ 8.2)', () => {
     const result = parseDietFile(dietFixture);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    const monday = result.value.days[0]!;
+    const monday = result.value.days[0]!.variants[0]!;
     expect(monday.meals[2]).toMatchObject({ name: '', items: [], time: null, window: null, recipe: null });
     expect(result.value.products.vitd).toMatchObject({ cat: 'Integratori', shop: false, per100: null });
     expect(result.value.categories).not.toContain('Integratori');
@@ -159,14 +191,14 @@ describe('file piano alimentare (§ 8.2)', () => {
   });
 
   it('chiavi con caratteri non ammessi', () => {
-    const errors = errorsOf(validate(dietPayloadSchema, { products: { 'Pollo Arrosto': { name: 'x', unit: 'g' } }, days: [{ weekday: 1, meals: [] }] }));
+    const errors = errorsOf(validate(dietPayloadSchema, { products: { 'Pollo Arrosto': { name: 'x', unit: 'g' } }, days: [{ weekday: 1, variants: [{ meals: [] }] }] }));
     expect(errors).toEqual(['prodotti › «Pollo Arrosto»: chiave non valida: usa minuscole, numeri, - e _ (massimo 40)']);
   });
 
   it('orari e finestre in formato HH:MM', () => {
     const file = editableDiet();
     file.days[0]!.meals[0]!.time = '7.30';
-    expect(errorsOf(parseDietFile(file))).toEqual(['giorni › n. 1 › pasti › n. 1 › orario: orario non valido: usa il formato HH:MM']);
+    expect(errorsOf(parseDietFile(file))).toEqual(['giorni › n. 1 › varianti › n. 1 › pasti › n. 1 › orario: orario non valido: usa il formato HH:MM']);
   });
 });
 
@@ -177,7 +209,10 @@ describe('righe delle tabelle', () => {
   });
 
   it('ogni riga del backup di prova rispetta lo schema della sua tabella', () => {
-    const backup = validBackupJson() as { tables: Record<keyof typeof TABLE_SCHEMAS, unknown[]> };
+    // Il backup di prova è del formato 1 (prima del 2a): le righe valgono dopo la migrazione.
+    const backup = backupV3ToV4(backupV2ToV3(backupV1ToV2(validBackupJson() as Record<string, unknown>))) as {
+      tables: Record<keyof typeof TABLE_SCHEMAS, unknown[]>;
+    };
     for (const [table, schema] of Object.entries(TABLE_SCHEMAS)) {
       for (const row of backup.tables[table as keyof typeof TABLE_SCHEMAS]) {
         expect(validate(schema, row).ok, table).toBe(true);

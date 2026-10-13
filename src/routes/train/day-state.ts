@@ -5,6 +5,10 @@ export function dayStateLabel(state: DayState, nextInDays: number | null): strin
   switch (state) {
     case 'done':
       return 'FATTO ✓';
+    case 'partial':
+      return 'IN PARTE';
+    case 'skipped':
+      return 'SALTATO';
     case 'next':
       return nextInDays === 0 ? 'OGGI' : nextInDays === 1 ? 'DOMANI' : 'PROSSIMO';
     case 'todo':

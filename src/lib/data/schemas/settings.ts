@@ -21,6 +21,11 @@ export const settingSchema = z.discriminatedUnion('key', [
     key: z.literal('nextMeasurement'),
     value: z.object({ text: text(MAX_TEXT.note), date: isoDate.nullable() }),
   }),
+  /**
+   * Primo giorno con il tipo di giornata dalle attività (2c): prima resta quello del piano alimentare, così lo storico
+   * non cambia. Lo scrive l'aggiornamento del database (v9) o il ripristino di un backup vecchio.
+   */
+  z.object({ key: z.literal('calendarStart'), value: isoDate }),
 ]);
 
 export type Setting = z.infer<typeof settingSchema>;

@@ -1,9 +1,11 @@
 import { lookup } from '../../data/errors';
 import type { DietPayload } from '../../data/schemas/diet-payload';
 import { formatQuantity, type Unit } from '../format';
+import { resolveDietDay, type VariantRequest } from '../variants';
 
 /**
- * Lista della spesa della settimana: somma dei pasti dei giorni del piano (gli scambi di giorno non contano).
+ * Lista della spesa della settimana: somma dei pasti dei giorni del piano, con la variante del tipo di giornata di
+ * ogni data (2c: dopo spostamenti e salti, con il ripiego "pasti di giovedì").
  * Si sommano solo quantità dello stesso prodotto, che ha una sola unità: mai conversioni tra prodotti.
  */
 
@@ -31,10 +33,16 @@ export interface ShoppingList {
 
 export const NO_CATEGORY_LABEL = 'Altro';
 
-export function buildShoppingList(payload: DietPayload): ShoppingList {
+/**
+ * `requests`: tipo di giornata (e fonte dei pasti) di ogni giorno della settimana, indice 0 = lunedì; senza, la
+ * variante predefinita di ogni giorno. Le spunte sono per prodotto: cambiando le quantità restano.
+ */
+export function buildShoppingList(payload: DietPayload, requests: readonly (VariantRequest | undefined)[] = []): ShoppingList {
   const sums = new Map<string, number>();
   const excluded = new Map<string, { key: string; name: string; cat: string }>();
-  for (const day of payload.days) {
+  for (let weekday = 1; weekday <= 7; weekday++) {
+    const day = resolveDietDay(payload, weekday, requests[weekday - 1] ?? {});
+    if (!day) continue;
     for (const meal of day.meals) {
       for (const item of meal.items) {
         const product = lookup(payload.products, item.p);

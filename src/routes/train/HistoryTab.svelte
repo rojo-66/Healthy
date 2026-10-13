@@ -2,10 +2,14 @@
   import { untrack } from 'svelte';
   import Icon from '../../lib/components/Icon.svelte';
   import { liveState } from '../../lib/data/live.svelte';
+  import { listRunLogs } from '../../lib/data/repo/runs';
   import { completedSessions } from '../../lib/data/repo/sessions';
+  import type { RunLog } from '../../lib/data/schemas/runs';
   import type { Session } from '../../lib/data/schemas/sessions';
-  import { isoWeekday, MONTHS, WEEKDAY_INITIALS } from '../../lib/diet/calc/calendar';
-  import { addMonths, compareMonths, monthGrid, monthOf, monthSummary, sessionsInMonth } from '../../lib/sessions/calendar';
+  import { runLogLabel } from '../../lib/runs/format';
+  import RunLogSheet from './RunLogSheet.svelte';
+  import { fromIsoDate, isoWeekday, MONTHS, toIsoDate, WEEKDAY_INITIALS } from '../../lib/diet/calc/calendar';
+  import { addMonths, compareMonths, inMonth, monthGrid, monthOf, monthSummary, sessionDate, sessionsInMonth } from '../../lib/sessions/calendar';
   import { durationShort, volumeLabel } from '../../lib/sessions/format';
   import { summaryHref } from '../../lib/sessions/nav';
   import { readinessTotal } from '../../lib/sessions/readiness';
@@ -13,8 +17,7 @@
   import { durationSec, volume } from '../../lib/sessions/stats';
   import { weekdayShort } from '../../lib/workouts/format';
 
-  // Storico (SPEC § 5.2): calendario del mese navigabile, sessioni concluse del mese → Riepilogo.
-  // Solo palestra e riposo: la corsa non è ancora nel modello dati (arriverà in una versione successiva).
+  // Storico (SPEC § 5.2): calendario del mese navigabile, sessioni concluse (→ Riepilogo) e corse fatte (2a, ciano).
   interface Props {
     today: Date;
   }
@@ -22,6 +25,8 @@
   let { today }: Props = $props();
 
   const all = liveState<Session[]>(completedSessions, []);
+  const runLogs = liveState<RunLog[]>(listRunLogs, []);
+  const todayIso = untrack(() => toIsoDate(today));
   const records = $derived(recordCountsBySession(all.current));
 
   const current = untrack(() => monthOf(today));
@@ -29,12 +34,37 @@
   const isCurrent = $derived(compareMonths(month, current) >= 0);
   const monthName = $derived(MONTHS[month.month] ?? '');
   const title = $derived(month.year === current.year ? monthName : `${monthName} ${month.year}`);
-  const cells = $derived(monthGrid(month, all.current, today));
-  const list = $derived(sessionsInMonth(all.current, month));
+  const cells = $derived(
+    monthGrid(
+      month,
+      all.current,
+      today,
+      runLogs.current.map((l) => l.date),
+    ),
+  );
   const totals = $derived(monthSummary(all.current, month, records));
+  const monthRuns = $derived(runLogs.current.filter((l) => inMonth(l.date, month)));
+
+  /** Sessioni e corse del mese, dalla più recente (per giorno, poi per orario). */
+  type Entry = { kind: 'session'; key: string; date: string; at: string; s: Session } | { kind: 'run'; key: string; date: string; at: string; log: RunLog };
+  const list = $derived(
+    [
+      ...sessionsInMonth(all.current, month).map((s): Entry => ({ kind: 'session', key: s.id, date: sessionDate(s), at: s.startedAt, s })),
+      ...monthRuns.map((log): Entry => ({ kind: 'run', key: log.id, date: log.date, at: log.loggedAt, log })),
+    ].sort((a, b) => b.date.localeCompare(a.date) || b.at.localeCompare(a.at)),
+  );
+  const empty = $derived(all.loaded && runLogs.loaded && all.current.length === 0 && runLogs.current.length === 0);
+
+  // Corsa fatta: dettaglio con Modifica / Elimina.
+  let logOpen = $state(false);
+  let openLog = $state.raw<RunLog | null>(null);
+  let status = $state('');
 
   function cellLabel(c: (typeof cells)[number]): string {
-    const what = c.sessions === 0 ? 'nessuna sessione' : c.sessions === 1 ? '1 sessione' : `${c.sessions} sessioni`;
+    const parts: string[] = [];
+    if (c.sessions > 0) parts.push(c.sessions === 1 ? '1 sessione' : `${c.sessions} sessioni`);
+    if (c.runs > 0) parts.push(c.runs === 1 ? '1 corsa' : `${c.runs} corse`);
+    const what = parts.join(' e ') || 'nessuna attività';
     return `${c.day} ${monthName.toLowerCase()}${c.isToday ? ', oggi' : ''}: ${what}`;
   }
 
@@ -57,7 +87,9 @@
       </button>
     </div>
     <span class="mono count" data-testid="month-count">
-      {totals.sessions === 1 ? '1 sessione' : `${totals.sessions} sessioni`}{totals.records > 0 ? ` · ${totals.records} PR` : ''}
+      {totals.sessions === 1 ? '1 sessione' : `${totals.sessions} sessioni`}{monthRuns.length > 0
+        ? ` · ${monthRuns.length === 1 ? '1 corsa' : `${monthRuns.length} corse`}`
+        : ''}{totals.records > 0 ? ` · ${totals.records} PR` : ''}
     </span>
     <div class="grid initials mono" aria-hidden="true">
       {#each WEEKDAY_INITIALS as l, i (i)}<span>{l}</span>{/each}
@@ -73,23 +105,50 @@
     </div>
     <div class="legend">
       <span><b class="sq training" aria-hidden="true">■</b> palestra</span>
+      <span><b class="sq run" aria-hidden="true">■</b> corsa</span>
       <span><b class="sq rest" aria-hidden="true">■</b> riposo</span>
     </div>
   </section>
 
-  <h3 class="mono-label">Sessioni</h3>
-  {#if all.loaded && all.current.length === 0}
+  <h3 class="mono-label">Sessioni e corse</h3>
+  <p class="status" role="status" aria-live="polite">{status}</p>
+  {#if empty}
     <div class="empty">
       <p class="empty-title graffiti">Nessun allenamento ancora</p>
       <p class="empty-text">
-        Quando completi una sessione la trovi qui, con durata, volume e record. Il calendario si colora giorno per giorno.
+        Quando completi una sessione o segni una corsa la trovi qui, con durata, volume, record o passo. Il calendario si colora
+        giorno per giorno.
       </p>
     </div>
   {:else if list.length === 0}
-    <p class="none">Nessuna sessione a {title.toLowerCase()}.</p>
+    <p class="none">Nessuna attività a {title.toLowerCase()}.</p>
   {:else}
     <div class="list">
-      {#each list as s (s.id)}
+      {#each list as e (e.key)}
+        {#if e.kind === 'run'}
+          {@const d = fromIsoDate(e.date)}
+          <button
+            type="button"
+            class="row run tap"
+            data-testid="history-run"
+            onclick={() => {
+              openLog = e.log;
+              status = '';
+              logOpen = true;
+            }}
+          >
+            <span class="day mono">
+              <span class="dow">{weekdayShort(isoWeekday(d))}</span>
+              <span class="n">{d.getDate()}</span>
+            </span>
+            <span class="main">
+              <span class="title"><span class="name">{e.log.runName}</span></span>
+              <span class="meta mono">{runLogLabel(e.log)}</span>
+            </span>
+            <Icon name="forward" size={18} />
+          </button>
+        {:else}
+        {@const s = e.s}
         {@const d = new Date(s.startedAt)}
         {@const prs = records.get(s.id) ?? 0}
         <a class="row tap" href={summaryHref(s.id, true)} data-testid="history-row">
@@ -106,10 +165,13 @@
           </span>
           <Icon name="forward" size={18} />
         </a>
+        {/if}
       {/each}
     </div>
   {/if}
 </div>
+
+<RunLogSheet bind:open={logOpen} run={null} log={openLog} date={todayIso} today={todayIso} onsaved={(m) => (status = m)} />
 
 <style>
   .history {
@@ -197,7 +259,22 @@
     color: var(--text);
   }
 
-  .cell.gym.today {
+  .cell.run {
+    background: var(--progress);
+    color: var(--on-tone);
+    font-weight: 700;
+  }
+
+  /* Palestra e corsa nello stesso giorno: metà magenta e metà ciano. */
+  .cell.both {
+    background: linear-gradient(135deg, var(--training) 50%, var(--progress) 50%);
+    color: var(--on-tone);
+    font-weight: 700;
+  }
+
+  .cell.gym.today,
+  .cell.run.today,
+  .cell.both.today {
     color: var(--on-tone);
   }
 
@@ -211,8 +288,21 @@
   .sq.training {
     color: var(--training);
   }
+  .sq.run {
+    color: var(--progress);
+  }
   .sq.rest {
     color: var(--line-strong);
+  }
+
+  .status:empty {
+    display: none;
+  }
+
+  .status {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text-2);
   }
 
   h3 {
@@ -229,11 +319,18 @@
     display: flex;
     align-items: center;
     gap: var(--space-3);
+    width: 100%;
     min-height: 64px;
     padding: var(--space-3) 14px;
+    border: 0;
     background: var(--surface);
     color: var(--text);
+    text-align: left;
     text-decoration: none;
+  }
+
+  .row.run .day .n {
+    color: var(--progress);
   }
 
   .row > :global(svg) {

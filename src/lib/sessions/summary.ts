@@ -1,4 +1,5 @@
 import type { Session, SessionSet } from '../data/schemas/sessions';
+import { cardioCounts, cardioEntry } from './cardio';
 import { compareWithLast, type Delta } from './compare';
 import { noteFor } from './edit';
 import { setLabel } from './format';
@@ -16,8 +17,21 @@ export interface SetLine {
   pr: boolean;
 }
 
+/** Esito di un esercizio cardio nel riepilogo (2a). */
+export interface CardioSummary {
+  /** Minuti previsti dalla scheda. */
+  plannedMin: number;
+  /** Minuti e km effettivi (`null` = non scritti). */
+  minutes: number | null;
+  distanceKm: number | null;
+  done: boolean;
+}
+
 export interface ExerciseSummary {
   index: number;
+  kind: 'strength' | 'cardio';
+  /** Solo per i cardio. */
+  cardio: CardioSummary | null;
   name: string;
   done: number;
   planned: number;
@@ -39,7 +53,9 @@ export interface SessionSummary {
   /** Esercizi con un PR, nell'ordine della scheda. */
   recordNames: string[];
   readinessTotal: number | null;
-  cardio: { type: string; minutes: number; done: boolean } | null;
+  /** Cardio fatti e previsti (2a). */
+  cardioDone: number;
+  cardioTotal: number;
   exercises: ExerciseSummary[];
 }
 
@@ -58,8 +74,14 @@ export function summarize(
   const exercises = items.map((item, index): ExerciseSummary => {
     const sets = setsOf(session, index);
     const prSets = new Set(prs.get(index) ?? []);
+    const entry = item.kind === 'cardio' ? cardioEntry(session, index) : null;
     return {
       index,
+      kind: item.kind,
+      cardio:
+        item.kind === 'cardio'
+          ? { plannedMin: item.minutes, minutes: entry?.minutes ?? null, distanceKm: entry?.distanceKm ?? null, done: entry?.done ?? false }
+          : null,
       name: item.name,
       done: doneFor(session, index),
       planned: plannedFor(session, index),
@@ -79,7 +101,7 @@ export function summarize(
       note: noteFor(session, index),
     };
   });
-  const cardio = session.snapshot?.cardio;
+  const cardio = cardioCounts(session);
   return {
     durationSec: durationSec(session, now),
     volume: volume(session.sets),
@@ -89,12 +111,8 @@ export function summarize(
     records: exercises.filter((e) => e.pr).length,
     recordNames: exercises.filter((e) => e.pr).map((e) => e.name),
     readinessTotal: session.readiness ? readinessTotal(session.readiness) : null,
-    cardio:
-      cardio && cardio.minutes > 0
-        ? { type: cardio.type, minutes: cardio.minutes, done: session.cardioDone !== null }
-        : session.cardioDone
-          ? { type: session.cardioDone.type, minutes: session.cardioDone.minutes, done: true }
-          : null,
+    cardioDone: cardio.done,
+    cardioTotal: cardio.total,
     exercises,
   };
 }

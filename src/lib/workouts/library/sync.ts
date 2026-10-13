@@ -1,27 +1,44 @@
 import { db as appDb, type HealthyDb } from '../../data/db';
 import { parseOrThrow } from '../../data/errors';
 import { exerciseSchema, type Exercise } from '../../data/schemas/exercises';
+import { CARDIO_LIBRARY } from './cardio';
 import { LIBRARY } from './data';
 
-/** Righe della libreria come esercizi del database (`custom: false`, niente video). */
+/** Righe della libreria (forza e cardio) come esercizi del database (`custom: false`, niente video). */
 export function libraryExercises(): Exercise[] {
-  return LIBRARY.map(([id, name, muscles, equipment]) => ({
+  const strength: Exercise[] = LIBRARY.map(([id, name, muscles, equipment]) => ({
     id,
     name,
     muscles: [...muscles],
     equipment,
     videoUrl: null,
     custom: false,
+    kind: 'strength',
+    cardioFields: [],
   }));
+  const cardio: Exercise[] = CARDIO_LIBRARY.map((entry) => ({
+    id: entry.id,
+    name: entry.name,
+    muscles: [],
+    equipment: entry.equipment,
+    videoUrl: null,
+    custom: false,
+    kind: 'cardio',
+    cardioFields: [...entry.fields],
+  }));
+  return [...strength, ...cardio];
 }
+
+const sameList = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((x, i) => x === b[i]);
 
 function sameContent(a: Exercise, b: Exercise): boolean {
   return (
     a.name === b.name &&
     a.equipment === b.equipment &&
     a.videoUrl === b.videoUrl &&
-    a.muscles.length === b.muscles.length &&
-    a.muscles.every((m, i) => m === b.muscles[i])
+    a.kind === b.kind &&
+    sameList(a.muscles, b.muscles) &&
+    sameList(a.cardioFields ?? [], b.cardioFields)
   );
 }
 

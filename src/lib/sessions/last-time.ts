@@ -1,5 +1,5 @@
 import type { Session } from '../data/schemas/sessions';
-import type { WorkoutItem } from '../data/schemas/workouts';
+import type { StrengthItem } from '../data/schemas/workouts';
 import { matchSessionItems, type ItemRef } from './items';
 
 export interface LastSet {
@@ -32,7 +32,7 @@ export function lastTimeTable(
  * Valori di partenza di una serie: quelli dell'ultima volta se quella serie era stata fatta,
  * altrimenti quelli del piano (con "Serie diverse tra loro" quelli della serie).
  */
-export function prefill(item: Pick<WorkoutItem, 'kg' | 'reps' | 'setsDetail'>, setIndex: number, last?: LastSet): { kg: number; reps: number } {
+export function prefill(item: Pick<StrengthItem, 'kg' | 'reps' | 'setsDetail'>, setIndex: number, last?: LastSet): { kg: number; reps: number } {
   if (last?.done) return { kg: last.kg, reps: last.reps };
   const detail = item.setsDetail?.[setIndex];
   return detail ? { kg: detail.kg, reps: detail.reps } : { kg: item.kg, reps: item.reps };

@@ -21,6 +21,8 @@ import {
 } from '../../../src/lib/workouts/calc/values';
 import { itemSummary, kgLabel, nextMeta, originLabel, weekdaysLabel, workoutMeta } from '../../../src/lib/workouts/format';
 import { workoutNamed } from './helpers';
+import { cardioSuffix } from '../../../src/lib/workouts/calc/duration';
+import type { StrengthItem } from '../../../src/lib/data/schemas/workouts';
 
 describe('durata e contatori', () => {
   it('serie × (recupero + 45 s)', () => {
@@ -31,26 +33,43 @@ describe('durata e contatori', () => {
   it('totali della scheda: esercizi, serie, minuti arrotondati + cardio', () => {
     // 4×(120+45) + 4×(90+45) + 3×(75+45) = 660 + 540 + 360 = 1560 s = 26 min; + 12 di tapis.
     const t = workoutTotals(workoutNamed('Petto + Schiena'));
-    expect(t).toEqual({ exercises: 3, sets: 11, strengthMin: 26, cardioMin: 12, totalMin: 38 });
+    expect(t).toEqual({ exercises: 3, cardio: 1, sets: 11, strengthMin: 26, cardioMin: 12, totalMin: 38 });
   });
 
   it('senza cardio e con scheda vuota', () => {
-    expect(workoutTotals({ items: [], cardio: null })).toEqual({ exercises: 0, sets: 0, strengthMin: 0, cardioMin: 0, totalMin: 0 });
+    expect(workoutTotals({ items: [] })).toEqual({ exercises: 0, cardio: 0, sets: 0, strengthMin: 0, cardioMin: 0, totalMin: 0 });
     // 1 × (60 + 45) = 105 s → 1,75 min → 2.
-    expect(workoutTotals({ items: [{ sets: 1, restSec: 60 }], cardio: null }).totalMin).toBe(2);
+    expect(workoutTotals({ items: [{ kind: 'strength', sets: 1, restSec: 60 }] }).totalMin).toBe(2);
+  });
+
+  it('2a: più cardio in qualsiasi posizione, scheda solo cardio', () => {
+    const items = [
+      { kind: 'cardio', name: 'Cyclette', minutes: 10 },
+      { kind: 'strength', sets: 2, restSec: 75 },
+      { kind: 'cardio', name: 'Ellittica', minutes: 15 },
+    ] as const;
+    // 2 × (75 + 45) = 240 s = 4 min; + 25 di cardio.
+    expect(workoutTotals({ items })).toEqual({ exercises: 1, cardio: 2, sets: 2, strengthMin: 4, cardioMin: 25, totalMin: 29 });
+    expect(cardioSuffix(items)).toBe('+ 25’ cardio');
+    expect(cardioSuffix([items[0]])).toBe('+ 10’ Cyclette');
+    expect(cardioSuffix([{ kind: 'cardio', name: 'X', minutes: 0 }])).toBe('');
+    expect(nextMeta({ items })).toBe('1 esercizio · 2 serie · ~4’ + 25’ cardio');
+    const onlyCardio = { items: [items[0], items[2]] };
+    expect(workoutMeta(onlyCardio)).toBe('2 cardio · ~25’');
+    expect(nextMeta(onlyCardio)).toBe('2 cardio · ~25’');
   });
 
   it('si ricalcola a ogni modifica (funzione pura)', () => {
     const w = workoutNamed('Gambe');
     const before = workoutTotals(w).sets;
-    w.items[0]!.sets += 1;
+    (w.items[0] as StrengthItem).sets += 1;
     expect(workoutTotals(w).sets).toBe(before + 1);
   });
 
   it('righe di testo delle card', () => {
     const w = workoutNamed('Petto + Schiena');
     expect(workoutMeta(w)).toBe('3 esercizi · 11 serie · ~38’');
-    expect(nextMeta(w)).toBe('3 esercizi · 11 serie · ~26’ + 12’ tapis roulant');
+    expect(nextMeta(w)).toBe('3 esercizi · 11 serie · ~26’ + 12’ Tapis roulant · corsa');
     expect(originLabel(w)).toBe('PT · v3');
     expect(originLabel(workoutNamed('Braccia'))).toBe('TUA');
     expect(weekdaysLabel([4, 1])).toBe('LUN · GIO');
@@ -138,9 +157,9 @@ describe('serie diverse tra loro (piramidali)', () => {
   });
 
   it('riepilogo di una riga piramidale', () => {
-    const item = workoutNamed('Petto + Schiena').items[0]!;
+    const item = workoutNamed('Petto + Schiena').items[0] as StrengthItem;
     expect(itemSummary(item)).toBe('4 serie · 10–6 rip · 55–65 kg · rec 120 s');
-    expect(itemSummary(workoutNamed('Gambe').items[0]!)).toBe('5 × 5 · 80 kg · rec 180 s');
+    expect(itemSummary(workoutNamed('Gambe').items[0] as StrengthItem)).toBe('5 × 5 · 80 kg · rec 180 s');
   });
 });
 

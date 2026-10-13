@@ -41,6 +41,7 @@ export function sessionItems(session: Pick<Session, 'snapshot' | 'sets'>): Worko
   for (let i = 0; i <= max; i++) {
     const entry = byIndex.get(i);
     items.push({
+      kind: 'strength',
       exerciseId: entry?.exerciseId ?? null,
       name: `Esercizio ${i + 1}`,
       muscles: [],

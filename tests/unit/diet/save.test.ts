@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { parseBackup } from '../../../src/lib/data/backup';
 import { db } from '../../../src/lib/data/db';
 import { ValidationError } from '../../../src/lib/data/errors';
-import { setMealEaten, setSwap } from '../../../src/lib/data/repo/diet-log';
+import { setMealEaten } from '../../../src/lib/data/repo/diet-log';
 import {
   activateDietPlan,
   getActiveDietPlan,
@@ -133,15 +133,20 @@ describe('salvataggio di un piano importato', () => {
 });
 
 describe('diario e spesa', () => {
-  it('scambio del giorno: salvato, e le spunte si azzerano solo se il giorno seguito cambia', async () => {
-    await setMealEaten('2026-10-12', 'p1', 'pranzo', true);
-    let day = await setSwap('2026-10-12', 'p1', 4);
-    expect(day).toEqual({ date: '2026-10-12', planId: 'p1', swappedFromWeekday: 4, eaten: {} });
-    await setMealEaten('2026-10-12', 'p1', 'colazione', true);
-    day = await setSwap('2026-10-12', 'p1', 4);
-    expect(day.eaten).toEqual({ colazione: true });
-    day = await setSwap('2026-10-12', 'p1', null);
-    expect(day).toEqual({ date: '2026-10-12', planId: 'p1', swappedFromWeekday: null, eaten: {} });
+  it('spunta con la fonte del pasto (2c): si salva segnando, si dimentica togliendo la spunta', async () => {
+    let day = await setMealEaten('2026-10-12', 'p1', 'pranzo', true, { weekday: 1, type: 'gym' });
+    expect(day).toEqual({
+      date: '2026-10-12',
+      planId: 'p1',
+      mealsFrom: null,
+      eaten: { pranzo: true },
+      mealSources: { pranzo: { weekday: 1, type: 'gym' } },
+    });
+    day = await setMealEaten('2026-10-12', 'p1', 'colazione', true, { weekday: 4, type: 'gym' });
+    expect(Object.keys(day.mealSources)).toEqual(['pranzo', 'colazione']);
+    day = await setMealEaten('2026-10-12', 'p1', 'pranzo', false);
+    expect(day.eaten).toEqual({ pranzo: false, colazione: true });
+    expect(day.mealSources).toEqual({ colazione: { weekday: 4, type: 'gym' } });
   });
 
   it('spunte della spesa per settimana (lunedì) e "Spesa finita"', async () => {

@@ -1,0 +1,981 @@
+{
+  "app": "healthy-app",
+  "kind": "diet",
+  "schemaVersion": 3,
+  "_modello": true,
+  "_generato": "2026-10-12",
+  "_istruzioni": [
+    "QUESTO È UN MODELLO VUOTO dell'app Healthy App per un piano alimentare. Va compilato con i dati della dieta allegata (PDF, foto, testo o file di MyDiet).",
+    "RISULTATO: restituisci SOLO il JSON compilato e valido (virgolette doppie, nessun commento, nessuna virgola finale, numeri con il punto decimale: 2.5 e non 2,5) come file scaricabile chiamato healthy-dieta-<titolo>.json. Nel file finale ELIMINA i campi _modello, _generato, _istruzioni ed _esempio.",
+    "NON INVENTARE: riporta solo ciò che è scritto nella dieta. Se un dato manca lascia null (numeri, orari, date, target, valori nutrizionali, tipo di giornata) oppure \"\" (testi). Non scrivere mai 0 al posto di un dato mancante. Poi, nel messaggio e non nel file, elenca all'utente cosa manca.",
+    "GIORNI: 'days' ha sempre 7 elementi, uno per giorno, con weekday da 1 = lunedì a 7 = domenica, ognuno una sola volta. Ogni giorno ha 'defaultType' (il tipo di giornata di quel giorno nel piano: gym, run o rest) e 'variants': da 1 a 3 VARIANTI, una per tipo di giornata, ciascuna con il suo 'type', i suoi pasti ('meals'), i suoi integratori ('supplements') e la sua 'note'. Due varianti dello stesso giorno non possono avere lo stesso type.",
+    "VARIANTI, CASO 1 · menu per tipo di giornata: se la dieta ha un menu per tipo di giornata (es. 'giorno di allenamento' e 'giorno di riposo') e non per giorno della settimana, copia quel menu nella variante corrispondente di TUTTI i giorni (es. ogni giorno ha una variante gym con il menu di allenamento e una variante rest con il menu di riposo).",
+    "VARIANTI, CASO 2 · un solo menu per giorno: se la dieta ha un solo menu per ogni giorno della settimana, crea per quel giorno SOLO la variante del suo tipo di giornata (una variante per giorno).",
+    "MAI INVENTARE VARIANTI: crea una variante solo se la dieta ha davvero quel menu. Se un giorno non ha la variante di un tipo, non crearla: l'app userà quella del giorno più vicino.",
+    "TIPO PREDEFINITO: 'defaultType' viene dal documento (in quali giorni ci si allena, si corre o si riposa). Se la dieta non dice in quali giorni della settimana, chiedilo all'utente prima di rispondere; se non può risponderti, lascia defaultType null e una sola variante con type null: lo sceglierà nell'app. 'defaultType' deve essere uguale al type di una delle varianti del giorno.",
+    "TIPO DI GIORNATA: 'type' e 'defaultType' sono chiavi di 'dayTypes': gym (palestra), run (corsa), rest (riposo), oppure null se non si sa. Elimina da 'dayTypes' i tipi che nessuna variante usa.",
+    "TARGET: 'dayTypes.<tipo>.targets' resta null se la dieta non indica i target giornalieri: li calcolerà l'app. Se li indica, sostituisci null con un oggetto come _esempio.dayType.targets (kcal e grammi di protein, carbs, fat, fiber): kcal è obbligatorio, gli altri possono restare null.",
+    "PASTI: ogni variante ha sempre 5 pasti con key fissa: colazione, spuntino1, pranzo, spuntino2, cena (non cambiare key e label). Pasto non previsto o libero senza alimenti: name \"\" (o 'Pasto libero') e items []. 'time' = orario indicato, sempre con 2 cifre (08:00, non 8:00), altrimenti null. 'window' = [\"inizio\", \"fine\"] se c'è una fascia oraria, altrimenti null.",
+    "ALIMENTI: in 'items' ogni alimento è { \"p\": <chiave del prodotto>, \"q\": <quantità> }. q è in grammi se unit = g, in millilitri se unit = ml, in numero di pezzi se unit = pz. Ogni chiave usata deve esistere in 'products'.",
+    "PRODOTTI: la chiave è breve e usa solo lettere minuscole a-z, cifre, _ e - (niente spazi né accenti, massimo 40 caratteri, es. petto_pollo). Lo stesso alimento usa sempre la stessa chiave in tutti i giorni e in tutte le varianti. name è obbligatorio. unit: g | ml | pz. pieceGrams = grammi di un pezzo (solo per pz, altrimenti null). shop: false per ciò che non si compra (acqua, pasto libero), true altrimenti. cat: uno dei reparti di 'categories' (aggiungine uno solo se nessuno va bene).",
+    "VALORI NUTRIZIONALI: per100 = valori per 100 g o 100 ml, nella forma di _esempio.products.alimento_esempio.per100. Se la dieta non li riporta, per100 = null: l'app li farà completare. Se li riporta, kcal, protein, carbs e fat sono obbligatori e fiber può restare null: non compilarli a metà.",
+    "ALTERNATIVE: se un pasto ha alternative ('oppure', 'in alternativa'), metti in items la prima opzione e scrivi le altre, per esteso, nella 'note' di quella variante.",
+    "RICETTE: vanno in 'recipes' con numero n progressivo da 1 e name obbligatorio. Nel pasto 'recipe' = n della ricetta collegata, altrimenti null.",
+    "INTEGRATORI: vanno nella variante in 'supplements' con name (obbligatorio), when (momento: es. 'colazione', 'prima di dormire'), dose e skip = true se quel giorno non va preso.",
+    "NOTE: 'note' della variante (massimo 2.000 caratteri) contiene le indicazioni del nutrizionista per quel giorno e quel tipo di giornata (es. alternative). Le indicazioni generali valide per tutti i giorni (es. idratazione, condimenti, sostituzioni ammesse) vanno in 'generalNotes' (massimo 4.000 caratteri), senza ripeterle in ogni variante.",
+    "INTESTAZIONE: title breve (es. 'Ottobre 2026'); author = nome del nutrizionista se presente, altrimenti 'Nutrizionista'; validFrom = data di inizio in formato AAAA-MM-GG (null se assente). Lascia id vuoto (\"\") e version = 1: li gestisce l'app.",
+    "_esempio mostra soltanto la FORMA di un prodotto, di un tipo di giornata, di un giorno con due varianti, di un pasto, di un integratore e di una ricetta, con valori finti: non copiarne i valori nel risultato."
+  ],
+  "_esempio": {
+    "products": {
+      "alimento_esempio": {
+        "name": "Alimento di esempio",
+        "cat": "Altro",
+        "unit": "g",
+        "shop": true,
+        "per100": { "kcal": 100, "protein": 10, "carbs": 10, "fat": 1, "fiber": 1 },
+        "pieceGrams": null
+      },
+      "frutto_esempio": {
+        "name": "Frutto di esempio (a pezzo)",
+        "cat": "Frutta e verdura",
+        "unit": "pz",
+        "shop": true,
+        "per100": null,
+        "pieceGrams": 150
+      }
+    },
+    "dayType": {
+      "label": "Palestra",
+      "targets": { "kcal": 2000, "protein": 120, "carbs": 250, "fat": 60, "fiber": 30 }
+    },
+    "day": {
+      "weekday": 1,
+      "defaultType": "gym",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "Nota di esempio per il giorno di allenamento.",
+          "supplements": [
+            {
+              "name": "Integratore di esempio",
+              "when": "colazione",
+              "dose": "1 compressa",
+              "skip": false
+            }
+          ],
+          "meals": [
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": ["12:00", "14:00"],
+              "name": "Piatto di esempio",
+              "recipe": 1,
+              "items": [{ "p": "alimento_esempio", "q": 120 }, { "p": "frutto_esempio", "q": 1 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": ["12:00", "14:00"],
+              "name": "Piatto di esempio (riposo)",
+              "recipe": null,
+              "items": [{ "p": "alimento_esempio", "q": 80 }]
+            }
+          ]
+        }
+      ]
+    },
+    "meal": {
+      "key": "pranzo",
+      "label": "Pranzo",
+      "time": "13:00",
+      "window": ["12:00", "14:00"],
+      "name": "Piatto di esempio",
+      "recipe": 1,
+      "items": [{ "p": "alimento_esempio", "q": 120 }, { "p": "frutto_esempio", "q": 1 }]
+    },
+    "supplement": {
+      "name": "Integratore di esempio",
+      "when": "colazione",
+      "dose": "1 compressa",
+      "skip": false
+    },
+    "recipe": {
+      "n": 1,
+      "name": "Ricetta di esempio",
+      "meta": "20 min · padella",
+      "dose": "per 1 porzione",
+      "steps": ["Primo passaggio.", "Secondo passaggio."],
+      "tip": "Consiglio facoltativo."
+    }
+  },
+  "id": "",
+  "version": 1,
+  "title": "Allenamento e riposo (finto)",
+  "author": "Nutrizionista",
+  "validFrom": null,
+  "dayTypes": {
+    "gym": {
+      "label": "Palestra",
+      "targets": { "kcal": 1800, "protein": null, "carbs": null, "fat": null, "fiber": null }
+    },
+    "run": { "label": "Corsa", "targets": null },
+    "rest": {
+      "label": "Riposo",
+      "targets": { "kcal": 1500, "protein": null, "carbs": null, "fat": null, "fiber": null }
+    }
+  },
+  "categories": [
+    "Carne e pesce",
+    "Latticini e uova",
+    "Frutta e verdura",
+    "Pane, pasta e cereali",
+    "Scatolame",
+    "Surgelati",
+    "Condimenti",
+    "Bevande",
+    "Integratori",
+    "Altro"
+  ],
+  "products": {
+    "yogurt": {
+      "name": "Yogurt greco",
+      "cat": "Latticini e uova",
+      "unit": "g",
+      "shop": true,
+      "per100": { "kcal": 60, "protein": 10, "carbs": 4, "fat": 0.5, "fiber": 0 },
+      "pieceGrams": null
+    },
+    "avena": {
+      "name": "Fiocchi d'avena",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": { "kcal": 370, "protein": 13, "carbs": 60, "fat": 7, "fiber": 10 },
+      "pieceGrams": null
+    },
+    "mela": {
+      "name": "Mela",
+      "cat": "Frutta e verdura",
+      "unit": "pz",
+      "shop": true,
+      "per100": { "kcal": 52, "protein": 0.3, "carbs": 14, "fat": 0.2, "fiber": 2.4 },
+      "pieceGrams": 180
+    },
+    "pollo": {
+      "name": "Petto di pollo",
+      "cat": "Carne e pesce",
+      "unit": "g",
+      "shop": true,
+      "per100": { "kcal": 110, "protein": 23, "carbs": 0, "fat": 1.5, "fiber": 0 },
+      "pieceGrams": null
+    },
+    "riso": {
+      "name": "Riso basmati",
+      "cat": "Pane, pasta e cereali",
+      "unit": "g",
+      "shop": true,
+      "per100": { "kcal": 350, "protein": 8, "carbs": 78, "fat": 0.6, "fiber": 1 },
+      "pieceGrams": null
+    },
+    "merluzzo": {
+      "name": "Merluzzo",
+      "cat": "Carne e pesce",
+      "unit": "g",
+      "shop": true,
+      "per100": { "kcal": 80, "protein": 18, "carbs": 0, "fat": 0.7, "fiber": 0 },
+      "pieceGrams": null
+    },
+    "zucchine": {
+      "name": "Zucchine",
+      "cat": "Frutta e verdura",
+      "unit": "g",
+      "shop": true,
+      "per100": { "kcal": 17, "protein": 1.2, "carbs": 3, "fat": 0.3, "fiber": 1 },
+      "pieceGrams": null
+    }
+  },
+  "generalNotes": "",
+  "days": [
+    {
+      "weekday": 1,
+      "defaultType": "gym",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 2,
+      "defaultType": "rest",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 3,
+      "defaultType": "gym",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 4,
+      "defaultType": "rest",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 5,
+      "defaultType": "gym",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 6,
+      "defaultType": "rest",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "weekday": 7,
+      "defaultType": "rest",
+      "variants": [
+        {
+          "type": "gym",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "07:30",
+              "window": null,
+              "name": "Yogurt e avena",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }, { "p": "avena", "q": 50 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": "10:30",
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Pollo e riso",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 150 }, { "p": "riso", "q": 80 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": "17:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:30",
+              "window": null,
+              "name": "Pesce e verdure",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 200 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        },
+        {
+          "type": "rest",
+          "note": "",
+          "supplements": [],
+          "meals": [
+            {
+              "key": "colazione",
+              "label": "Colazione",
+              "time": "08:00",
+              "window": null,
+              "name": "Yogurt",
+              "recipe": null,
+              "items": [{ "p": "yogurt", "q": 150 }]
+            },
+            {
+              "key": "spuntino1",
+              "label": "Spuntino mattina",
+              "time": null,
+              "window": null,
+              "name": "",
+              "recipe": null,
+              "items": []
+            },
+            {
+              "key": "pranzo",
+              "label": "Pranzo",
+              "time": "13:00",
+              "window": null,
+              "name": "Insalata di pollo",
+              "recipe": null,
+              "items": [{ "p": "pollo", "q": 120 }, { "p": "zucchine", "q": 150 }]
+            },
+            {
+              "key": "spuntino2",
+              "label": "Spuntino pomeriggio",
+              "time": null,
+              "window": null,
+              "name": "Frutto",
+              "recipe": null,
+              "items": [{ "p": "mela", "q": 1 }]
+            },
+            {
+              "key": "cena",
+              "label": "Cena",
+              "time": "20:00",
+              "window": null,
+              "name": "Pesce",
+              "recipe": null,
+              "items": [{ "p": "merluzzo", "q": 180 }, { "p": "zucchine", "q": 200 }]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "recipes": []
+}

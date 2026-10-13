@@ -47,7 +47,7 @@
   </div>
   {#if error}<p class="err" id="workout-name-err" data-error>Nome: {error}</p>{/if}
   <div class="counters mono" data-testid="editor-counters">
-    <span><b>{totals.exercises}</b> esercizi</span>
+    <span><b>{totals.exercises + totals.cardio}</b> esercizi</span>
     <span><b>{totals.sets}</b> serie</span>
     <span>~<b>{totals.totalMin}</b> min</span>
   </div>

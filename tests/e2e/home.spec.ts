@@ -212,9 +212,13 @@ test('cambio giorno con striscia e swipe più volte: sempre un anello, una card,
     await swipe(page, dir);
     await expectClean(day, `swipe ${i + 1} verso ${dir}`);
   }
-  // Lunedì è il primo giorno della settimana: oltre non si va (resistenza al bordo).
+  // 2c: oltre lunedì si va alla settimana scorsa (la striscia la segue), poi si torna.
   await swipe(page, 'right');
+  await expectClean('Domenica');
+  await expect(page.getByTestId('home-week')).toHaveText('Settimana scorsa');
+  await swipe(page, 'left');
   await expectClean('Lunedì');
+  await expect(page.getByTestId('home-week')).toHaveText('Questa settimana');
 
   // Con "Riduci movimento" il cambio è secco, sempre senza doppioni.
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -224,14 +228,12 @@ test('cambio giorno con striscia e swipe più volte: sempre un anello, una card,
   await expectClean('Lunedì');
 });
 
-test('mercoledì: piano da riposo con una scheda assegnata, il conflitto si dichiara', async ({ page }) => {
+test('2c: mercoledì il piano dice riposo ma c’è una scheda: il tipo di giornata viene dalle attività (palestra)', async ({ page }) => {
   await loadBackup(page);
   await strip(page).nth(2).click();
   await expect(title(page)).toHaveText('Mercoledì');
-  await expect(page.getByTestId('day-type')).toHaveText('Riposo');
-  await expect(page.getByTestId('day-conflict')).toHaveText(
-    'Il piano alimentare di questo giorno è da giorno di riposo: i target restano quelli del piano.',
-  );
+  await expect(page.getByTestId('day-type')).toHaveText('Giorno palestra');
+  await expect(page.getByTestId('day-conflict')).toHaveCount(0);
   await expect(page.getByRole('region', { name: 'Allenamento: Àddome e mobilità' })).toContainText('in programma');
   // Domenica: riposo senza schede.
   await strip(page).nth(6).click();

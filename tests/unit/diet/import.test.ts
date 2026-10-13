@@ -28,10 +28,10 @@ describe('adattatore MyDiet → formato esteso', () => {
     expect(origin).toBe('mydiet');
     expect(warnings).toEqual([]);
     expect(file.days.map((d) => d.weekday)).toEqual([1, 2, 3, 4, 5, 6, 7]);
-    expect(file.days[0]!.note).toBe('Giornata di prova: bevi molta acqua.');
-    expect(file.days[0]!.type).toBeNull();
+    expect(file.days[0]!.variants[0]!.note).toBe('Giornata di prova: bevi molta acqua.');
+    expect(file.days[0]!.defaultType).toBeNull();
 
-    const monday = file.days[0]!.meals;
+    const monday = file.days[0]!.variants[0]!.meals;
     expect(monday.map((m) => [m.key, m.label])).toEqual([
       ['colazione', 'Colazione'],
       ['spuntino1', 'Spuntino'],
@@ -68,18 +68,18 @@ describe('adattatore MyDiet → formato esteso', () => {
 
   it('tollera pasti vuoti e categorie non elencate (Integratori, Pasto libero)', () => {
     const { file } = importMyDiet();
-    expect(file.days[2]!.meals[3]).toMatchObject({ key: 'spuntino2', name: '', items: [] });
-    expect(file.days[6]!.meals[1]).toMatchObject({ key: 'spuntino1', name: '', items: [] });
+    expect(file.days[2]!.variants[0]!.meals[3]).toMatchObject({ key: 'spuntino2', name: '', items: [] });
+    expect(file.days[6]!.variants[0]!.meals[1]).toMatchObject({ key: 'spuntino1', name: '', items: [] });
     expect(file.categories).not.toContain('Integratori');
     expect(file.products.whey!.cat).toBe('Integratori');
   });
 
   it('gli integratori usati nei pasti diventano anche integratori del giorno', () => {
     const { file } = importMyDiet();
-    expect(file.days[0]!.supplements).toEqual([{ name: 'Proteine in polvere', when: 'spuntino', dose: '30 g', skip: false }]);
-    expect(file.days[2]!.supplements).toEqual([]);
+    expect(file.days[0]!.variants[0]!.supplements).toEqual([{ name: 'Proteine in polvere', when: 'spuntino', dose: '30 g', skip: false }]);
+    expect(file.days[2]!.variants[0]!.supplements).toEqual([]);
     // Restano anche nel pasto, per i calcoli.
-    expect(file.days[0]!.meals[3]!.items).toEqual([{ p: 'whey', q: 30 }]);
+    expect(file.days[0]!.variants[0]!.meals[3]!.items).toEqual([{ p: 'whey', q: 30 }]);
   });
 
   it('titolo, validità, id e versione dal contenuto', () => {
@@ -116,10 +116,10 @@ describe('adattatore MyDiet → formato esteso', () => {
     expect(file.title).toBe('Piano MyDiet');
     expect(file.validFrom).toBeNull();
     expect(file.products.mela).toMatchObject({ cat: '', shop: true });
-    expect(file.days[0]!.meals).toEqual([
+    expect(file.days[0]!.variants[0]!.meals).toEqual([
       { key: 'cena', label: 'Cena', time: null, window: null, name: '', recipe: null, items: [{ p: 'mela', q: 100 }] },
     ]);
-    expect(file.days[1]!.meals).toEqual([]);
+    expect(file.days[1]!.variants[0]!.meals).toEqual([]);
     expect(warnings).toEqual(['Il file contiene solo 2 giorni (da lunedì).']);
   });
 
@@ -127,7 +127,7 @@ describe('adattatore MyDiet → formato esteso', () => {
     const raw = myDietJson();
     raw.dieta.giorni[1]!.pasti.cena.abilita = '25:00';
     const { file, warnings } = importMyDiet(raw);
-    expect(file.days[1]!.meals[4]!.window).toBeNull();
+    expect(file.days[1]!.variants[0]!.meals[4]!.window).toBeNull();
     expect(warnings).toEqual(['Martedì › Cena: orari non validi, ignorati']);
   });
 
@@ -135,12 +135,12 @@ describe('adattatore MyDiet → formato esteso', () => {
     const raw = myDietJson() as unknown as { dieta: { giorni: { pasti: Record<string, unknown> }[] } };
     raw.dieta.giorni[0]!.pasti = { spuntino_sera: { nome: 'Tisana', items: [] }, ...raw.dieta.giorni[0]!.pasti };
     const { file } = importMyDiet(raw);
-    expect(file.days[0]!.meals.map((m) => m.label)).toEqual(['Colazione', 'Spuntino', 'Pranzo', 'Spuntino', 'Cena', 'Spuntino sera']);
+    expect(file.days[0]!.variants[0]!.meals.map((m) => m.label)).toEqual(['Colazione', 'Spuntino', 'Pranzo', 'Spuntino', 'Cena', 'Spuntino sera']);
   });
 
   it('convertMyDiet produce una bozza che va validata', () => {
     const { draft } = convertMyDiet(myDietFileSchema.parse(myDietJson()));
-    expect(draft).toMatchObject({ app: 'healthy-app', kind: 'diet', schemaVersion: 2 });
+    expect(draft).toMatchObject({ app: 'healthy-app', kind: 'diet', schemaVersion: 3 });
     expect(parseDietFile(draft).ok).toBe(true);
   });
 

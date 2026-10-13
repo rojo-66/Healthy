@@ -23,13 +23,17 @@ function rowsOf<T extends TableName>(tables: TableRows, name: T): TableRow<T>[] 
 /** Tutte le tabelle, lette in un'unica transazione. Impostazioni del telefono e libreria dell'app restano fuori. */
 async function readAllTables(database: HealthyDb): Promise<TableRows> {
   return database.transaction('r', database.tables, async () => {
-    const [profile, measurements, exercises, workouts, sessions, dietPlans, dietLog, shopping, settings] =
+    const [profile, measurements, exercises, workouts, sessions, runs, runLogs, calendarEdits, dayChoices, dietPlans, dietLog, shopping, settings] =
       await Promise.all([
         database.profile.toArray(),
         database.measurements.toArray(),
         database.exercises.toArray(),
         database.workouts.toArray(),
         database.sessions.toArray(),
+        database.runs.toArray(),
+        database.runLogs.toArray(),
+        database.calendarEdits.toArray(),
+        database.dayChoices.toArray(),
         database.dietPlans.toArray(),
         database.dietLog.toArray(),
         database.shopping.toArray(),
@@ -41,6 +45,10 @@ async function readAllTables(database: HealthyDb): Promise<TableRows> {
       exercises: exercises.filter((row) => !isBuiltInExercise(row)),
       workouts,
       sessions,
+      runs,
+      runLogs,
+      calendarEdits,
+      dayChoices,
       dietPlans,
       dietLog,
       shopping,

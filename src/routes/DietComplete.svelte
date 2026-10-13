@@ -20,7 +20,7 @@
   import { routeHref } from '../lib/routes';
   import { hasCompleteValues } from '../lib/diet/calc/nutrients';
   import { atPercent } from '../lib/diet/format';
-  import { DAY_TYPE_PRESETS, setDayType, setProductValues, setSupplements, setTargets } from '../lib/diet/edit';
+  import { DAY_TYPE_PRESETS, selectableDayTypes, setDayType, setProductValues, setSupplements, setTargets } from '../lib/diet/edit';
   import ProductForm from './diet/complete/ProductForm.svelte';
   import SupplementsEditor from './diet/complete/SupplementsEditor.svelte';
   import TargetsForm from './diet/complete/TargetsForm.svelte';
@@ -71,8 +71,14 @@
 
   // --- Target ---
   const usedTypes = $derived(
-    plan ? [...new Set(plan.payload.days.flatMap((d) => (d.type === null ? [] : [d.type])))] : [],
+    plan ? [...new Set(plan.payload.days.flatMap((d) => d.variants.flatMap((v) => (v.type === null ? [] : [v.type]))))] : [],
   );
+
+  /** Etichetta di un tipo di giornata, in minuscolo ("palestra"). */
+  function typeName(key: string | null): string {
+    if (key === null) return 'senza tipo';
+    return ((plan && lookup(plan.payload.dayTypes, key)?.label) || key).toLowerCase();
+  }
   // Ultimo peso inserito: una misura senza peso (solo circonferenze) non lo cancella.
   const lastWeight = $derived(latestWeight(measurements.current));
   const estimateInput = $derived(estimateInputFrom(profile.current, lastWeight, new Date()));
@@ -139,17 +145,23 @@
         <h2 id="c-types" class="mono-label">Tipi di giornata</h2>
         <p class="hint">Servono per i target: di solito palestra, corsa o riposo.</p>
         {#each plan.payload.days as day (day.weekday)}
+          {@const selectable = selectableDayTypes(plan.payload, day.weekday)}
           <div class="type-row" role="group" aria-label="Tipo di giornata di {weekdayName(day.weekday).toLowerCase()}">
             <span class="type-day">{weekdayName(day.weekday)}</span>
+            {#if selectable}
+              <!-- Più varianti (2b): il predefinito si sceglie tra i tipi che il giorno ha. -->
+              <span class="hint">predefinito, tra le varianti del piano:</span>
+            {/if}
             <div class="type-options">
-              {#each typeOptions as opt (opt.key)}
+              {#each selectable ? typeOptions.filter((o) => selectable.includes(o.key)) : typeOptions as opt (opt.key)}
                 <Button
                   variant="secondary"
                   tone="food"
                   size="sm"
-                  pressed={day.type === opt.key}
+                  pressed={day.defaultType === opt.key}
                   disabled={busy}
-                  onclick={() => chooseType(day.weekday, day.type === opt.key ? null : opt.key)}>{opt.label}</Button
+                  onclick={() => chooseType(day.weekday, day.defaultType === opt.key && !selectable ? null : opt.key)}
+                  >{opt.label}</Button
                 >
               {/each}
             </div>
@@ -219,12 +231,20 @@
       <section class="block" aria-labelledby="c-supps">
         <h2 id="c-supps" class="mono-label">Integratori</h2>
         {#each plan.payload.days as day (day.weekday)}
-          <SupplementsEditor
-            weekday={day.weekday}
-            supplements={day.supplements}
-            {busy}
-            onsave={(list) => save(setSupplements(plan.payload, day.weekday, list), `Integratori di ${weekdayName(day.weekday).toLowerCase()} salvati.`)}
-          />
+          {#each day.variants as variant (variant.type ?? '')}
+            {@const many = day.variants.length > 1}
+            <SupplementsEditor
+              weekday={day.weekday}
+              variantLabel={many ? typeName(variant.type) : undefined}
+              supplements={variant.supplements}
+              {busy}
+              onsave={(list) =>
+                save(
+                  setSupplements(plan.payload, day.weekday, list, variant.type),
+                  `Integratori di ${weekdayName(day.weekday).toLowerCase()}${many ? ` (${typeName(variant.type)})` : ''} salvati.`,
+                )}
+            />
+          {/each}
         {/each}
       </section>
 

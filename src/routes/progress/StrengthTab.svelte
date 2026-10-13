@@ -6,6 +6,8 @@
   import ViewToggle from '../../lib/charts/ViewToggle.svelte';
   import Button from '../../lib/components/Button.svelte';
   import Card from '../../lib/components/Card.svelte';
+  import type { CalendarEdit } from '../../lib/data/schemas/calendar';
+  import type { Run, RunLog } from '../../lib/data/schemas/runs';
   import type { Session } from '../../lib/data/schemas/sessions';
   import type { Workout } from '../../lib/data/schemas/workouts';
   import { formatDecimal, formatInt } from '../../lib/diet/format';
@@ -28,11 +30,16 @@
     index: StrengthIndex;
     sessions: readonly Session[];
     workouts: readonly Workout[];
+    /** Corse pianificate e fatte (2a): contano negli allenamenti a settimana. */
+    runs?: readonly Run[];
+    runLogs?: readonly RunLog[];
+    /** Spostamenti e salti (2c): l'obiettivo di ogni settimana sono le attività previste dopo le modifiche. */
+    edits?: readonly CalendarEdit[];
     range: DateRange | null;
     today: string;
   }
 
-  let { index, sessions, workouts, range, today }: Props = $props();
+  let { index, sessions, workouts, runs = [], runLogs = [], edits = [], range, today }: Props = $props();
 
   const VIEWS = [
     { id: 'chart', label: 'Grafico' },
@@ -53,7 +60,7 @@
   const metric = $derived(progressView.metric);
   const isLoad = $derived(metric === 'load');
   const view = $derived(exerciseView(chosen, metric, range));
-  const weekly = $derived(weeklyWorkouts(sessions, workouts, range, today));
+  const weekly = $derived(weeklyWorkouts(sessions, workouts, range, today, runs, runLogs, edits));
   const records = $derived(recentRecords(index, range, 5));
 
   // Cambiando periodo, esercizio o misura si torna all'ultimo punto.
@@ -93,20 +100,25 @@
   );
 
   const weekBars = $derived(
-    weekly.weeks.map((w) => ({ key: w.monday, label: dayMonth(w.monday), value: w.count, partial: w.current })),
+    weekly.weeks.map((w) => ({ key: w.monday, label: dayMonth(w.monday), value: w.count, partial: w.current, target: w.target })),
   );
   const doneWeeks = $derived(weekly.weeks.filter((w) => !w.current));
   const average = $derived(doneWeeks.length ? doneWeeks.reduce((s, w) => s + w.count, 0) / doneWeeks.length : null);
   const weekSummary = $derived(
     `Allenamenti a settimana: ${weekly.weeks.length} settimane` +
       (average !== null ? `, in media ${formatDecimal(average, 1, true)} a settimana` : '') +
-      (weekly.target !== null ? `, obiettivo ${weekly.target}` : ''),
+      (weekly.hasTarget ? ', con l’obiettivo di ogni settimana' : ''),
   );
   function weekTip(i: number) {
     const w = weekly.weeks[i];
     if (!w) return { title: '', value: '' };
-    const count = weekly.target !== null ? `${w.count} su ${weekly.target}` : `${w.count} ${w.count === 1 ? 'allenamento' : 'allenamenti'}`;
-    return { title: `Sett. del ${dayMonth(w.monday)}`, value: count + (w.current ? ' · in corso' : ''), extra: `volume ${tonnes(w.volumeKg)}` };
+    const count = w.target !== null ? `${w.count} su ${w.target}` : `${w.count} ${w.count === 1 ? 'allenamento' : 'allenamenti'}`;
+    const split = w.runs > 0 ? `${w.gym} palestra · ${w.runs} ${w.runs === 1 ? 'corsa' : 'corse'} · ` : '';
+    return {
+      title: `Sett. del ${dayMonth(w.monday)}`,
+      value: count + (w.current ? ' · in corso' : ''),
+      extra: `${split}volume ${tonnes(w.volumeKg)}`,
+    };
   }
   const weekRows = $derived(
     weekly.weeks
@@ -223,8 +235,7 @@
       {#if viewOf('settimane') === 'chart'}
         <BarChart
           bars={weekBars}
-          target={weekly.target}
-          targetLabel={weekly.target !== null ? `obiettivo ${weekly.target}` : ''}
+          target={null}
           tone="training"
           summary={weekSummary}
           tip={weekTip}
@@ -234,7 +245,7 @@
         <Legend
           items={[
             { mark: '■', tone: 'training', text: 'sessioni fatte' },
-            ...(weekly.target !== null ? [{ mark: '- -', text: 'giorni assegnati nelle schede attuali' }] : []),
+            ...(weekly.hasTarget ? [{ mark: '- -', text: 'obiettivo: attività previste dopo spostamenti e salti' }] : []),
             { mark: '▭', text: 'tratteggiata = settimana in corso' },
           ]}
         />

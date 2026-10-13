@@ -8,6 +8,7 @@ import {
   daySchema,
   dietPayloadShape,
   mealSchema,
+  variantSchema,
   nutrientsSchema,
   productSchema,
   recipeSchema,
@@ -64,9 +65,10 @@ function filledTemplate(): Json {
     prova: { name: 'Alimento finto', cat: 'Altro', unit: 'g', shop: true, per100: null, pieceGrams: null },
   };
   for (const day of copy.days) {
-    day.type = 'rest';
-    day.meals[2].name = 'Pranzo finto';
-    day.meals[2].items = [{ p: 'prova', q: 100 }];
+    day.defaultType = 'rest';
+    day.variants[0].type = 'rest';
+    day.variants[0].meals[2].name = 'Pranzo finto';
+    day.variants[0].meals[2].items = [{ p: 'prova', q: 100 }];
   }
   return copy;
 }
@@ -76,16 +78,20 @@ const sortedKeys = (value: object) => Object.keys(value).sort();
 describe('modello per Claude: il file', () => {
   it('è JSON valido, vuoto e senza dati reali', () => {
     const raw = JSON.parse(readFileSync(TEMPLATE_PATH, 'utf8')) as Json;
-    expect(raw).toMatchObject({ app: 'healthy-app', kind: 'diet', schemaVersion: 2, _modello: true, id: '', title: '' });
+    expect(raw).toMatchObject({ app: 'healthy-app', kind: 'diet', schemaVersion: 3, _modello: true, id: '', title: '' });
     expect(raw.products).toEqual({});
     expect(raw.recipes).toEqual([]);
     expect(raw.generalNotes).toBe('');
     expect(raw.days.map((d: Json) => d.weekday)).toEqual([1, 2, 3, 4, 5, 6, 7]);
     for (const day of raw.days) {
-      expect(day.type).toBeNull();
-      expect(day.supplements).toEqual([]);
-      expect(day.meals.map((m: Json) => m.key)).toEqual(['colazione', 'spuntino1', 'pranzo', 'spuntino2', 'cena']);
-      for (const meal of day.meals) expect(meal).toMatchObject({ name: '', items: [], time: null, window: null, recipe: null });
+      // v3 (2b): tipo predefinito e una sola variante, entrambi da compilare.
+      expect(day.defaultType).toBeNull();
+      expect(day.variants).toHaveLength(1);
+      const variant = day.variants[0];
+      expect(variant.type).toBeNull();
+      expect(variant.supplements).toEqual([]);
+      expect(variant.meals.map((m: Json) => m.key)).toEqual(['colazione', 'spuntino1', 'pranzo', 'spuntino2', 'cena']);
+      for (const meal of variant.meals) expect(meal).toMatchObject({ name: '', items: [], time: null, window: null, recipe: null });
     }
     for (const type of Object.values(raw.dayTypes) as Json[]) expect(type.targets).toBeNull();
   });
@@ -116,17 +122,18 @@ describe('modello per Claude: il file', () => {
       expect(part[0].safeParse(part[1]).success).toBe(true);
     }
     expect(sortedKeys(raw.days[0])).toEqual(sortedKeys(daySchema.shape));
-    expect(sortedKeys(raw.days[0].meals[0])).toEqual(sortedKeys(mealSchema.shape));
+    expect(sortedKeys(raw.days[0].variants[0])).toEqual(sortedKeys(variantSchema.shape));
+    expect(sortedKeys(raw.days[0].variants[0].meals[0])).toEqual(sortedKeys(mealSchema.shape));
   });
 
   it('il download è una copia profonda con _modello e la data di oggi', () => {
     const first = templateContent(TODAY) as Json;
     expect(first._modello).toBe(true);
     expect(first._generato).toBe('2026-10-12');
-    first.days[0].meals[0].name = 'modificato';
+    first.days[0].variants[0].meals[0].name = 'modificato';
     first._istruzioni.push('modificato');
     const second = templateContent(TODAY) as Json;
-    expect(second.days[0].meals[0].name).toBe('');
+    expect(second.days[0].variants[0].meals[0].name).toBe('');
     expect(second._istruzioni).not.toContain('modificato');
   });
 
@@ -199,11 +206,12 @@ describe('modello per Claude: import', () => {
     expect(file.products.banana_esempio?.per100).toBeNull();
     expect(file.products.latte_esempio?.per100).toBeNull();
     expect(file.products.yogurt_esempio?.per100?.fiber).toBeNull();
-    const tuesday = file.days[1]!;
+    const tuesday = file.days[1]!.variants[0]!;
+    expect(file.days[1]!.defaultType).toBeNull();
     expect(tuesday.type).toBeNull();
     expect(tuesday.meals[0]!.time).toBeNull();
     expect(tuesday.meals[2]!.window).toBeNull();
-    expect(file.days[0]!.note).toContain('In alternativa');
+    expect(file.days[0]!.variants[0]!.note).toContain('In alternativa');
     expect(warnings).toEqual([]);
 
     const completeness = planCompleteness(file);
@@ -242,9 +250,9 @@ describe('modello per Claude: import', () => {
 
   it('fascia oraria con un solo estremo: ignorata con avviso', () => {
     const raw = filledTemplate();
-    raw.days[0].meals[2].window = ['12:00', ''];
+    raw.days[0].variants[0].meals[2].window = ['12:00', ''];
     const { file, warnings } = importDiet(raw);
-    expect(file.days[0]!.meals[2]!.window).toBeNull();
+    expect(file.days[0]!.variants[0]!.meals[2]!.window).toBeNull();
     expect(warnings).toEqual(['Lunedì › Pranzo: fascia oraria incompleta, ignorata']);
   });
 });
@@ -266,7 +274,7 @@ describe('modello per Claude: errori tipici, ciascuno con il suo messaggio', () 
 
   it('prodotto usato nei pasti ma assente in products', () => {
     const raw = filledTemplate();
-    raw.days[0].meals[0].items = [{ p: 'fantasma', q: 50 }];
+    raw.days[0].variants[0].meals[0].items = [{ p: 'fantasma', q: 50 }];
     expect(dietErrors(raw)).toEqual(["Lunedì › Colazione usa il prodotto «fantasma» che non è nell'elenco dei prodotti"]);
   });
 
@@ -285,9 +293,9 @@ describe('modello per Claude: errori tipici, ciascuno con il suo messaggio', () 
 
   it('numero scritto come testo con la virgola', () => {
     const raw = filledTemplate();
-    raw.days[0].meals[2].items[0].q = '1,5';
+    raw.days[0].variants[0].meals[2].items[0].q = '1,5';
     expect(dietErrors(raw)).toEqual([
-      'giorni › n. 1 › pasti › n. 3 › elementi › n. 1 › quantità: numero scritto con la virgola («1,5»): usa il punto (1.5), senza virgolette',
+      'giorni › n. 1 › varianti › n. 1 › pasti › n. 3 › elementi › n. 1 › quantità: numero scritto con la virgola («1,5»): usa il punto (1.5), senza virgolette',
     ]);
   });
 

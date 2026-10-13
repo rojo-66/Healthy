@@ -6,6 +6,8 @@
     value: number;
     /** Periodo in corso (settimana non finita): barra tratteggiata. */
     partial?: boolean;
+    /** Obiettivo di questa barra (2c): tacca tratteggiata sopra la barra. */
+    target?: number | null;
   }
 
   export interface BarTip {
@@ -49,7 +51,9 @@
   const n = $derived(bars.length);
   const si = $derived(selected < 0 || selected >= n ? n - 1 : selected);
   const plot = $derived(plotArea(width, height, INSETS));
-  const scale = $derived(niceScale([...bars.map((b) => b.value), target ?? 0], { zero: true, integer: true }));
+  const scale = $derived(
+    niceScale([...bars.map((b) => b.value), ...bars.map((b) => b.target ?? 0), target ?? 0], { zero: true, integer: true }),
+  );
   const layout = $derived(barLayout(n, plot));
   const centers = $derived(bars.map((_, i) => layout.x(i) + layout.bar / 2));
   const base = $derived(plot.top + plot.height);
@@ -97,6 +101,9 @@
               />
             {/if}
             <path class="bar" class:partial={bar.partial} {d} />
+          {/if}
+          {#if bar.target !== undefined && bar.target !== null}
+            <line class="target bar-target" x1={layout.x(i) - 2} x2={layout.x(i) + layout.bar + 2} y1={y(bar.target)} y2={y(bar.target)} />
           {/if}
           {#if labels.has(i)}
             <text class="date" class:on={i === si} x={centers[i]} y={height - 6} text-anchor="middle">{bar.label}</text>
@@ -164,6 +171,11 @@
     stroke: var(--text);
     stroke-dasharray: 4 4;
     opacity: 0.7;
+  }
+
+  .bar-target {
+    stroke-width: 2;
+    stroke-dasharray: 3 2;
   }
 
   .tip {

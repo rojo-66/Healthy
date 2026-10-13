@@ -2,6 +2,7 @@
   import NoteBox from '../../lib/components/NoteBox.svelte';
   import { MAX_TEXT } from '../../lib/data/limits';
   import { fromIsoDate } from '../../lib/diet/calc/calendar';
+  import { weekdayName } from '../../lib/data/schemas/diet-payload';
   import type { DietImportPreview } from '../../lib/diet/import/preview';
 
   // Anteprima di un piano ricevuto (ex ImportSheet di M3): tutto come testo.
@@ -40,6 +41,15 @@
     <div><dt>Pasti</dt><dd class="mono">{preview.meals}</dd></div>
     <div><dt>Prodotti</dt><dd class="mono">{preview.products}</dd></div>
     <div><dt>Ricette</dt><dd class="mono">{preview.recipes}</dd></div>
+    {#if preview.variants.length > 0}
+      <!-- 2b: giorni con più varianti ("Lun · palestra + riposo"). -->
+      <div class="wide">
+        <dt>Varianti</dt>
+        <dd data-testid="import-variants">
+          {preview.variants.map((v) => `${weekdayName(v.weekday).slice(0, 3)} · ${v.types.join(' + ')}`).join('; ')}
+        </dd>
+      </div>
+    {/if}
   </dl>
   <p class="meta">Completo al {preview.completeness.percent}%</p>
 
@@ -126,6 +136,18 @@
     margin: 0;
     font-size: 18px;
     font-weight: 700;
+  }
+
+  /* Varianti (2b): tutta la riga, testo normale. */
+  .counts .wide {
+    grid-column: 1 / -1;
+    align-items: flex-start;
+  }
+
+  .counts .wide dd {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-2);
   }
 
   .list {

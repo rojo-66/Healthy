@@ -1,7 +1,7 @@
 {
   "app": "healthy-app",
   "kind": "workout",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "id": "c3333333-3333-4333-8333-333333333333",
   "version": 3,
   "author": "Coach Finto",
@@ -16,12 +16,77 @@
     { "name": "Band pull-apart", "hint": "Scapole che si avvicinano", "dose": "2 × 20" }
   ],
   "items": [
-    { "name": "Panca piana con bilanciere", "muscles": ["Petto", "Tricipiti", "Spalle"], "sets": 4, "reps": 8, "kg": 72.5, "restSec": 120, "note": "Scapole addotte e piedi ben piantati." },
-    { "name": "Lat machine presa larga", "muscles": ["Dorsali", "Bicipiti"], "sets": 4, "reps": 10, "kg": 57.5, "restSec": 90, "note": "Tira con i gomiti, non con le mani. Se alla serie 3 non chiudi 10 ripetizioni pulite, nell'ultima scendi a 55 kg.", "videoUrl": "https://example.com/video/lat-machine" },
-    { "name": "Panca inclinata con manubri", "muscles": ["Petto", "Spalle"], "sets": 3, "reps": 10, "kg": 22, "restSec": 90, "note": "" },
-    { "name": "Rematore con manubrio", "muscles": ["Dorsali"], "sets": 3, "reps": 10, "kg": 32, "restSec": 90, "note": "Schiena dritta, tira verso l'anca." },
-    { "name": "Croci ai cavi", "muscles": ["Petto"], "sets": 3, "reps": 12, "kg": 15, "restSec": 60, "note": "" },
-    { "name": "Pulley basso", "muscles": ["Dorsali", "Bicipiti"], "sets": 3, "reps": 12, "kg": 50, "restSec": 60, "note": "Petto in fuori, pausa di un secondo al petto." }
-  ],
-  "cardio": { "type": "tapis roulant", "minutes": 12 }
+    {
+      "kind": "strength",
+      "name": "Panca piana con bilanciere",
+      "muscles": ["Petto", "Tricipiti", "Spalle"],
+      "sets": 4,
+      "reps": 8,
+      "kg": 72.5,
+      "restSec": 120,
+      "note": "Scapole addotte e piedi ben piantati."
+    },
+    {
+      "kind": "strength",
+      "name": "Lat machine presa larga",
+      "muscles": ["Dorsali", "Bicipiti"],
+      "sets": 4,
+      "reps": 10,
+      "kg": 57.5,
+      "restSec": 90,
+      "note": "Tira con i gomiti, non con le mani. Se alla serie 3 non chiudi 10 ripetizioni pulite, nell'ultima scendi a 55 kg.",
+      "videoUrl": "https://example.com/video/lat-machine"
+    },
+    {
+      "kind": "strength",
+      "name": "Panca inclinata con manubri",
+      "muscles": ["Petto", "Spalle"],
+      "sets": 3,
+      "reps": 10,
+      "kg": 22,
+      "restSec": 90,
+      "note": ""
+    },
+    {
+      "kind": "strength",
+      "name": "Rematore con manubrio",
+      "muscles": ["Dorsali"],
+      "sets": 3,
+      "reps": 10,
+      "kg": 32,
+      "restSec": 90,
+      "note": "Schiena dritta, tira verso l'anca."
+    },
+    {
+      "kind": "strength",
+      "name": "Croci ai cavi",
+      "muscles": ["Petto"],
+      "sets": 3,
+      "reps": 12,
+      "kg": 15,
+      "restSec": 60,
+      "note": ""
+    },
+    {
+      "kind": "strength",
+      "name": "Pulley basso",
+      "muscles": ["Dorsali", "Bicipiti"],
+      "sets": 3,
+      "reps": 12,
+      "kg": 50,
+      "restSec": 60,
+      "note": "Petto in fuori, pausa di un secondo al petto."
+    },
+    {
+      "kind": "cardio",
+      "name": "Tapis roulant · corsa",
+      "minutes": 12,
+      "distanceKm": null,
+      "speedKmh": null,
+      "inclinePct": null,
+      "level": null,
+      "note": "",
+      "videoUrl": null
+    }
+  ]
 }

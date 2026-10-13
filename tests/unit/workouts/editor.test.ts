@@ -11,11 +11,13 @@ import {
 import { clearWorkoutDraft, getWorkoutAuthor, getWorkoutDraft, saveWorkoutDraft, setWorkoutAuthor } from '../../../src/lib/data/repo/settings';
 import { deleteWorkout, duplicateWorkoutById, saveWorkout } from '../../../src/lib/data/repo/workouts';
 import { workoutSchema } from '../../../src/lib/data/schemas/workouts';
+import type { DraftItem, DraftStrength, WorkoutDraft } from '../../../src/lib/data/schemas/workout-draft';
 import { firstItemWithError, itemErrors, validateDraft } from '../../../src/lib/workouts/calc/editor-schema';
 import { copyName, duplicateWorkout, isOwnWorkout, prepareSave, saveKind, versionAfterSave } from '../../../src/lib/workouts/calc/version';
 import {
   draftFingerprint,
   draftFromWorkout,
+  cardioFieldsFor,
   draftToCandidate,
   duplicateItem,
   emptyDraft,
@@ -31,8 +33,26 @@ import { customExercise, ME_OWN, ME_PT, MONDAY, SAME_PT, weekWorkouts, workoutNa
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/;
 
-const BENCH = { id: 'fx-barbell-bench-press-medium-grip', name: 'Panca piana con bilanciere', muscles: ['Petto', 'Tricipiti'], videoUrl: null };
-const LAT = { id: 'fx-wide-grip-lat-pulldown', name: 'Lat machine presa larga', muscles: ['Dorsali'], videoUrl: null };
+const BENCH = {
+  id: 'fx-barbell-bench-press-medium-grip',
+  name: 'Panca piana con bilanciere',
+  muscles: ['Petto', 'Tricipiti'],
+  videoUrl: null,
+  kind: 'strength' as const,
+  cardioFields: [],
+};
+const LAT = { id: 'fx-wide-grip-lat-pulldown', name: 'Lat machine presa larga', muscles: ['Dorsali'], videoUrl: null, kind: 'strength' as const, cardioFields: [] };
+const TAPIS = {
+  id: 'cd-tapis-corsa',
+  name: 'Tapis roulant · corsa',
+  muscles: [],
+  videoUrl: null,
+  kind: 'cardio' as const,
+  cardioFields: ['distance' as const, 'speed' as const, 'incline' as const],
+};
+
+/** Riga di forza della bozza (per modificarla nei test). */
+const strengthRow = (d: WorkoutDraft, i: number) => d.items[i] as DraftStrength;
 
 function newDraft(name = 'Spinta') {
   const d = emptyDraft(ME_OWN);
@@ -113,7 +133,27 @@ describe('bozza', () => {
     expect(dup.items).toHaveLength(3);
     expect(dup.items[1]!.key).not.toBe(dup.items[0]!.key);
     expect(removeItem(d, 0).items.map((i) => i.name)).toEqual([LAT.name]);
-    expect(updateItem(d, 1, { reps: 12 }).items[1]!.reps).toBe(12);
+    expect(strengthRow(updateItem(d, 1, { reps: 12 }), 1).reps).toBe(12);
+  });
+
+  it('2a: cardio dalla libreria (10′, campi della voce), andata e ritorno, scheda solo cardio valida', () => {
+    const row = itemFromExercise(TAPIS);
+    expect(row).toMatchObject({ kind: 'cardio', exerciseId: 'cd-tapis-corsa', minutes: 10, distanceKm: null, fields: ['distance', 'speed', 'incline'] });
+    const d = { ...newDraft(), items: [...newDraft().items, row] };
+    const candidate = validateDraft(d, MONDAY);
+    expect(candidate.ok).toBe(true);
+    if (!candidate.ok) return;
+    expect(candidate.value.items.map((i) => i.kind)).toEqual(['strength', 'strength', 'cardio']);
+    const back = draftFromWorkout(candidate.value);
+    expect(back.items[2]).toMatchObject({ kind: 'cardio', minutes: 10, fields: ['distance', 'speed', 'incline'] });
+
+    const onlyCardio = validateDraft({ ...newDraft(), items: [itemFromExercise(TAPIS)] }, MONDAY);
+    expect(onlyCardio.ok).toBe(true);
+    const zero = validateDraft({ ...newDraft(), items: [{ ...itemFromExercise(TAPIS), minutes: 0 } as DraftItem] }, MONDAY);
+    expect(zero.ok || zero.fields['items.0.minutes']).toBe('almeno 1 minuto');
+    // Un cardio non collegato alla libreria mostra tutti i campi.
+    expect(cardioFieldsFor(null)).toEqual(['distance', 'speed', 'incline', 'level']);
+    expect(cardioFieldsFor('cd-cyclette')).toEqual(['distance', 'level']);
   });
 });
 
@@ -126,7 +166,7 @@ describe('validazione dell\'editor', () => {
 
   it('errori in italiano accanto al campo', () => {
     const d = newDraft('');
-    d.items[1] = { ...d.items[1]!, reps: 0, videoUrl: 'http://video.example.com' };
+    d.items[1] = { ...strengthRow(d, 1), reps: 0, videoUrl: 'http://video.example.com' };
     const result = validateDraft(d, MONDAY);
     expect(result.ok).toBe(false);
     if (result.ok) return;
@@ -144,7 +184,7 @@ describe('validazione dell\'editor', () => {
     const empty = validateDraft({ ...newDraft(), items: [] }, MONDAY);
     expect(empty.ok || empty.fields['items']).toBe('aggiungi almeno un esercizio');
     const d = newDraft();
-    d.items[0] = { ...d.items[0]!, name: '', sets: 0 };
+    d.items[0] = { ...strengthRow(d, 0), name: '', sets: 0 };
     const bad = validateDraft(d, MONDAY);
     expect(bad.ok).toBe(false);
     if (!bad.ok) {
@@ -160,7 +200,7 @@ describe('validazione dell\'editor', () => {
 
   it('serie piramidali con 0 ripetizioni', () => {
     const d = newDraft();
-    d.items[0] = { ...d.items[0]!, sets: 2, setsDetail: [{ reps: 8, kg: 50 }, { reps: 0, kg: 55 }] };
+    d.items[0] = { ...strengthRow(d, 0), sets: 2, setsDetail: [{ reps: 8, kg: 50 }, { reps: 0, kg: 55 }] };
     const result = validateDraft(d, MONDAY);
     expect(result.ok || result.fields['items.0.setsDetail.1.reps']).toBe('almeno 1 ripetizione');
   });
@@ -182,7 +222,7 @@ describe('salvataggio nel database', () => {
     expect(second).toMatchObject({ kind: 'update', from: 1 });
     expect(second.workout).toMatchObject({ id: d.workoutId, version: 2 });
     expect(await db.workouts.count()).toBe(1);
-    expect((await db.workouts.get(d.workoutId))?.items[0]?.kg).toBe(60);
+    expect((await db.workouts.get(d.workoutId))?.items[0]).toMatchObject({ kind: 'strength', kg: 60 });
   });
 
   it('dati non validi: errore in italiano e nessuna scrittura', async () => {
@@ -241,15 +281,18 @@ describe('esercizi personalizzati', () => {
   beforeEach(resetDb);
 
   it('crea, modifica ed elimina; muscoli e attrezzo dalle liste', async () => {
-    const ex = await createCustomExercise({ name: 'Crunch sul rullo', muscles: ['Addominali'], equipment: 'Altro', videoUrl: '' });
-    expect(ex).toMatchObject({ custom: true, videoUrl: null });
+    const ex = await createCustomExercise({ name: 'Crunch sul rullo', kind: 'strength', muscles: ['Addominali'], equipment: 'Altro', videoUrl: '' });
+    expect(ex).toMatchObject({ custom: true, videoUrl: null, kind: 'strength', cardioFields: [] });
     expect(ex.id).toMatch(UUID);
     const edited = await updateCustomExercise(ex.id, { ...ex, name: 'Crunch al rullo', videoUrl: 'https://example.com/v' });
     expect(edited).toMatchObject({ name: 'Crunch al rullo', videoUrl: 'https://example.com/v' });
-    const bad = await caught(createCustomExercise({ name: 'X', muscles: ['Collo'], equipment: 'Altro', videoUrl: '' }));
+    const bad = await caught(createCustomExercise({ name: 'X', kind: 'strength', muscles: ['Collo'], equipment: 'Altro', videoUrl: '' }));
     expect(bad).toBeInstanceOf(ValidationError);
-    const none = await caught(createCustomExercise({ name: 'X', muscles: [], equipment: 'Altro', videoUrl: '' }));
+    const none = await caught(createCustomExercise({ name: 'X', kind: 'strength', muscles: [], equipment: 'Altro', videoUrl: '' }));
     expect((none as ValidationError).errors).toContain('muscoli: scegli almeno un muscolo');
+    // 2a: un cardio personalizzato non ha bisogno di muscoli e mostra tutti i campi.
+    const cardio = await createCustomExercise({ name: 'Corsa sulle scale', kind: 'cardio', muscles: [], equipment: 'Corpo libero', videoUrl: '' });
+    expect(cardio).toMatchObject({ kind: 'cardio', muscles: [], cardioFields: ['distance', 'speed', 'incline', 'level'] });
     await deleteCustomExercise(ex.id);
     expect(await db.exercises.get(ex.id)).toBeUndefined();
   });
@@ -274,7 +317,7 @@ describe('esercizi personalizzati', () => {
   it('gli esercizi della libreria non si modificano né si eliminano', async () => {
     await syncLibrary();
     expect(await caught(deleteCustomExercise('fx-plank'))).toBeInstanceOf(ValidationError);
-    expect(await caught(updateCustomExercise('fx-plank', { name: 'X', muscles: ['Petto'], equipment: 'Altro', videoUrl: '' }))).toBeInstanceOf(
+    expect(await caught(updateCustomExercise('fx-plank', { name: 'X', kind: 'strength', muscles: ['Petto'], equipment: 'Altro', videoUrl: '' }))).toBeInstanceOf(
       ValidationError,
     );
   });

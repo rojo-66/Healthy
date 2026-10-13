@@ -289,6 +289,8 @@ test('"Riduci movimento": stessi contenuti, nessun doppione', async ({ page }) =
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await importBackup(page);
   await openProgress(page);
+  // Si contano i contenuti a dati caricati (non la scritta di caricamento).
+  await expect(page.getByText('Carico i dati…')).toHaveCount(0);
   for (let i = 0; i < 6; i++) {
     await tab(page, 'Forza').click();
     expect(await counts(page)).toEqual(EXPECTED.forza);

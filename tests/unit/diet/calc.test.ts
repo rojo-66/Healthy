@@ -14,7 +14,7 @@ import {
 import { DEVIATION_THRESHOLD_PCT, dayObservations, deviations } from '../../../src/lib/diet/calc/observations';
 import { resolveTargets, TARGET_ORIGIN_LABELS, type ResolvedTargets } from '../../../src/lib/diet/calc/targets';
 import { dayHasVegetables, isVegetable } from '../../../src/lib/diet/calc/vegetables';
-import { payload, PRODUCTS } from './helpers';
+import { flatDay, payload, PRODUCTS } from './helpers';
 
 const plan = (days: unknown[], extra: Record<string, unknown> = {}) => payload({ products: PRODUCTS, days, ...extra });
 const meal = (key: string, items: [string, number][]) => ({ key, label: key, name: key, items: items.map(([p, q]) => ({ p, q })) });
@@ -54,9 +54,12 @@ describe('macro e kcal', () => {
   });
 
   it('giorno: tutti i pasti o solo alcuni (es. quelli mangiati); fibre mancanti segnalate', () => {
-    const day = plan([
-      { weekday: 1, meals: [meal('colazione', [['uova', 2]]), meal('pranzo', [['pollo', 100]]), meal('cena', [['pizza', 1]])] },
-    ]).days[0]!;
+    const day = flatDay(
+      plan([
+        { weekday: 1, meals: [meal('colazione', [['uova', 2]]), meal('pranzo', [['pollo', 100]]), meal('cena', [['pizza', 1]])] },
+      ]),
+      0,
+    );
     const all = dayTotals(day, p);
     expect(all.total.kcal).toBeCloseTo(240);
     expect(all).toMatchObject({ missing: ['pizza'], fiberMissing: ['uova'], complete: false, itemCount: 3 });
@@ -78,29 +81,29 @@ describe('target: priorità e origine', () => {
       ['estimated', 'estimated'],
     ] as const) {
       const p = plan(days('gym'), { dayTypes: { gym: { label: 'Palestra', targets, targetsSource: source } } });
-      expect(resolveTargets(p, p.days[0]!)).toEqual({
+      expect(resolveTargets(p, flatDay(p, 0))).toEqual({
         targets: { kcal: 1800, protein: 140, carbs: null, fat: null, fiber: null },
         origin,
       });
     }
     // Il default (piani salvati prima di M3) è "dal nutrizionista".
     const old = plan(days('gym'), { dayTypes: { gym: { label: 'Palestra', targets } } });
-    expect(resolveTargets(old, old.days[0]!)?.origin).toBe('nutritionist');
+    expect(resolveTargets(old, flatDay(old, 0))?.origin).toBe('nutritionist');
   });
 
   it('2. calcolati dal piano se mancano i target (solo con tutti i valori)', () => {
     const p = plan(days(null));
-    expect(resolveTargets(p, p.days[0]!)).toEqual({
+    expect(resolveTargets(p, flatDay(p, 0))).toEqual({
       targets: { kcal: 550, protein: 47, carbs: 80, fat: 5, fiber: 1 },
       origin: 'calculated',
     });
     const typeWithoutTargets = plan(days('gym'), { dayTypes: { gym: { label: 'Palestra' } } });
-    expect(resolveTargets(typeWithoutTargets, typeWithoutTargets.days[0]!)?.origin).toBe('calculated');
+    expect(resolveTargets(typeWithoutTargets, flatDay(typeWithoutTargets, 0))?.origin).toBe('calculated');
 
     const incomplete = plan([{ weekday: 1, meals: [meal('pranzo', [['pollo', 200], ['ignoto', 10]])] }]);
-    expect(resolveTargets(incomplete, incomplete.days[0]!)).toBeNull();
+    expect(resolveTargets(incomplete, flatDay(incomplete, 0))).toBeNull();
     const empty = plan([{ weekday: 1, meals: [] }]);
-    expect(resolveTargets(empty, empty.days[0]!)).toBeNull();
+    expect(resolveTargets(empty, flatDay(empty, 0))).toBeNull();
   });
 
   it('etichette di origine', () => {
@@ -190,7 +193,7 @@ describe('osservazioni', () => {
     origin,
   });
   const withVeg = plan([{ weekday: 1, meals: [meal('pranzo', [['zucchine', 100]])] }]);
-  const day = withVeg.days[0]!;
+  const day = flatDay(withVeg, 0);
 
   it('soglia del 5%: 4,9% è in linea, 5% si segnala', () => {
     expect(DEVIATION_THRESHOLD_PCT).toBe(5);
@@ -223,11 +226,11 @@ describe('osservazioni', () => {
 
   it('giorni senza verdura', () => {
     const noVeg = plan([{ weekday: 3, meals: [meal('pranzo', [['pollo', 100]])] }, { weekday: 4, meals: [] }]);
-    expect(dayObservations(noVeg, noVeg.days[0]!, totals(100), null)).toEqual([
+    expect(dayObservations(noVeg, flatDay(noVeg, 0), totals(100), null)).toEqual([
       { kind: 'no-vegetables', text: "Nel piano di mercoledì non c'è verdura." },
     ]);
     // Un giorno senza alimenti non ha senso segnalarlo.
-    expect(dayObservations(noVeg, noVeg.days[1]!, totals(0), null)).toEqual([]);
+    expect(dayObservations(noVeg, flatDay(noVeg, 1), totals(0), null)).toEqual([]);
     expect(dayHasVegetables(day, withVeg.products)).toBe(true);
     expect(isVegetable('Verdure miste surgelate')).toBe(true);
     expect(isVegetable('Insalata e pomodoro')).toBe(true);

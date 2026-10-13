@@ -1,12 +1,17 @@
-import { workoutSchema, type Workout } from '../../../src/lib/data/schemas/workouts';
+import { isStrengthItem, workoutSchema, type StrengthItem, type Workout } from '../../../src/lib/data/schemas/workouts';
 import { sessionSchema, type Session } from '../../../src/lib/data/schemas/sessions';
 import { buildSession } from '../../../src/lib/sessions/create';
 import { toggleSet } from '../../../src/lib/sessions/edit';
 import workoutFixture from '../../fixtures/sessions/workout.json';
 
-/** Scheda finta: panca (piramidale, 3 serie), lat machine (2), croci (senza id della libreria, 2) + cardio. */
+/** Scheda finta: panca (piramidale, 3 serie), lat machine (2), croci (senza id della libreria, 2) + cardio in fondo (2a). */
 export function sessionWorkout(): Workout {
   return workoutSchema.parse(structuredClone(workoutFixture));
+}
+
+/** Gli esercizi di forza della scheda finta (panca, lat machine, croci). */
+export function strengthItems(workout: Workout = sessionWorkout()): StrengthItem[] {
+  return workout.items.filter(isStrengthItem);
 }
 
 export const READY = { sleep: 4, mood: 4, energy: 3, stress: 4, soreness: 5 } as const;

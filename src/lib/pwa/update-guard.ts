@@ -5,7 +5,7 @@
  */
 
 /** Schermate con lavoro in corso: sessione (readiness, live, riepilogo) e moduli. */
-const BUSY_ROUTES = ['/sessione/', '/allena/editor', '/profilo/misura', '/dieta/completa', '/importa'];
+const BUSY_ROUTES = ['/sessione/', '/allena/editor', '/allena/corsa', '/profilo/misura', '/dieta/completa', '/importa'];
 
 export interface UpdateContext {
   path: string;

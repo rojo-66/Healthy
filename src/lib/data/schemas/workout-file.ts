@@ -3,24 +3,30 @@ import { MAX_ITEMS, MAX_TEXT } from '../limits';
 import { entityId, envelope, hhmm, httpsUrl, requiredText, text } from './common';
 import { musclesSchema } from './exercises';
 import {
-  cardioSchema,
+  cardioMinutesSchema,
   checkSetsDetail,
+  distanceKmSchema,
+  inclinePctSchema,
   kgSchema,
+  levelSchema,
   repsSchema,
   restSecSchema,
   setDetailSchema,
   setsSchema,
+  speedKmhSchema,
   versionSchema,
   warmupItemSchema,
   weekdaysSchema,
 } from './workouts';
 
 export const WORKOUT_FILE_KIND = 'workout';
-export const WORKOUT_FILE_VERSION = 1;
+/** 2: esercizi con `kind` (forza o cardio), niente `cardio` finale. La v1 si legge ancora (`workoutFileV1ToV2`). */
+export const WORKOUT_FILE_VERSION = 2;
 
-/** Esercizio nel file condiviso: niente `exerciseId` (il collegamento alla libreria avviene all'import, M8). */
-const fileItemSchema = z
+/** Esercizio di forza nel file condiviso: niente `exerciseId` (il collegamento alla libreria avviene all'import, M8). */
+const fileStrengthSchema = z
   .object({
+    kind: z.literal('strength'),
     name: requiredText(MAX_TEXT.name),
     muscles: musclesSchema.default([]),
     sets: setsSchema,
@@ -32,6 +38,21 @@ const fileItemSchema = z
     setsDetail: z.array(setDetailSchema).max(MAX_ITEMS.setsPerItem).nullable().default(null),
   })
   .superRefine(checkSetsDetail);
+
+/** Esercizio cardio nel file condiviso (2a). */
+const fileCardioSchema = z.object({
+  kind: z.literal('cardio'),
+  name: requiredText(MAX_TEXT.name),
+  minutes: cardioMinutesSchema,
+  distanceKm: distanceKmSchema.nullable().default(null),
+  speedKmh: speedKmhSchema.nullable().default(null),
+  inclinePct: inclinePctSchema.nullable().default(null),
+  level: levelSchema.nullable().default(null),
+  note: text(MAX_TEXT.note).default(''),
+  videoUrl: httpsUrl.nullable().default(null),
+});
+
+export const fileItemSchema = z.discriminatedUnion('kind', [fileStrengthSchema, fileCardioSchema]);
 
 /** File di una scheda (SPEC § 8.1). I campi facoltativi hanno un valore neutro. */
 export const workoutFileSchema = z.object({
@@ -58,7 +79,7 @@ export const workoutFileSchema = z.object({
     .max(MAX_ITEMS.warmup)
     .default([]),
   items: z.array(fileItemSchema).min(1).max(MAX_ITEMS.workoutItems),
-  cardio: cardioSchema.nullable().default(null),
 });
 
 export type WorkoutFile = z.infer<typeof workoutFileSchema>;
+export type WorkoutFileItem = z.infer<typeof fileItemSchema>;

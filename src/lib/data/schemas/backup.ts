@@ -5,7 +5,7 @@ import { PRIMARY_KEYS, TABLE_LABELS, TABLE_NAMES, TABLE_SCHEMAS, type TableName,
 
 export const BACKUP_KIND = 'backup';
 /** Versione del formato di backup. Se cambia, aggiungere la migrazione in `backup-migrations.ts`. */
-export const BACKUP_VERSION = 1;
+export const BACKUP_VERSION = 4;
 
 function rows<T extends TableName>(table: T) {
   return z.array(TABLE_SCHEMAS[table]).max(MAX_ITEMS.rows[table]);
@@ -21,6 +21,10 @@ export const backupTablesSchema = z.object({
   exercises: rows('exercises'),
   workouts: rows('workouts'),
   sessions: rows('sessions'),
+  runs: rows('runs'),
+  runLogs: rows('runLogs'),
+  calendarEdits: rows('calendarEdits'),
+  dayChoices: rows('dayChoices'),
   dietPlans: rows('dietPlans'),
   dietLog: rows('dietLog'),
   shopping: rows('shopping'),
@@ -33,6 +37,10 @@ export const backupCountsSchema = z.object({
   exercises: count('exercises'),
   workouts: count('workouts'),
   sessions: count('sessions'),
+  runs: count('runs'),
+  runLogs: count('runLogs'),
+  calendarEdits: count('calendarEdits'),
+  dayChoices: count('dayChoices'),
   dietPlans: count('dietPlans'),
   dietLog: count('dietLog'),
   shopping: count('shopping'),

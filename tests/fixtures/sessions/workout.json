@@ -12,6 +12,7 @@
   ],
   "items": [
     {
+      "kind": "strength",
       "exerciseId": "fx-barbell-bench-press-medium-grip",
       "name": "Panca piana con bilanciere",
       "muscles": ["Petto", "Tricipiti"],
@@ -21,13 +22,10 @@
       "restSec": 120,
       "note": "Scapole addotte.",
       "videoUrl": "https://example.com/video/panca",
-      "setsDetail": [
-        { "reps": 10, "kg": 55 },
-        { "reps": 8, "kg": 60 },
-        { "reps": 6, "kg": 65 }
-      ]
+      "setsDetail": [{ "reps": 10, "kg": 55 }, { "reps": 8, "kg": 60 }, { "reps": 6, "kg": 65 }]
     },
     {
+      "kind": "strength",
       "exerciseId": "fx-wide-grip-lat-pulldown",
       "name": "Lat machine presa larga",
       "muscles": ["Dorsali", "Bicipiti"],
@@ -40,6 +38,7 @@
       "setsDetail": null
     },
     {
+      "kind": "strength",
       "exerciseId": null,
       "name": "Croci ai cavi",
       "muscles": ["Petto"],
@@ -50,8 +49,19 @@
       "note": "Gomiti morbidi.",
       "videoUrl": null,
       "setsDetail": null
+    },
+    {
+      "kind": "cardio",
+      "exerciseId": "cd-tapis-corsa",
+      "name": "Tapis roulant · corsa",
+      "minutes": 12,
+      "distanceKm": null,
+      "speedKmh": null,
+      "inclinePct": null,
+      "level": null,
+      "note": "",
+      "videoUrl": null
     }
   ],
-  "cardio": { "type": "tapis roulant", "minutes": 12 },
   "updatedAt": "2026-10-01T10:00:00.000Z"
 }

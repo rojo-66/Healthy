@@ -1,7 +1,19 @@
 import { z } from 'zod';
 import { MAX_ITEMS, MAX_TEXT } from '../limits';
 import { entityId, hhmm, int, text, weekday } from './common';
-import { kgSchema, repsSchema, restSecSchema, setDetailSchema, versionSchema } from './workouts';
+import { cardioFieldSchema } from './exercises';
+import {
+  cardioMinutesSchema,
+  distanceKmSchema,
+  inclinePctSchema,
+  kgSchema,
+  levelSchema,
+  repsSchema,
+  restSecSchema,
+  setDetailSchema,
+  speedKmhSchema,
+  versionSchema,
+} from './workouts';
 
 /**
  * Bozza dell'editor schede (M4): lo stato del modulo così com'è, anche incompleto
@@ -19,7 +31,8 @@ export const draftWarmupSchema = z.object({
   dose: text(MAX_TEXT.short),
 });
 
-export const draftItemSchema = z.object({
+export const draftStrengthSchema = z.object({
+  kind: z.literal('strength'),
   key: rowKey,
   exerciseId: entityId.nullable(),
   name: text(MAX_TEXT.name),
@@ -36,10 +49,25 @@ export const draftItemSchema = z.object({
   setsDetailMemory: z.array(setDetailSchema).max(MAX_ITEMS.setsPerItem).nullable(),
 });
 
+/** Esercizio cardio nella bozza (2a). */
 export const draftCardioSchema = z.object({
-  type: text(MAX_TEXT.short),
-  minutes: int(0, 600),
+  kind: z.literal('cardio'),
+  key: rowKey,
+  exerciseId: entityId.nullable(),
+  name: text(MAX_TEXT.name),
+  minutes: cardioMinutesSchema,
+  distanceKm: distanceKmSchema.nullable(),
+  speedKmh: speedKmhSchema.nullable(),
+  inclinePct: inclinePctSchema.nullable(),
+  level: levelSchema.nullable(),
+  note: text(MAX_TEXT.note),
+  /** Testo del campo: `''` = nessun link. */
+  videoUrl: z.string().max(MAX_TEXT.url),
+  /** Campi mostrati subito (dalla libreria); gli altri dietro "Altri campi". */
+  fields: z.array(cardioFieldSchema).max(4),
 });
+
+export const draftItemSchema = z.discriminatedUnion('kind', [draftStrengthSchema, draftCardioSchema]);
 
 export const workoutDraftSchema = z.object({
   /** Id della scheda: quella in modifica, oppure un UUID nuovo. */
@@ -55,7 +83,6 @@ export const workoutDraftSchema = z.object({
   intro: text(MAX_TEXT.long),
   warmup: z.array(draftWarmupSchema).max(MAX_ITEMS.warmup),
   items: z.array(draftItemSchema).max(MAX_ITEMS.workoutItems),
-  cardio: draftCardioSchema.nullable(),
 });
 
 /** Bozza salvata: cosa e quando. */
@@ -66,6 +93,7 @@ export const savedDraftSchema = z.object({
 
 export type WorkoutDraft = z.infer<typeof workoutDraftSchema>;
 export type DraftItem = z.infer<typeof draftItemSchema>;
+export type DraftStrength = z.infer<typeof draftStrengthSchema>;
 export type DraftWarmup = z.infer<typeof draftWarmupSchema>;
 export type DraftCardio = z.infer<typeof draftCardioSchema>;
 export type SavedDraft = z.infer<typeof savedDraftSchema>;

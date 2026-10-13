@@ -54,11 +54,16 @@ export function decideWorkoutImport(file: Pick<WorkoutFile, 'version'>, existing
   return { status, existing, localEdits, base, actions: ['copy'], defaultAction: 'copy' };
 }
 
-/** Collegamento alla libreria per nome (maiuscole, accenti e spazi non contano); `null` se non c'è. */
-export function exerciseIndex(exercises: readonly Pick<Exercise, 'id' | 'name'>[]): ReadonlyMap<string, string> {
+/** Chiave del collegamento alla libreria: tipo + nome (un cardio non si collega a un esercizio di forza). */
+export function libraryKey(kind: 'strength' | 'cardio', name: string): string {
+  return `${kind}:${normalize(name)}`;
+}
+
+/** Collegamento alla libreria per tipo e nome (maiuscole, accenti e spazi non contano); `null` se non c'è. */
+export function exerciseIndex(exercises: readonly Pick<Exercise, 'id' | 'name' | 'kind'>[]): ReadonlyMap<string, string> {
   const map = new Map<string, string>();
   for (const ex of exercises) {
-    const key = normalize(ex.name);
+    const key = libraryKey(ex.kind, ex.name);
     if (!map.has(key)) map.set(key, ex.id);
   }
   return map;
@@ -84,19 +89,34 @@ export function fileToWorkout(
     time: file.time,
     intro: file.intro,
     warmup: file.warmup.map((w) => ({ name: w.name, hint: w.hint, dose: w.dose })),
-    items: file.items.map((item) => ({
-      exerciseId: library.get(normalize(item.name)) ?? null,
-      name: item.name,
-      muscles: [...item.muscles],
-      sets: item.sets,
-      reps: item.reps,
-      kg: item.kg,
-      restSec: item.restSec,
-      note: item.note,
-      videoUrl: item.videoUrl,
-      setsDetail: item.setsDetail ? item.setsDetail.map((s) => ({ reps: s.reps, kg: s.kg })) : null,
-    })),
-    cardio: file.cardio ? { type: file.cardio.type, minutes: file.cardio.minutes } : null,
+    items: file.items.map((item) =>
+      item.kind === 'cardio'
+        ? {
+            kind: 'cardio' as const,
+            exerciseId: library.get(libraryKey('cardio', item.name)) ?? null,
+            name: item.name,
+            minutes: item.minutes,
+            distanceKm: item.distanceKm,
+            speedKmh: item.speedKmh,
+            inclinePct: item.inclinePct,
+            level: item.level,
+            note: item.note,
+            videoUrl: item.videoUrl,
+          }
+        : {
+            kind: 'strength' as const,
+            exerciseId: library.get(libraryKey('strength', item.name)) ?? null,
+            name: item.name,
+            muscles: [...item.muscles],
+            sets: item.sets,
+            reps: item.reps,
+            kg: item.kg,
+            restSec: item.restSec,
+            note: item.note,
+            videoUrl: item.videoUrl,
+            setsDetail: item.setsDetail ? item.setsDetail.map((s) => ({ reps: s.reps, kg: s.kg })) : null,
+          },
+    ),
     updatedAt: nowIso(now),
     received: null,
     previousVersions: [],

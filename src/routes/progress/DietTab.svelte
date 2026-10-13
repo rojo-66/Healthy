@@ -19,6 +19,7 @@
     heatmapWeeks,
     macroAverages,
     targetDeviation,
+    type DietCalendar,
   } from '../../lib/progress/diet';
   import { arrow, longDay, signedPct, weekdayDay } from '../../lib/progress/format';
   import { progressView, type CardView } from '../../lib/progress/state.svelte';
@@ -32,9 +33,11 @@
     plans: readonly DietPlan[];
     logs: readonly DietLogDay[];
     today: string;
+    /** Attività e spostamenti (2c): ogni giorno con la variante del suo tipo di giornata. */
+    calendar?: DietCalendar | null;
   }
 
-  let { plans, logs, today }: Props = $props();
+  let { plans, logs, today, calendar = null }: Props = $props();
 
   const VIEWS = [
     { id: 'chart', label: 'Grafico' },
@@ -44,7 +47,7 @@
   const setView = (card: string) => (v: CardView) => (progressView.views[card] = v);
 
   const active = $derived(plans.find((p) => p.active));
-  const days = $derived(dietDays(plans, logs, today));
+  const days = $derived(dietDays(plans, logs, today, calendar));
   const summary = $derived(adherenceSummary(days));
   const weeks = $derived(heatmapWeeks(days, today));
   const deviation = $derived(targetDeviation(days));

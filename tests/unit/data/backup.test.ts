@@ -11,7 +11,7 @@ import {
   readBackupFile,
   restoreBackup,
 } from '../../../src/lib/data/backup';
-import type { BackupMigrations } from '../../../src/lib/data/backup-migrations';
+import { BACKUP_MIGRATIONS, type BackupMigrations } from '../../../src/lib/data/backup-migrations';
 import { db } from '../../../src/lib/data/db';
 import type { Result } from '../../../src/lib/data/errors';
 import { MAX_BYTES } from '../../../src/lib/data/limits';
@@ -63,10 +63,25 @@ describe('esporta', () => {
     expect(backup).toMatchObject({
       app: 'healthy-app',
       kind: 'backup',
-      schemaVersion: 1,
+      schemaVersion: 4,
       createdAt: '2026-10-11T09:15:00.000Z',
       dbVersion: latestVersion(),
-      counts: { profile: 1, measurements: 2, exercises: 3, workouts: 2, sessions: 3, dietPlans: 1, dietLog: 2, shopping: 1, settings: 0 },
+      counts: {
+        profile: 1,
+        measurements: 2,
+        exercises: 3,
+        workouts: 2,
+        sessions: 3,
+        runs: 0,
+        runLogs: 0,
+        calendarEdits: 0,
+        dayChoices: 0,
+        dietPlans: 1,
+        dietLog: 2,
+        shopping: 1,
+        // 2c: l'inizio del calendario (dal ripristino del backup vecchio).
+        settings: 1,
+      },
     });
     expect(Object.keys(backup.tables)).toEqual([...TABLE_NAMES]);
   });
@@ -166,13 +181,13 @@ describe('importa: validazione', () => {
     expect(previewBackup(fixture())).toEqual({
       createdAt: '2026-10-11T08:00:00.000Z',
       counts: fixture().counts,
-      total: 15,
+      total: 16,
     });
   });
 
   it('schemaVersion più nuova: rifiutata con messaggio chiaro', () => {
     expect(errorsOf(parseBackup(futureVersion))).toEqual([
-      "Questo file è un backup creato con una versione più recente dell'app (formato 99, questa app legge fino al 1): aggiorna Healthy e riprova.",
+      "Questo file è un backup creato con una versione più recente dell'app (formato 99, questa app legge fino al 4): aggiorna Healthy e riprova.",
     ]);
   });
 
@@ -213,6 +228,7 @@ describe('importa: validazione', () => {
     const { tables, ...rest } = validBackupJson();
     const old = { ...rest, schemaVersion: 0, data: tables };
     const migrations: BackupMigrations = {
+      ...BACKUP_MIGRATIONS,
       0: ({ data, ...v0 }) => ({ ...v0, schemaVersion: 1, tables: data }),
     };
     expect(valid(parseBackup(old, migrations)).tables).toEqual(fixture().tables);
@@ -264,5 +280,59 @@ describe('isBackupStale', () => {
 
   it('data illeggibile → da fare', () => {
     expect(isBackupStale('ieri', now)).toBe(true);
+  });
+});
+
+describe('2a: backup del formato 1 e corse', () => {
+  const run = {
+    id: 'corsa-1',
+    name: 'Corsa lenta',
+    weekdays: [3, 6],
+    time: '07:00',
+    targetMinutes: 30,
+    targetKm: 5,
+    note: '',
+    createdAt: '2026-10-01T08:00:00.000Z',
+    updatedAt: '2026-10-01T08:00:00.000Z',
+  };
+  const runLog = {
+    id: 'fatta-1',
+    runId: 'corsa-1',
+    runName: 'Corsa lenta',
+    date: '2026-10-10',
+    loggedAt: '2026-10-10T08:00:00.000Z',
+    durationSec: 1930,
+    distanceKm: 5.2,
+    rpe: 6,
+    note: 'Parco',
+  };
+
+  it('un backup del formato 1 (prima del 2a) viene migrato: cardio come esercizio, nessun dato perso', () => {
+    const raw = validBackupJson() as { schemaVersion: number; tables: { workouts: { cardio: unknown }[]; sessions: { cardioDone: unknown }[] } };
+    expect(raw.schemaVersion).toBe(1);
+    const legacyCardio = raw.tables.workouts.filter((w) => w.cardio).length;
+    const legacyDone = raw.tables.sessions.filter((s) => s.cardioDone).length;
+    const backup = fixture();
+    expect(backup.schemaVersion).toBe(4);
+    expect(backup.counts.runs).toBe(0);
+    expect(backup.tables.runs).toEqual([]);
+    expect(backup.tables.workouts.filter((w) => w.items.at(-1)?.kind === 'cardio')).toHaveLength(legacyCardio);
+    expect(backup.tables.sessions.filter((s) => s.cardio.some((c) => c.done))).toHaveLength(legacyDone);
+    for (const w of backup.tables.workouts) expect(w).not.toHaveProperty('cardio');
+    for (const s of backup.tables.sessions) expect(s).not.toHaveProperty('cardioDone');
+  });
+
+  it('corse pianificate e fatte entrano nel backup e tornano uguali al ripristino', async () => {
+    await restoreBackup(fixture());
+    await db.runs.add(run);
+    await db.runLogs.add(runLog);
+    const backup = await buildBackup();
+    expect(backup.counts.runs).toBe(1);
+    expect(backup.counts.runLogs).toBe(1);
+    const again = valid(parseBackup(JSON.parse(JSON.stringify(backup))));
+    await clearAll();
+    await restoreBackup(again);
+    expect(await db.runs.toArray()).toEqual([run]);
+    expect(await db.runLogs.toArray()).toEqual([runLog]);
   });
 });

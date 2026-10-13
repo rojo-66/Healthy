@@ -1,4 +1,5 @@
 import { lookup } from '../data/errors';
+import { defaultVariant } from './variants';
 import type {
   DietNutrients,
   DietPayload,
@@ -63,8 +64,23 @@ export function setDayType(payload: DietPayload, weekday: number, typeKey: strin
     next.dayTypes[typeKey] = { label: preset?.label ?? typeKey, targets: null, targetsSource: 'manual' };
   }
   const day = next.days.find((d) => d.weekday === weekday);
-  if (day) day.type = typeKey;
+  if (!day) return next;
+  // Tipo predefinito del giorno (2b). Una variante senza tipo (l'unica) prende lo stesso tipo; con più varianti
+  // il predefinito si sceglie tra i tipi che il giorno ha già (le varianti arrivano solo dal file).
+  if (day.variants.length === 1 && (day.variants[0]!.type === null || day.variants[0]!.type === day.defaultType)) {
+    day.variants[0]!.type = typeKey;
+    day.defaultType = typeKey;
+  } else if (typeKey !== null && day.variants.some((v) => v.type === typeKey)) {
+    day.defaultType = typeKey;
+  }
   return next;
+}
+
+/** Tipi che si possono scegliere come predefiniti per un giorno: quelli delle sue varianti (con più varianti). */
+export function selectableDayTypes(payload: DietPayload, weekday: number): string[] | null {
+  const day = payload.days.find((d) => d.weekday === weekday);
+  if (!day || day.variants.length === 1) return null;
+  return day.variants.flatMap((v) => (v.type === null ? [] : [v.type]));
 }
 
 /** Target di un tipo di giornata, con la loro origine (inseriti a mano o stima accettata). */
@@ -82,10 +98,17 @@ export function setTargets(
   return next;
 }
 
-/** Integratori di un giorno. */
-export function setSupplements(payload: DietPayload, weekday: number, supplements: DietSupplement[]): DietPayload {
+/** Integratori di una variante di un giorno (2b); `variantType` `null` = la variante predefinita. */
+export function setSupplements(
+  payload: DietPayload,
+  weekday: number,
+  supplements: DietSupplement[],
+  variantType: string | null = null,
+): DietPayload {
   const next = copy(payload);
   const day = next.days.find((d) => d.weekday === weekday);
-  if (day) day.supplements = structuredClone(supplements);
+  if (!day) return next;
+  const variant = (variantType !== null && day.variants.find((v) => v.type === variantType)) || defaultVariant(day);
+  variant.supplements = structuredClone(supplements);
   return next;
 }

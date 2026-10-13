@@ -29,6 +29,8 @@
   const PAGE = 60;
   let query = $state('');
   let muscle = $state<string | null>(null);
+  /** Chip "Cardio" (2a): solo esercizi cardio. Esclude il filtro per muscolo. */
+  let cardioOnly = $state(false);
   let limit = $state(PAGE);
   let status = $state('');
 
@@ -39,7 +41,15 @@
   let warning = $state<string | null>(null);
 
   // Prima i tuoi esercizi e quelli comuni (con nome italiano), poi il resto della libreria.
-  const results = $derived(searchExercises(exercises, query, muscle, (ex) => ex.custom || COMMON_IDS.has(ex.id)));
+  const results = $derived(
+    searchExercises(
+      exercises,
+      query,
+      muscle,
+      (ex) => ex.custom || ex.kind === 'cardio' || COMMON_IDS.has(ex.id),
+      cardioOnly ? 'cardio' : null,
+    ),
+  );
   const shown = $derived(results.slice(0, limit));
   const title = $derived(view.kind === 'list' ? 'Libreria' : view.exercise ? 'Modifica esercizio' : 'Nuovo esercizio');
 
@@ -51,7 +61,20 @@
 
   function setMuscle(value: string | null) {
     muscle = value;
+    cardioOnly = false;
     limit = PAGE;
+  }
+
+  function toggleCardio() {
+    cardioOnly = !cardioOnly;
+    muscle = null;
+    limit = PAGE;
+  }
+
+  /** "Petto · Tricipiti · Bilanciere"; cardio "cardio · Macchina". */
+  function metaOf(ex: Exercise): string {
+    const head = ex.kind === 'cardio' ? ['cardio', ...ex.muscles] : ex.muscles;
+    return [...head, ex.equipment, ex.custom ? 'tuo' : ''].filter(Boolean).join(' · ');
   }
 
   function openForm(exercise: Exercise | null) {
@@ -115,6 +138,7 @@
     status = '';
     query = '';
     muscle = null;
+    cardioOnly = false;
     limit = PAGE;
   }
 </script>
@@ -129,12 +153,15 @@
           type="search"
           autocomplete="off"
           enterkeyhint="search"
-          placeholder="Cerca: panca, squat, curl…"
+          placeholder="Cerca: panca, squat, tapis…"
           value={query}
           oninput={(e) => setQuery(e.currentTarget.value)}
         />
         <div class="chips scroll-x" role="group" aria-label="Filtra per muscolo principale">
-          <button type="button" class="chip tap" aria-pressed={muscle === null} onclick={() => setMuscle(null)}>Tutti</button>
+          <button type="button" class="chip tap" aria-pressed={muscle === null && !cardioOnly} onclick={() => setMuscle(null)}
+            >Tutti</button
+          >
+          <button type="button" class="chip tap" aria-pressed={cardioOnly} onclick={toggleCardio}>Cardio</button>
           {#each MUSCLES as m (m)}
             <button type="button" class="chip tap" aria-pressed={muscle === m} onclick={() => setMuscle(muscle === m ? null : m)}>{m}</button>
           {/each}
@@ -151,7 +178,7 @@
           <li class="result">
             <span class="r-text">
               <span class="r-name">{ex.name}</span>
-              <span class="r-meta">{ex.muscles.join(' · ')}{ex.equipment ? ` · ${ex.equipment}` : ''}{ex.custom ? ' · tuo' : ''}</span>
+              <span class="r-meta">{metaOf(ex)}</span>
             </span>
             {#if ex.custom}
               <button type="button" class="r-edit tap" aria-label="Modifica {ex.name}" onclick={() => openForm(ex)}>
@@ -186,6 +213,7 @@
     <CustomExerciseForm
       exercise={view.exercise}
       suggestedName={query.trim()}
+      suggestedKind={cardioOnly ? 'cardio' : 'strength'}
       {busy}
       errors={formErrors}
       deleteWarning={warning}

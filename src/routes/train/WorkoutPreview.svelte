@@ -1,18 +1,20 @@
 <script lang="ts" module>
-  import type { Workout } from '../../lib/data/schemas/workouts';
+  import type { CardioItem, StrengthItem, Workout } from '../../lib/data/schemas/workouts';
+
+  type Shown<T> = Omit<T, 'videoUrl' | 'exerciseId'> & { videoUrl: string | null };
 
   /** Dati mostrati: una scheda salvata o la bozza dell'editor (stessa vista, in sola lettura). */
-  export type PreviewWorkout = Pick<Workout, 'name' | 'source' | 'author' | 'intro' | 'warmup' | 'cardio' | 'received'> & {
+  export type PreviewWorkout = Pick<Workout, 'name' | 'source' | 'author' | 'intro' | 'warmup' | 'received'> & {
     /** Versione mostrata (per la bozza: quella dopo il salvataggio). */
     version: number;
-    items: readonly (Omit<Workout['items'][number], 'videoUrl' | 'exerciseId'> & { videoUrl: string | null })[];
+    items: readonly (Shown<StrengthItem> | Shown<CardioItem>)[];
   };
 </script>
 
 <script lang="ts">
   import NoteBox from '../../lib/components/NoteBox.svelte';
-  import { workoutTotals } from '../../lib/workouts/calc/duration';
-  import { itemSummary, kgLabel, originLabel } from '../../lib/workouts/format';
+  import { cardioPlanLabel } from '../../lib/sessions/format';
+  import { itemSummary, kgLabel, nextMeta, originLabel } from '../../lib/workouts/format';
 
   interface Props {
     workout: PreviewWorkout;
@@ -22,7 +24,6 @@
 
   let { workout, inset = false }: Props = $props();
 
-  const totals = $derived(workoutTotals(workout));
   /** Solo link https completi: niente link a metà scrittura nell'anteprima della bozza. */
   const safeUrl = (url: string | null) => (url && /^https:\/\/[^\s]+$/.test(url) ? url : null);
 </script>
@@ -33,11 +34,7 @@
       {originLabel(workout)}{workout.source === 'pt' && workout.author && !workout.received ? ` · ${workout.author}` : ''}
     </span>
     <h2 class="graffiti name">{workout.name || 'Senza nome'}</h2>
-    <p class="mono totals">
-      {totals.exercises} esercizi · {totals.sets} serie · ~{totals.strengthMin}’{workout.cardio && workout.cardio.minutes > 0
-        ? ` + ${workout.cardio.minutes}’ ${workout.cardio.type}`
-        : ''}
-    </p>
+    <p class="mono totals">{nextMeta(workout)}</p>
   </header>
 
   {#if workout.intro}
@@ -69,11 +66,15 @@
             <span class="num mono" aria-hidden="true">{i + 1}</span>
             <div class="item-text">
               <span class="item-name">{item.name}</span>
-              <span class="mono item-scheme">{itemSummary(item)}</span>
-              {#if item.muscles.length > 0}<span class="item-muscles">{item.muscles.join(' · ')}</span>{/if}
+              {#if item.kind === 'cardio'}
+                <span class="mono item-scheme">cardio · {cardioPlanLabel(item)}</span>
+              {:else}
+                <span class="mono item-scheme">{itemSummary(item)}</span>
+                {#if item.muscles.length > 0}<span class="item-muscles">{item.muscles.join(' · ')}</span>{/if}
+              {/if}
             </div>
           </div>
-          {#if item.setsDetail}
+          {#if item.kind === 'strength' && item.setsDetail}
             <table class="sets mono">
               <caption class="visually-hidden">Serie di {item.name}</caption>
               <thead><tr><th scope="col">Serie</th><th scope="col">Rip</th><th scope="col">Kg</th></tr></thead>
@@ -96,13 +97,6 @@
       {/each}
     </ol>
   </section>
-
-  {#if workout.cardio}
-    <section class="block cardio" aria-label="Cardio finale">
-      <span>Cardio finale</span>
-      <span class="mono cardio-val">{workout.cardio.type} · {workout.cardio.minutes}’</span>
-    </section>
-  {/if}
 </article>
 
 <style>
@@ -285,19 +279,5 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  .cardio {
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 14px;
-    background: var(--card);
-    font-size: 14px;
-  }
-
-  .cardio-val {
-    color: var(--tone);
-    font-size: 13px;
   }
 </style>
